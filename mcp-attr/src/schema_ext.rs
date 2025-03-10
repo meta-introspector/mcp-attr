@@ -389,12 +389,6 @@ impl Implementation {
     }
 }
 
-impl From<serde_json::Value> for TextContent {
-    fn from(value: serde_json::Value) -> Self {
-        TextContent::new(format!("{value:#}"))
-    }
-}
-
 impl Root {
     pub fn new(uri: &str) -> Self {
         Self {

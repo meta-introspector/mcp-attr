@@ -288,7 +288,7 @@
 //! 引数には `#[arg("name")]` 属性を付与することで名前を指定できる。
 //! 指定しない場合は関数引数名の最初から `_` が取り除かれた名前が使用される。
 //!
-//! 戻り値: [`Result<impl Into<GetPromptResult>>`](GetPromptResult)
+//! 戻り値: [`Result<impl Into<GetPromptResult>>`]
 //!
 //! ```rust
 //! use mcp_attr::server::Result;
@@ -344,7 +344,7 @@
 //! - `{+var}`
 //! - `{#var}`
 //!
-//! 戻り値: [`Result<impl Into<ReadResourceResult>>`](ReadResourceResult)
+//! 戻り値: [`Result<impl Into<ReadResourceResult>>`]
 //!
 //! ```rust
 //! use mcp_attr::server::Result;
@@ -398,7 +398,7 @@
 //! 引数には `#[arg("name")]` 属性を付与することで名前を指定できる。
 //! 指定しない場合は関数引数名の最初から `_` が取り除かれた名前が使用される。
 //!
-//! 戻り値: [`Result<impl Into<CallToolResult>>`](CallToolResult)
+//! 戻り値: [`Result<impl Into<CallToolResult>>`]
 //!
 //! ```rust
 //! use mcp_attr::server::Result;
@@ -513,6 +513,9 @@
 //! [`server_info`]: https://docs.rs/mcp-attr/latest/mcp_attr/server/trait.McpServer.html#method.server_info
 //! [`instructions`]: https://docs.rs/mcp-attr/latest/mcp_attr/server/trait.McpServer.html#method.instructions
 //! [`completion_complete`]: https://docs.rs/mcp-attr/latest/mcp_attr/server/trait.McpServer.html#method.completion_complete
+//! [`Result<impl Into<GetPromptResult>>`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.GetPromptResult.html
+//! [`Result<impl Into<ReadResourceResult>>`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.ReadResourceResult.html
+//! [`Result<impl Into<CallToolResult>>`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.CallToolResult.html
 // #![include_doc("../../README.ja.md", end)]
 // #![include_doc("../../README.md", start)]
 //! # mcp-attr
@@ -804,7 +807,7 @@
 //! Arguments can be given names using the `#[arg("name")]` attribute.
 //! If not specified, the name used is the function argument name with leading `_` removed.
 //!
-//! Return value: [`Result<impl Into<GetPromptResult>>`](GetPromptResult)
+//! Return value: [`Result<impl Into<GetPromptResult>>`]
 //!
 //! ```rust
 //! use mcp_attr::server::Result;
@@ -860,7 +863,7 @@
 //! - `{+var}`
 //! - `{#var}`
 //!
-//! Return value: [`Result<impl Into<ReadResourceResult>>`](ReadResourceResult)
+//! Return value: [`Result<impl Into<ReadResourceResult>>`]
 //!
 //! ```rust
 //! use mcp_attr::server::Result;
@@ -914,7 +917,7 @@
 //! Arguments can be given names using the `#[arg("name")]` attribute.
 //! If not specified, the name used is the function argument name with leading `_` removed.
 //!
-//! Return value: [`Result<impl Into<CallToolResult>>`](CallToolResult)
+//! Return value: [`Result<impl Into<CallToolResult>>`]
 //!
 //! ```rust
 //! use mcp_attr::server::Result;
@@ -1029,4 +1032,7 @@
 //! [`server_info`]: https://docs.rs/mcp-attr/latest/mcp_attr/server/trait.McpServer.html#method.server_info
 //! [`instructions`]: https://docs.rs/mcp-attr/latest/mcp_attr/server/trait.McpServer.html#method.instructions
 //! [`completion_complete`]: https://docs.rs/mcp-attr/latest/mcp_attr/server/trait.McpServer.html#method.completion_complete
+//! [`Result<impl Into<GetPromptResult>>`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.GetPromptResult.html
+//! [`Result<impl Into<ReadResourceResult>>`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.ReadResourceResult.html
+//! [`Result<impl Into<CallToolResult>>`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.CallToolResult.html
 // #![include_doc("../../README.md", end)]
