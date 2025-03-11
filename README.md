@@ -433,7 +433,7 @@ Additionally, the following methods do not support implementation through attrib
 
 The following method can be overridden with manual implementation over the attribute-based implementation:
 
-- [`tools_list`]
+- [`resources_list`]
 
 ### Testing
 

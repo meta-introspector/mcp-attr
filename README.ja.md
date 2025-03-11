@@ -433,7 +433,7 @@ impl McpServer for ExampleServer {
 
 次のメソッドは、属性による実装を手動での実装で上書きすることができます。
 
-- [`tools_list`]
+- [`resources_list`]
 
 ### テスト方法
 
