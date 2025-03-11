@@ -3,7 +3,7 @@ use std::{future::Future, sync::Arc};
 use derive_ex::Ex;
 use jsoncall::{
     Handler, NotificationContext, Params, RequestContext, RequestContextAs, Response, Result,
-    Session, SessionResult,
+    Session, SessionOptions, SessionResult,
 };
 use serde_json::Map;
 use tokio::{
@@ -59,6 +59,7 @@ pub struct McpClientBuilder {
     sampling_handler: Option<Arc<dyn DynSamplingHandler>>,
     roots: Option<Vec<Root>>,
     client_info: Implementation,
+    expose_internals: Option<bool>,
 }
 impl McpClientBuilder {
     pub fn new() -> Self {
@@ -66,6 +67,7 @@ impl McpClientBuilder {
             sampling_handler: None,
             roots: None,
             client_info: Implementation::from_compile_time_env(),
+            expose_internals: None,
         }
     }
     pub fn with_sampling_handler(
@@ -79,7 +81,12 @@ impl McpClientBuilder {
         self.roots = Some(roots);
         self
     }
-    pub fn into_handler(self) -> (impl Handler, InitializeRequestParams) {
+    pub fn with_expose_internals(mut self, expose_internals: bool) -> Self {
+        self.expose_internals = Some(expose_internals);
+        self
+    }
+
+    pub fn into_handler(self) -> (impl Handler, SessionOptions, InitializeRequestParams) {
         let mut capabilities = ClientCapabilities::default();
         if self.roots.is_some() {
             capabilities.roots = Some(ClientCapabilitiesRoots {
@@ -93,12 +100,15 @@ impl McpClientBuilder {
             sampling_handler: self.sampling_handler,
             roots: self.roots,
         };
+        let options = SessionOptions {
+            expose_internals: self.expose_internals,
+        };
         let p = InitializeRequestParams {
             capabilities,
             client_info: self.client_info,
             protocol_version: PROTOCOL_VERSION.to_string(),
         };
-        (handler, p)
+        (handler, options, p)
     }
 
     pub async fn build(
@@ -106,18 +116,18 @@ impl McpClientBuilder {
         reader: impl AsyncBufRead + Send + Sync + 'static,
         writer: impl AsyncWrite + Send + Sync + 'static,
     ) -> SessionResult<McpClient> {
-        let (handler, p) = self.into_handler();
-        McpClient::initialize(Session::new(handler, reader, writer), p).await
+        let (handler, options, p) = self.into_handler();
+        McpClient::initialize(Session::new(handler, reader, writer, &options), p).await
     }
     pub async fn build_with_command(self, command: &mut Command) -> SessionResult<McpClient> {
-        let (handler, p) = self.into_handler();
-        McpClient::initialize(Session::from_command(handler, command)?, p).await
+        let (handler, options, p) = self.into_handler();
+        McpClient::initialize(Session::from_command(handler, command, &options)?, p).await
     }
     pub async fn build_with_server(self, server: impl McpServer) -> SessionResult<McpClient> {
-        let (client_handler, p) = self.into_handler();
+        let (client_handler, options, p) = self.into_handler();
         let server_handler = server.into_handler();
 
-        let (client, server) = Session::new_channel(client_handler, server_handler);
+        let (client, server) = Session::new_channel(client_handler, server_handler, &options);
         let mut client = McpClient::initialize(client, p).await?;
         client.server = Some(server);
         Ok(client)

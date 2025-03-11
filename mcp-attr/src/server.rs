@@ -3,7 +3,7 @@ use std::{future::Future, sync::Arc};
 pub use jsoncall::Result;
 use jsoncall::{
     ErrorCode, Handler, Hook, NotificationContext, Params, RequestContextAs, RequestId, Response,
-    Session, SessionContext, SessionResult, bail_public,
+    Session, SessionContext, SessionOptions, SessionResult, bail_public,
 };
 use serde::{Serialize, de::DeserializeOwned};
 use serde_json::Map;
@@ -471,7 +471,15 @@ impl RequestContext {
 }
 
 pub async fn serve_stdio(server: impl McpServer) -> SessionResult<()> {
-    Session::from_stdio(McpServerHandler::new(server))
+    Session::from_stdio(McpServerHandler::new(server), &SessionOptions::default())
+        .wait()
+        .await
+}
+pub async fn serve_stdio_with(
+    server: impl McpServer,
+    options: &SessionOptions,
+) -> SessionResult<()> {
+    Session::from_stdio(McpServerHandler::new(server), options)
         .wait()
         .await
 }
