@@ -128,10 +128,6 @@ impl McpServerHandler {
     //     todo!()
     // }
 
-    // fn completion_complete(&self, p: CompleteRequestParams) -> Result<CompleteResult> {
-    //     todo!()
-    // }
-
     // fn resources_subscribe(&self, p: SubscribeRequestParams) -> Result<()> {
     //     todo!()
     // }
