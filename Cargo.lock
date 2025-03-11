@@ -516,8 +516,7 @@ dependencies = [
 [[package]]
 name = "jsoncall"
 version = "0.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bce4bfcfb7761a8aac9dd07b9047b1c81826e3acc211428bd9ef93a07c65e162"
+source = "git+https://github.com/frozenlib/jsoncall.git#f80763e7fb3e0a45603a0c78af44b33fa11888ce"
 dependencies = [
  "derive-ex",
  "ordered-float",

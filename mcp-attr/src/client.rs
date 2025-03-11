@@ -6,7 +6,10 @@ use jsoncall::{
     Session, SessionResult,
 };
 use serde_json::Map;
-use tokio::io::{AsyncBufRead, AsyncWrite};
+use tokio::{
+    io::{AsyncBufRead, AsyncWrite},
+    process::Command,
+};
 
 use crate::{
     PROTOCOL_VERSION,
@@ -105,6 +108,10 @@ impl McpClientBuilder {
     ) -> SessionResult<McpClient> {
         let (handler, p) = self.into_handler();
         McpClient::initialize(Session::new(handler, reader, writer), p).await
+    }
+    pub async fn build_with_command(self, command: &mut Command) -> SessionResult<McpClient> {
+        let (handler, p) = self.into_handler();
+        McpClient::initialize(Session::from_command(handler, command)?, p).await
     }
     pub async fn build_with_server(self, server: impl McpServer) -> SessionResult<McpClient> {
         let (client_handler, p) = self.into_handler();
