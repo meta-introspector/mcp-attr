@@ -460,7 +460,7 @@ impl McpServer for ExampleServer {
 
 #[tokio::test]
 async fn test_hello() -> Result<()> {
-    let client = McpClient::from_server(ExampleServer).await?;
+    let client = McpClient::with_server(ExampleServer).await?;
     let a = client
         .prompts_get(GetPromptRequestParams::new("hello"))
         .await?;

@@ -1,7 +1,7 @@
+use mcp_attr::Result;
 use mcp_attr::client::McpClient;
 use mcp_attr::schema::{CallToolResult, GetPromptResult, ReadResourceResult};
-use mcp_attr::server::{mcp_server, McpServer};
-use mcp_attr::Result;
+use mcp_attr::server::{McpServer, mcp_server};
 use tokio::test;
 
 struct MyMcpServer;
@@ -30,6 +30,6 @@ impl McpServer for MyMcpServer {
 #[test]
 async fn test() -> Result<()> {
     let server = MyMcpServer;
-    let _client = McpClient::from_server(server).await?;
+    let _client = McpClient::with_server(server).await?;
     Ok(())
 }

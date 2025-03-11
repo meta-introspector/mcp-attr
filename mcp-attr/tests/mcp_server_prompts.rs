@@ -2,13 +2,13 @@ use jsoncall::{ErrorCode, SessionResult};
 use pretty_assertions::assert_eq;
 use tokio::test;
 
+use mcp_attr::Result;
 use mcp_attr::client::McpClient;
 use mcp_attr::schema::{
     GetPromptRequestParams, GetPromptResult, ListPromptsRequestParams, ListPromptsResult, Prompt,
     PromptArgument,
 };
-use mcp_attr::server::{mcp_server, McpServer};
-use mcp_attr::Result;
+use mcp_attr::server::{McpServer, mcp_server};
 
 struct MyMcpServer;
 
@@ -80,7 +80,7 @@ impl McpServer for MyMcpServer {
 
 #[test]
 async fn list_some() -> Result<()> {
-    let client = McpClient::from_server(MyMcpServer).await?;
+    let client = McpClient::with_server(MyMcpServer).await?;
     let a = client
         .prompts_list(Some(ListPromptsRequestParams::default()))
         .await?;
@@ -91,7 +91,7 @@ async fn list_some() -> Result<()> {
 
 #[test]
 async fn list_none() -> Result<()> {
-    let client = McpClient::from_server(MyMcpServer).await?;
+    let client = McpClient::with_server(MyMcpServer).await?;
     let a = client.prompts_list(None).await?;
     let e = prompts_expected();
     assert_eq!(a, e);
@@ -116,7 +116,7 @@ fn prompts_expected() -> ListPromptsResult {
             .with_arguments(vec![PromptArgument::new("_xxx", true)]),
         Prompt::new("prompt_description").with_description("Prompt Description"),
         Prompt::new("arg_description").with_arguments(vec![
-            PromptArgument::new("arg", true).with_description("Arg description")
+            PromptArgument::new("arg", true).with_description("Arg description"),
         ]),
     ]
     .into()
@@ -124,7 +124,7 @@ fn prompts_expected() -> ListPromptsResult {
 
 #[test]
 async fn get_no_arg() -> Result<()> {
-    let client = McpClient::from_server(MyMcpServer).await?;
+    let client = McpClient::with_server(MyMcpServer).await?;
     let a = client
         .prompts_get(GetPromptRequestParams::new("no_arg"))
         .await?;
@@ -135,7 +135,7 @@ async fn get_no_arg() -> Result<()> {
 
 #[test]
 async fn get_with_name() -> Result<()> {
-    let client = McpClient::from_server(MyMcpServer).await?;
+    let client = McpClient::with_server(MyMcpServer).await?;
     let a = client
         .prompts_get(GetPromptRequestParams::new("xxx"))
         .await?;
@@ -146,7 +146,7 @@ async fn get_with_name() -> Result<()> {
 
 #[test]
 async fn get_arg_1() -> Result<()> {
-    let client = McpClient::from_server(MyMcpServer).await?;
+    let client = McpClient::with_server(MyMcpServer).await?;
     let a = client
         .prompts_get(GetPromptRequestParams::new("arg_1").with_arguments(vec![("arg_1", "world")]))
         .await?;
@@ -157,7 +157,7 @@ async fn get_arg_1() -> Result<()> {
 
 #[test]
 async fn get_arg_2() -> Result<()> {
-    let client = McpClient::from_server(MyMcpServer).await?;
+    let client = McpClient::with_server(MyMcpServer).await?;
     let a = client
         .prompts_get(
             GetPromptRequestParams::new("arg_2")
@@ -171,7 +171,7 @@ async fn get_arg_2() -> Result<()> {
 
 #[test]
 async fn get_arg_opt_some() -> Result<()> {
-    let client = McpClient::from_server(MyMcpServer).await?;
+    let client = McpClient::with_server(MyMcpServer).await?;
     let a = client
         .prompts_get(GetPromptRequestParams::new("arg_opt").with_arguments(vec![("arg_1", "aaa")]))
         .await?;
@@ -182,7 +182,7 @@ async fn get_arg_opt_some() -> Result<()> {
 
 #[test]
 async fn get_arg_opt_none() -> Result<()> {
-    let client = McpClient::from_server(MyMcpServer).await?;
+    let client = McpClient::with_server(MyMcpServer).await?;
     let a = client
         .prompts_get(GetPromptRequestParams::new("arg_opt"))
         .await?;
@@ -193,7 +193,7 @@ async fn get_arg_opt_none() -> Result<()> {
 
 #[test]
 async fn get_missing_arg() -> Result<()> {
-    let client = McpClient::from_server(MyMcpServer).await?;
+    let client = McpClient::with_server(MyMcpServer).await?;
     let a = client
         .prompts_get(GetPromptRequestParams::new("arg_1"))
         .await;
@@ -203,7 +203,7 @@ async fn get_missing_arg() -> Result<()> {
 
 #[test]
 async fn get_name_mismatch() -> Result<()> {
-    let client = McpClient::from_server(MyMcpServer).await?;
+    let client = McpClient::with_server(MyMcpServer).await?;
     let a = client
         .prompts_get(GetPromptRequestParams::new("unknown"))
         .await;

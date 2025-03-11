@@ -180,7 +180,12 @@ pub struct McpClient {
 }
 
 impl McpClient {
+    #[deprecated(since = "0.0.3", note = "use with_server instead")]
     pub async fn from_server(server: impl McpServer) -> SessionResult<Self> {
+        Self::with_server(server).await
+    }
+
+    pub async fn with_server(server: impl McpServer) -> SessionResult<Self> {
         McpClientBuilder::new().build_with_server(server).await
     }
 

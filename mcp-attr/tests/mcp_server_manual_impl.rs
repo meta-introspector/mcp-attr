@@ -24,7 +24,7 @@ impl McpServer for MyMcpServer {
 
 #[test]
 async fn completion_complete() -> Result<()> {
-    let client = McpClient::from_server(MyMcpServer).await?;
+    let client = McpClient::with_server(MyMcpServer).await?;
     let e = client
         .completion_complete(CompleteRequestParams::new(
             CompleteRequestParamsRef::new_prompt("a"),

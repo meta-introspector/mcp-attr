@@ -434,7 +434,7 @@
 //!
 //! 次のメソッドは、属性による実装を手動での実装で上書きすることができます。
 //!
-//! - [`tools_list`]
+//! - [`resources_list`]
 //!
 //! ### テスト方法
 //!
@@ -461,7 +461,7 @@
 //!
 //! #[tokio::test]
 //! async fn test_hello() -> Result<()> {
-//!     let client = McpClient::from_server(ExampleServer).await?;
+//!     let client = McpClient::with_server(ExampleServer).await?;
 //!     let a = client
 //!         .prompts_get(GetPromptRequestParams::new("hello"))
 //!         .await?;
@@ -953,7 +953,7 @@
 //!
 //! The following method can be overridden with manual implementation over the attribute-based implementation:
 //!
-//! - [`tools_list`]
+//! - [`resources_list`]
 //!
 //! ### Testing
 //!
@@ -980,7 +980,7 @@
 //!
 //! #[tokio::test]
 //! async fn test_hello() -> Result<()> {
-//!     let client = McpClient::from_server(ExampleServer).await?;
+//!     let client = McpClient::with_server(ExampleServer).await?;
 //!     let a = client
 //!         .prompts_get(GetPromptRequestParams::new("hello"))
 //!         .await?;

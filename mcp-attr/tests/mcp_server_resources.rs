@@ -115,7 +115,7 @@ impl McpServer for MyMcpServer {
 
 #[test]
 async fn list_some() -> Result<()> {
-    let client = McpClient::from_server(MyMcpServer).await?;
+    let client = McpClient::with_server(MyMcpServer).await?;
     let a = client
         .resources_list(Some(ListResourcesRequestParams::default()))
         .await?;
@@ -125,7 +125,7 @@ async fn list_some() -> Result<()> {
 }
 #[test]
 async fn list_none() -> Result<()> {
-    let client = McpClient::from_server(MyMcpServer).await?;
+    let client = McpClient::with_server(MyMcpServer).await?;
     let a = client.resources_list(None).await?;
     let e = resources_expected();
     assert_eq!(a, e);
@@ -146,7 +146,7 @@ fn resources_expected() -> ListResourcesResult {
 
 #[test]
 async fn templates_list_some() -> Result<()> {
-    let client = McpClient::from_server(MyMcpServer).await?;
+    let client = McpClient::with_server(MyMcpServer).await?;
     let a = client
         .resources_templates_list(Some(ListResourceTemplatesRequestParams::default()))
         .await?;
@@ -156,7 +156,7 @@ async fn templates_list_some() -> Result<()> {
 }
 #[test]
 async fn templates_list_none() -> Result<()> {
-    let client = McpClient::from_server(MyMcpServer).await?;
+    let client = McpClient::with_server(MyMcpServer).await?;
     let a = client.resources_templates_list(None).await?;
     let e = templates_list_expected();
     assert_eq!(a, e);
@@ -184,7 +184,7 @@ fn templates_list_expected() -> ListResourceTemplatesResult {
 
 #[test]
 async fn read_no_arg() -> Result<()> {
-    let client = McpClient::from_server(MyMcpServer).await?;
+    let client = McpClient::with_server(MyMcpServer).await?;
     let a = client
         .resources_read(ReadResourceRequestParams::new("http://localhost/a.txt"))
         .await?;
@@ -195,7 +195,7 @@ async fn read_no_arg() -> Result<()> {
 
 #[test]
 async fn read_no_arg_with_name() -> Result<()> {
-    let client = McpClient::from_server(MyMcpServer).await?;
+    let client = McpClient::with_server(MyMcpServer).await?;
     let a = client
         .resources_read(ReadResourceRequestParams::new("http://localhost/b.txt"))
         .await?;
@@ -206,7 +206,7 @@ async fn read_no_arg_with_name() -> Result<()> {
 
 #[test]
 async fn read_arg_with_name() -> Result<()> {
-    let client = McpClient::from_server(MyMcpServer).await?;
+    let client = McpClient::with_server(MyMcpServer).await?;
     let a = client
         .resources_read(ReadResourceRequestParams::new("http://localhost/b/123"))
         .await?;
@@ -217,7 +217,7 @@ async fn read_arg_with_name() -> Result<()> {
 
 #[test]
 async fn read_simple_expansion() -> Result<()> {
-    let client = McpClient::from_server(MyMcpServer).await?;
+    let client = McpClient::with_server(MyMcpServer).await?;
     let a = client
         .resources_read(ReadResourceRequestParams::new("http://localhost/se/123"))
         .await?;
@@ -228,7 +228,7 @@ async fn read_simple_expansion() -> Result<()> {
 
 #[test]
 async fn read_simple_expansion_decode() -> Result<()> {
-    let client = McpClient::from_server(MyMcpServer).await?;
+    let client = McpClient::with_server(MyMcpServer).await?;
     let a = client
         .resources_read(ReadResourceRequestParams::new(
             "http://localhost/se/%E3%81%82",
@@ -241,7 +241,7 @@ async fn read_simple_expansion_decode() -> Result<()> {
 
 #[test]
 async fn read_reserved_expansion() -> Result<()> {
-    let client = McpClient::from_server(MyMcpServer).await?;
+    let client = McpClient::with_server(MyMcpServer).await?;
     let a = client
         .resources_read(ReadResourceRequestParams::new(
             "http://localhost/re/123/456",
@@ -254,7 +254,7 @@ async fn read_reserved_expansion() -> Result<()> {
 
 #[test]
 async fn read_reserved_expansion_not_decode() -> Result<()> {
-    let client = McpClient::from_server(MyMcpServer).await?;
+    let client = McpClient::with_server(MyMcpServer).await?;
     let a = client
         .resources_read(ReadResourceRequestParams::new(
             "http://localhost/re/%E3%81%82",
@@ -266,7 +266,7 @@ async fn read_reserved_expansion_not_decode() -> Result<()> {
 }
 #[test]
 async fn read_fragment_expansion() -> Result<()> {
-    let client = McpClient::from_server(MyMcpServer).await?;
+    let client = McpClient::with_server(MyMcpServer).await?;
     let a = client
         .resources_read(ReadResourceRequestParams::new("http://localhost/ge/#123"))
         .await?;
@@ -277,7 +277,7 @@ async fn read_fragment_expansion() -> Result<()> {
 
 // #[test]
 // async fn read_simple_expansion_not_match() -> Result<()> {
-//     let client = McpClient::from_server(MyMcpServer).await?;
+//     let client = McpClient::with_server(MyMcpServer).await?;
 //     let a = client
 //         .resources_read(ReadResourceRequestParams::new(
 //             "http://localhost/se/123/456",

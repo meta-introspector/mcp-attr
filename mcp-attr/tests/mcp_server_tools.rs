@@ -80,7 +80,7 @@ impl McpServer for MyMcpServer {
 
 #[test]
 async fn list_some() -> Result<()> {
-    let client = McpClient::from_server(MyMcpServer).await?;
+    let client = McpClient::with_server(MyMcpServer).await?;
     let a = client
         .tools_list(Some(ListToolsRequestParams::default()))
         .await?;
@@ -90,7 +90,7 @@ async fn list_some() -> Result<()> {
 }
 #[test]
 async fn list_none() -> Result<()> {
-    let client = McpClient::from_server(MyMcpServer).await?;
+    let client = McpClient::with_server(MyMcpServer).await?;
     let a = client.tools_list(None).await?;
     let e = tools_expected()?;
     assert_eq!(a, e);
@@ -141,7 +141,7 @@ fn tools_expected() -> Result<ListToolsResult> {
 
 #[test]
 async fn call() -> Result<()> {
-    let client = McpClient::from_server(MyMcpServer).await?;
+    let client = McpClient::with_server(MyMcpServer).await?;
     let a = client
         .tools_call(CallToolRequestParams::new("no_arg"))
         .await?;
@@ -152,7 +152,7 @@ async fn call() -> Result<()> {
 
 #[test]
 async fn call_with_name() -> Result<()> {
-    let client = McpClient::from_server(MyMcpServer).await?;
+    let client = McpClient::with_server(MyMcpServer).await?;
     let a = client
         .tools_call(CallToolRequestParams::new("xxx").with_argument("xxx", "abc")?)
         .await?;
@@ -163,7 +163,7 @@ async fn call_with_name() -> Result<()> {
 
 #[test]
 async fn call_with_arg_1() -> Result<()> {
-    let client = McpClient::from_server(MyMcpServer).await?;
+    let client = McpClient::with_server(MyMcpServer).await?;
     let a = client
         .tools_call(CallToolRequestParams::new("arg_1").with_argument("arg_1", "abc")?)
         .await?;
@@ -174,7 +174,7 @@ async fn call_with_arg_1() -> Result<()> {
 
 #[test]
 async fn call_with_arg_2() -> Result<()> {
-    let client = McpClient::from_server(MyMcpServer).await?;
+    let client = McpClient::with_server(MyMcpServer).await?;
     let a = client
         .tools_call(
             CallToolRequestParams::new("arg_2")
@@ -189,7 +189,7 @@ async fn call_with_arg_2() -> Result<()> {
 
 #[test]
 async fn call_with_arg_opt_some() -> Result<()> {
-    let client = McpClient::from_server(MyMcpServer).await?;
+    let client = McpClient::with_server(MyMcpServer).await?;
     let a = client
         .tools_call(CallToolRequestParams::new("arg_opt").with_argument("arg_1", "abc")?)
         .await?;
@@ -200,7 +200,7 @@ async fn call_with_arg_opt_some() -> Result<()> {
 
 #[test]
 async fn call_with_arg_opt_none() -> Result<()> {
-    let client = McpClient::from_server(MyMcpServer).await?;
+    let client = McpClient::with_server(MyMcpServer).await?;
     let a = client
         .tools_call(CallToolRequestParams::new("arg_opt"))
         .await?;
@@ -211,7 +211,7 @@ async fn call_with_arg_opt_none() -> Result<()> {
 
 #[test]
 async fn call_missing_arg() -> Result<()> {
-    let client = McpClient::from_server(MyMcpServer).await?;
+    let client = McpClient::with_server(MyMcpServer).await?;
     let a = client.tools_call(CallToolRequestParams::new("arg_1")).await;
     assert_error(a, ErrorCode::INVALID_PARAMS);
     Ok(())
@@ -219,7 +219,7 @@ async fn call_missing_arg() -> Result<()> {
 
 #[test]
 async fn call_name_mismatch() -> Result<()> {
-    let client = McpClient::from_server(MyMcpServer).await?;
+    let client = McpClient::with_server(MyMcpServer).await?;
     let a = client
         .tools_call(CallToolRequestParams::new("unknown"))
         .await;
