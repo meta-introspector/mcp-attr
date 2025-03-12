@@ -1,12 +1,13 @@
 use jsoncall::{ErrorCode, SessionResult};
+use mcp_attr::Result;
 use mcp_attr::client::McpClient;
 use mcp_attr::schema::{
     CallToolRequestParams, CallToolResult, ListToolsRequestParams, ListToolsResult, Tool,
     ToolInputSchema,
 };
-use mcp_attr::server::{mcp_server, McpServer};
-use mcp_attr::Result;
+use mcp_attr::server::{McpServer, mcp_server};
 use pretty_assertions::assert_eq;
+use serde_json::Value;
 use tokio::test;
 
 struct MyMcpServer;
@@ -203,6 +204,17 @@ async fn call_with_arg_opt_none() -> Result<()> {
     let client = McpClient::with_server(MyMcpServer).await?;
     let a = client
         .tools_call(CallToolRequestParams::new("arg_opt"))
+        .await?;
+    let e: CallToolResult = "---".into();
+    assert_eq!(a, e);
+    Ok(())
+}
+
+#[test]
+async fn call_with_arg_opt_null() -> Result<()> {
+    let client = McpClient::with_server(MyMcpServer).await?;
+    let a = client
+        .tools_call(CallToolRequestParams::new("arg_opt").with_argument("arg_1", Value::Null)?)
         .await?;
     let e: CallToolResult = "---".into();
     assert_eq!(a, e);

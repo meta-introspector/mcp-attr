@@ -82,7 +82,16 @@ where
     if let Some(arguments) = arguments {
         let value = arguments.get(name);
         if let Some(value) = value {
-            return Ok(Some(serde_json::from_value(value.clone())?));
+            return match serde_json::from_value(value.clone()) {
+                Ok(v) => Ok(Some(v)),
+                Err(e) => {
+                    if value.is_null() {
+                        Ok(None)
+                    } else {
+                        Err(e.into())
+                    }
+                }
+            };
         }
     }
     Ok(None)

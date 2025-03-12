@@ -220,6 +220,10 @@ impl McpClient {
             server: None,
         })
     }
+    pub fn session(&self) -> &Session {
+        &self.session
+    }
+
     pub fn instructions(&self) -> Option<&str> {
         self.init.instructions.as_deref()
     }

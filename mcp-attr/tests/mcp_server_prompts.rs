@@ -191,6 +191,30 @@ async fn get_arg_opt_none() -> Result<()> {
     Ok(())
 }
 
+// #[test]
+// async fn get_arg_opt_null() -> Result<()> {
+//     let client = McpClient::with_server(MyMcpServer).await?;
+//     let a = client
+//         .session()
+//         .request(
+//             "prompts/get",
+//             Some(&json! {{
+//                 "name": "arg_opt",
+//                 "arguments" :json!({
+//                     "arg_1" : null
+//                 })
+//             }}),
+//         )
+//         .await;
+//     if let Err(e) = &a {
+//         eprintln!("{e:#}");
+//     }
+//     let a: GetPromptResult = a?;
+//     let e: GetPromptResult = "---".into();
+//     assert_eq!(a, e);
+//     Ok(())
+// }
+
 #[test]
 async fn get_missing_arg() -> Result<()> {
     let client = McpClient::with_server(MyMcpServer).await?;
