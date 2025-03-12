@@ -422,6 +422,28 @@
 //! }
 //! ```
 //!
+//! ### クライアント機能の呼び出し
+//!
+//! MCP サーバは [`RequestContext`] を使用してクライアント機能([`roots/list`]など)を呼び出すことができます。
+//!
+//! 属性を使用使用して実装されたメソッドで `ResuestContext` を使用するには、メソッドの引数に `&ResuestContext` 型の変数を追加します。
+//!
+//! ```rust
+//! use mcp_attr::server::{mcp_server, McpServer, RequestContext};
+//! use mcp_attr::Result;
+//!
+//! struct ExampleServer;
+//!
+//! #[mcp_server]
+//! impl McpServer for ExampleServer {
+//!   #[prompt]
+//!   async fn echo_roots(&self, context: &RequestContext) -> Result<String> {
+//!     let roots = context.list_roots().await?;
+//!     Ok(format!("{:?}", roots))
+//!   }
+//! }
+//! ```
+//!
 //! ### 手動実装
 //!
 //! 属性を使用せず `McpServer` のメソッドを直接実装することもできます。
@@ -488,6 +510,7 @@
 //! [`resources/templates/list`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/server/resources/#resource-templates
 //! [`tools/list`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/server/tools/#listing-tools
 //! [`tools/call`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/server/tools/#calling-a-tool
+//! [`roots/list`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/client/roots/#listing-roots
 //! [`FromStr`]: https://doc.rust-lang.org/std/str/trait.FromStr.html
 //! [`JsonSchema`]: https://docs.rs/schemars/latest/schemars/trait.JsonSchema.html
 //! [`DeserializeOwned`]: https://docs.rs/serde/latest/serde/de/trait.DeserializeOwned.html
@@ -516,6 +539,7 @@
 //! [`Result<impl Into<GetPromptResult>>`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.GetPromptResult.html
 //! [`Result<impl Into<ReadResourceResult>>`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.ReadResourceResult.html
 //! [`Result<impl Into<CallToolResult>>`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.CallToolResult.html
+//! [`RequestContext`]: https://docs.rs/mcp-attr/latest/mcp_attr/server/struct.RequestContext.html
 // #![include_doc("../../README.ja.md", end)]
 // #![include_doc("../../README.md", start)]
 //! # mcp-attr
