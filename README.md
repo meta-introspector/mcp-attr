@@ -280,7 +280,7 @@ struct ExampleServer;
 impl McpServer for ExampleServer {
   #[prompt]
   async fn echo_roots(&self, context: &RequestContext) -> Result<String> {
-    let roots = context.list_roots().await?;
+    let roots = context.roots_list().await?;
     Ok(format!("{:?}", roots))
   }
 }

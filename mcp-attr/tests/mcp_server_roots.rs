@@ -14,7 +14,7 @@ struct MyMcpServer;
 impl McpServer for MyMcpServer {
     #[tool]
     async fn echo_roots(&self, cx: &RequestContext) -> Result<Vec<String>> {
-        let roots = cx.list_roots().await?;
+        let roots = cx.roots_list().await?;
         let mut res = Vec::new();
         for root in roots {
             if let Some(path) = root.to_file_path() {

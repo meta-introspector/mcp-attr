@@ -461,7 +461,7 @@ impl RequestContext {
             .request("sampling/createMessage", Some(&p))
             .await
     }
-    pub async fn list_roots(&self) -> SessionResult<Vec<Root>> {
+    pub async fn roots_list(&self) -> SessionResult<Vec<Root>> {
         let res: ListRootsResult = self
             .session
             .request("roots/list", Some(&ListRootsRequestParams::default()))
