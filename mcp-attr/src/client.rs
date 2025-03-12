@@ -28,8 +28,6 @@ use crate::{
     utils::Empty,
 };
 
-pub struct McpclientSessionOptions {}
-
 pub trait SamplingHandler {
     fn create_message(
         &self,
