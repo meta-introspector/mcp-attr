@@ -28,7 +28,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! mcp-attr = "0.0.2"
+//! mcp-attr = "0.0.3"
 //! tokio = "1.43.0"
 //! ```
 //!
@@ -571,7 +571,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! mcp-attr = "0.0.2"
+//! mcp-attr = "0.0.3"
 //! tokio = "1.43.0"
 //! ```
 //!
@@ -797,14 +797,36 @@
 //!     async fn add(&self, a: String) -> Result<String> {
 //!         let something_wrong = false;
 //!         if something_wrong {
-//!             bail_public!(ErrorCode::INTERNAL_ERROR, "error message");
+//!             bail_public!(ErrorCode::INTERNAL_ERROR, "Error message");
 //!         }
 //!         if something_wrong {
-//!             bail!("error message");
+//!             bail!("Error message");
 //!         }
 //!         let a = a.parse::<i32>()?;
-//!         Ok(format!("success {a}"))
+//!         Ok(format!("Success {a}"))
 //!     }
+//! }
+//! ```
+//!
+//! ### Calling Client Features
+//!
+//! MCP servers can call client features (such as [`roots/list`]) using [`RequestContext`].
+//!
+//! To use `RequestContext` in methods implemented using attributes, add a `&RequestContext` type variable to the method arguments.
+//!
+//! ```rust
+//! use mcp_attr::server::{mcp_server, McpServer, RequestContext};
+//! use mcp_attr::Result;
+//!
+//! struct ExampleServer;
+//!
+//! #[mcp_server]
+//! impl McpServer for ExampleServer {
+//!   #[prompt]
+//!   async fn echo_roots(&self, context: &RequestContext) -> Result<String> {
+//!     let roots = context.list_roots().await?;
+//!     Ok(format!("{:?}", roots))
+//!   }
 //! }
 //! ```
 //!
@@ -1031,6 +1053,7 @@
 //! [`resources/templates/list`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/server/resources/#resource-templates
 //! [`tools/list`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/server/tools/#listing-tools
 //! [`tools/call`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/server/tools/#calling-a-tool
+//! [`roots/list`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/client/roots/#listing-roots
 //! [`FromStr`]: https://doc.rust-lang.org/std/str/trait.FromStr.html
 //! [`JsonSchema`]: https://docs.rs/schemars/latest/schemars/trait.JsonSchema.html
 //! [`DeserializeOwned`]: https://docs.rs/serde/latest/serde/de/trait.DeserializeOwned.html
@@ -1059,4 +1082,5 @@
 //! [`Result<impl Into<GetPromptResult>>`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.GetPromptResult.html
 //! [`Result<impl Into<ReadResourceResult>>`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.ReadResourceResult.html
 //! [`Result<impl Into<CallToolResult>>`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.CallToolResult.html
+//! [`RequestContext`]: https://docs.rs/mcp-attr/latest/mcp_attr/server/struct.RequestContext.html
 // #![include_doc("../../README.md", end)]

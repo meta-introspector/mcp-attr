@@ -515,8 +515,9 @@ dependencies = [
 
 [[package]]
 name = "jsoncall"
-version = "0.0.1"
-source = "git+https://github.com/frozenlib/jsoncall.git#c1109bf6e64c219f3adbdcdce1e475a15e1bb2d7"
+version = "0.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6d743b8242fe44ad1f58b5532ef320021d10c4315831661c3049bcafe7a49296"
 dependencies = [
  "derive-ex",
  "ordered-float",
@@ -537,9 +538,9 @@ checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
 
 [[package]]
 name = "libc"
-version = "0.2.170"
+version = "0.2.171"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "875b3680cb2f8f71bdcf9a30f38d48282f5d3c95cbf9b3fa57269bb5d5c06828"
+checksum = "c19937216e9d3aa9956d9bb8dfc0b0c8beb6058fc4f7a4dc4d850edf86a237d6"
 
 [[package]]
 name = "litemap"
@@ -576,7 +577,7 @@ dependencies = [
 
 [[package]]
 name = "mcp-attr"
-version = "0.0.2"
+version = "0.0.3"
 dependencies = [
  "assert-call",
  "base64",
@@ -762,9 +763,9 @@ dependencies = [
 
 [[package]]
 name = "quote"
-version = "1.0.39"
+version = "1.0.40"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c1f1914ce909e1658d9907913b4b91947430c7d9be598b15a1912935b8c04801"
+checksum = "1885c039570dc00dcb4ff087a89e185fd56bae234ddc7f056a945bf36467248d"
 dependencies = [
  "proc-macro2",
 ]
