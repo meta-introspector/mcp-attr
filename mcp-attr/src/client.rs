@@ -94,7 +94,7 @@ impl McpClientBuilder {
         if self.sampling_handler.is_some() {
             capabilities.sampling = Some(Map::new());
         }
-        let handler = MpcClientHandler {
+        let handler = McpClientHandler {
             sampling_handler: self.sampling_handler,
             roots: self.roots,
         };
@@ -132,11 +132,11 @@ impl McpClientBuilder {
     }
 }
 
-struct MpcClientHandler {
+struct McpClientHandler {
     sampling_handler: Option<Arc<dyn DynSamplingHandler>>,
     roots: Option<Vec<Root>>,
 }
-impl Handler for MpcClientHandler {
+impl Handler for McpClientHandler {
     fn hook(&self) -> Arc<dyn jsoncall::Hook> {
         Arc::new(McpCancellationHook)
     }
@@ -168,7 +168,7 @@ impl Handler for MpcClientHandler {
         }
     }
 }
-impl MpcClientHandler {
+impl McpClientHandler {
     fn ping(&self, _p: PingRequestParams) -> Result<Empty> {
         Ok(Empty::default())
     }

@@ -1,20 +1,20 @@
-# MPC Client の実装に関して
+# MCP Client の実装に関して
 
-`mod client` に含まれる MPC Client の実装に関して
+`mod client` に含まれる MCP Client の実装に関して
 （`mod client`の内容は現在未実装です）
 
 ## 目的
 
-1. `mod server` で実装された MPC Server セットで使用することで、`mod server`のテストを行えるようにする(最も重要)
-2. AI Agent の実装の為に使用できる使いやすい MPC Client 実装を提供する
+1. `mod server` で実装された MCP Server セットで使用することで、`mod server`のテストを行えるようにする(最も重要)
+2. AI Agent の実装の為に使用できる使いやすい MCP Client 実装を提供する
 
 ## 詳細
 
 ### 全体設計
 
-MPC クライアントは以下の機能を提供します：
+MCP クライアントは以下の機能を提供します：
 
-1. MPC プロトコルに準拠したクライアント実装
+1. MCP プロトコルに準拠したクライアント実装
 2. サーバーとの通信を容易にするためのインターフェース
 3. テスト用の機能（`mod server`のテストを容易にするため）
 4. AI Agent の実装を支援するためのヘルパー機能

@@ -241,8 +241,8 @@ impl<T: McpServer> DynMcpServer for T {
         cx: RequestContextAs<ListPromptsResult>,
         initialize: Arc<InitializeRequestParams>,
     ) -> Result<Response> {
-        let mut mpc_cx = RequestContext::new(&cx, initialize);
-        cx.handle_async(async move { self.prompts_list(p, &mut mpc_cx).await })
+        let mut mcp_cx = RequestContext::new(&cx, initialize);
+        cx.handle_async(async move { self.prompts_list(p, &mut mcp_cx).await })
     }
 
     fn dyn_prompts_get(
@@ -251,8 +251,8 @@ impl<T: McpServer> DynMcpServer for T {
         cx: RequestContextAs<GetPromptResult>,
         initialize: Arc<InitializeRequestParams>,
     ) -> Result<Response> {
-        let mut mpc_cx = RequestContext::new(&cx, initialize);
-        cx.handle_async(async move { self.prompts_get(p, &mut mpc_cx).await })
+        let mut mcp_cx = RequestContext::new(&cx, initialize);
+        cx.handle_async(async move { self.prompts_get(p, &mut mcp_cx).await })
     }
 
     fn dyn_resources_list(
@@ -261,8 +261,8 @@ impl<T: McpServer> DynMcpServer for T {
         cx: RequestContextAs<ListResourcesResult>,
         initialize: Arc<InitializeRequestParams>,
     ) -> Result<Response> {
-        let mut mpc_cx = RequestContext::new(&cx, initialize);
-        cx.handle_async(async move { self.resources_list(p, &mut mpc_cx).await })
+        let mut mcp_cx = RequestContext::new(&cx, initialize);
+        cx.handle_async(async move { self.resources_list(p, &mut mcp_cx).await })
     }
 
     fn dyn_resources_templates_list(
@@ -271,8 +271,8 @@ impl<T: McpServer> DynMcpServer for T {
         cx: RequestContextAs<ListResourceTemplatesResult>,
         initialize: Arc<InitializeRequestParams>,
     ) -> Result<Response> {
-        let mut mpc_cx = RequestContext::new(&cx, initialize);
-        cx.handle_async(async move { self.resources_templates_list(p, &mut mpc_cx).await })
+        let mut mcp_cx = RequestContext::new(&cx, initialize);
+        cx.handle_async(async move { self.resources_templates_list(p, &mut mcp_cx).await })
     }
 
     fn dyn_resources_read(
@@ -281,8 +281,8 @@ impl<T: McpServer> DynMcpServer for T {
         cx: RequestContextAs<ReadResourceResult>,
         initialize: Arc<InitializeRequestParams>,
     ) -> Result<Response> {
-        let mut mpc_cx = RequestContext::new(&cx, initialize);
-        cx.handle_async(async move { self.resources_read(p, &mut mpc_cx).await })
+        let mut mcp_cx = RequestContext::new(&cx, initialize);
+        cx.handle_async(async move { self.resources_read(p, &mut mcp_cx).await })
     }
 
     fn dyn_tools_list(
@@ -291,8 +291,8 @@ impl<T: McpServer> DynMcpServer for T {
         cx: RequestContextAs<ListToolsResult>,
         initialize: Arc<InitializeRequestParams>,
     ) -> Result<Response> {
-        let mut mpc_cx = RequestContext::new(&cx, initialize);
-        cx.handle_async(async move { self.tools_list(p, &mut mpc_cx).await })
+        let mut mcp_cx = RequestContext::new(&cx, initialize);
+        cx.handle_async(async move { self.tools_list(p, &mut mcp_cx).await })
     }
 
     fn dyn_tools_call(
@@ -301,8 +301,8 @@ impl<T: McpServer> DynMcpServer for T {
         cx: RequestContextAs<CallToolResult>,
         initialize: Arc<InitializeRequestParams>,
     ) -> Result<Response> {
-        let mut mpc_cx = RequestContext::new(&cx, initialize);
-        cx.handle_async(async move { self.tools_call(p, &mut mpc_cx).await })
+        let mut mcp_cx = RequestContext::new(&cx, initialize);
+        cx.handle_async(async move { self.tools_call(p, &mut mcp_cx).await })
     }
 
     fn dyn_completion_complete(
@@ -311,8 +311,8 @@ impl<T: McpServer> DynMcpServer for T {
         cx: RequestContextAs<CompleteResult>,
         initialize: Arc<InitializeRequestParams>,
     ) -> Result<Response> {
-        let mut mpc_cx = RequestContext::new(&cx, initialize);
-        cx.handle_async(async move { self.completion_complete(p, &mut mpc_cx).await })
+        let mut mcp_cx = RequestContext::new(&cx, initialize);
+        cx.handle_async(async move { self.completion_complete(p, &mut mcp_cx).await })
     }
 }
 
