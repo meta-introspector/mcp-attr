@@ -5,7 +5,7 @@
 //! [![Docs.rs](https://docs.rs/mcp-attr/badge.svg)](https://docs.rs/mcp-attr/)
 //! [![Actions Status](https://github.com/frozenlib/mcp-attr/workflows/CI/badge.svg)](https://github.com/frozenlib/mcp-attr/actions)
 //!
-//! 属性と型を活用した宣言的な記述で Model Context Protocol サーバを作るための crate
+//! 宣言的な記述で Model Context Protocol サーバを作るためのライブラリ
 //!
 //! ## 特徴
 //!
@@ -75,21 +75,21 @@
 //! }
 //! ```
 //!
-//! ### サポート状況
+//! ## サポート状況
 //!
 //! 下記のプロトコルバージョン、トランスポート、メソッドをサポートしています。
 //!
-//! #### プロトコルバージョン
+//! ### プロトコルバージョン
 //!
 //! - `2024-11-05`
 //!
-//! #### トランスポート
+//! ### トランスポート
 //!
 //! - stdio
 //!
 //! SSE は未対応です。ただし、トランスポートは拡張可能なためカスタムトランスポートを実装することは可能です。
 //!
-//! #### メソッド
+//! ### メソッド
 //!
 //! | Attribute                  | [`McpServer`] methods                                                    | Model context protocol methods                                           |
 //! | -------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
@@ -458,7 +458,7 @@
 //!
 //! - [`resources_list`]
 //!
-//! ### テスト方法
+//! ## テスト方法
 //!
 //! AI Coding Agent の登場によりテストはより重要になりました。
 //! AI はテスト無しでは、正しいコードをほとんど書く事ができませんが、テストがあればテストと修正を繰り返すことで正しいコードを書くことができるでしょう。
@@ -548,7 +548,7 @@
 //! [![Docs.rs](https://docs.rs/mcp-attr/badge.svg)](https://docs.rs/mcp-attr/)
 //! [![Actions Status](https://github.com/frozenlib/mcp-attr/workflows/CI/badge.svg)](https://github.com/frozenlib/mcp-attr/actions)
 //!
-//! A crate for creating Model Context Protocol servers using declarative descriptions with attributes and types.
+//! A library for declaratively building Model Context Protocol servers.
 //!
 //! ## Features
 //!
@@ -618,21 +618,19 @@
 //! }
 //! ```
 //!
-//! ### Support Status
+//! ## Support Status
 //!
-//! The following protocol versions, transports, and methods are supported.
-//!
-//! #### Protocol Versions
+//! ### Protocol Versions
 //!
 //! - `2024-11-05`
 //!
-//! #### Transport
+//! ### Transport
 //!
 //! - stdio
 //!
 //! SSE is not yet supported. However, transport is extensible, so custom transports can be implemented.
 //!
-//! #### Methods
+//! ### Methods
 //!
 //! | Attribute                  | [`McpServer`] methods                                                    | Model context protocol methods                                           |
 //! | -------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
@@ -1001,7 +999,7 @@
 //!
 //! - [`resources_list`]
 //!
-//! ### Testing
+//! ## Testing
 //!
 //! With the advent of AI Coding Agents, testing has become even more important.
 //! AI can hardly write correct code without tests, but with tests, it can write correct code through repeated testing and fixes.

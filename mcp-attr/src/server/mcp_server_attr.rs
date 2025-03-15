@@ -1,59 +1,96 @@
-// #[include_doc("../mcp_server_attr.md",start)]
-/// [`crate::server::McpServer`] トレイトを実装する属性マクロ
+/// A macro for implementing the [`McpServer`](crate::server::McpServer) trait.
 ///
-/// `impl McpServer for X {}` に対して付与することで [`crate::server::McpServer`] を実装する。
+/// By applying this attribute to `impl McpServer for ...` and specifying the attributes listed in the [Methods section](#methods) to methods,
+/// you can implement a Model Context Protocol server.
+///
+// #[include_doc("../../../README.md",start("### Basic Usage"))]
+/// ### Basic Usage
 ///
 /// ```rust
-/// use mcp_attr::server::{mcp_server, McpServer};
+/// use std::sync::Mutex;
 ///
-/// struct X;
+/// use mcp_attr::server::{mcp_server, McpServer, serve_stdio};
+/// use mcp_attr::Result;
+///
+/// #[tokio::main]
+/// async fn main() -> Result<()> {
+///     serve_stdio(ExampleServer(Mutex::new(ServerData { count: 0 }))).await?;
+///     Ok(())
+/// }
+///
+/// struct ExampleServer(Mutex<ServerData>);
+///
+/// struct ServerData {
+///   /// Server state
+///   count: u32,
+/// }
 ///
 /// #[mcp_server]
-/// impl McpServer for X {
-///   // ...
+/// impl McpServer for ExampleServer {
+///     /// Description sent to MCP client
+///     #[prompt]
+///     async fn example_prompt(&self) -> Result<&str> {
+///         Ok("Hello!")
+///     }
+///
+///     #[resource("my_app://files/{name}.txt")]
+///     async fn read_file(&self, name: String) -> Result<String> {
+///         Ok(format!("Content of {name}.txt"))
+///     }
+///
+///     #[tool]
+///     async fn add_count(&self, message: String) -> Result<String> {
+///         let mut state = self.0.lock().unwrap();
+///         state.count += 1;
+///         Ok(format!("Echo: {message} {}", state.count))
+///     }
 /// }
 /// ```
+// #[include_doc("../../../README.md",end("## Support Status"))]
+// #[include_doc("../../../README.md",start("### Methods"))]
+/// ### Methods
 ///
-/// 下記の属性を付与した[`Result<T>`]を返す非同期メソッド実装することで model context protocol のメソッドを実装する。
+/// | Attribute                  | [`McpServer`] methods                                                    | Model context protocol methods                                           |
+/// | -------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
+/// | [`#[prompt]`](#prompt)     | [`prompts_list`]<br>[`prompts_get`]                                      | [`prompts/list`]<br>[`prompts/get`]                                      |
+/// | [`#[resource]`](#resource) | [`resources_list`]<br>[`resources_read`]<br>[`resources_templates_list`] | [`resources/list`]<br>[`resources/read`]<br>[`resources/templates/list`] |
+/// | [`#[tool]`](#tool)         | [`tools_list`]<br>[`tools_call`]                                         | [`tools/list`]<br>[`tools/call`]                                         |
+// #[include_doc("../../../README.md",end("## Usage"))]
+// #[include_doc("../../../README.md",start("## Attribute Descriptions"))]
+/// ## Attribute Descriptions
 ///
-/// 戻り値の型 `T` は付与する属性によって異なり、下記の表で示された型とその型に変換可能な型を使用できる。
-///
-/// | attribute                  | return type                           | model context protocol methods                                       |
-/// | -------------------------- | ------------------------------------- | -------------------------------------------------------------------- |
-/// | [`#[prompt]`](#prompt)     | [`crate::schema::GetPromptResult`]    | [`prompts/list`], [`prompts/get`]                                    |
-/// | [`#[resource]`](#resource) | [`crate::schema::ReadResourceResult`] | [`resources/list`], [`resources/read`], [`resources/templates/list`] |
-/// | [`#[tool]`](#tool)         | [`crate::schema::CallToolResult`]     | [`tools/list`], [`tools/call`]                                       |
-///
-/// # `#[prompt]`
+/// ### `#[prompt]`
 ///
 /// ```rust,ignore
 /// #[prompt("name")]
 /// async fn func_name(&self) -> Result<GetPromptResult> { }
 /// ```
 ///
-/// - "name" (optional) : プロンプト名。省略した場合は関数名が使用される。
+/// - "name" (optional): Prompt name. If omitted, the function name is used.
 ///
-/// 下記のメソッドを実装する。
+/// Implements the following methods:
 ///
 /// - [`prompts_list`]
 /// - [`prompts_get`]
 ///
-/// 関数の引数はプロンプトの引数となる。引数は [`FromStr`] の実装が必要。
+/// Function arguments become prompt arguments. Arguments must implement the following trait:
 ///
-/// 引数には `#[arg("name")]` 属性を付与することで名前を指定できる。
-/// 指定しない場合は関数引数名の最初から `_` が取り除かれた名前が使用される。
+/// - [`FromStr`]: Trait for restoring values from strings
 ///
-/// 戻り値: [`Result<impl Into<crate::schema::GetPromptResult>>`](crate::schema::GetPromptResult)
+/// Arguments can be given names using the `#[arg("name")]` attribute.
+/// If not specified, the name used is the function argument name with leading `_` removed.
+///
+/// Return value: [`Result<impl Into<GetPromptResult>>`]
 ///
 /// ```rust
 /// use mcp_attr::Result;
 /// use mcp_attr::server::{mcp_server, McpServer};
 ///
-/// struct X;
+/// struct ExampleServer;
 ///
 /// #[mcp_server]
-/// impl McpServer for X {
-///   /// 関数の説明 (AI用)
+/// impl McpServer for ExampleServer {
+///   /// Function description (for AI)
 ///   #[prompt]
 ///   async fn hello(&self) -> Result<&str> {
 ///     Ok("Hello, world!")
@@ -61,9 +98,9 @@
 ///
 ///   #[prompt]
 ///   async fn echo(&self,
-///     /// 引数の説明 (AI用)
+///     /// Argument description (for AI)
 ///     a: String,
-///     /// 引数の説明 (AI用)
+///     /// Argument description (for AI)
 ///     #[arg("x")]
 ///     b: String,
 ///   ) -> Result<String> {
@@ -72,44 +109,50 @@
 /// }
 /// ```
 ///
-/// # `#[resource]`
+/// ### `#[resource]`
 ///
 /// ```rust,ignore
 /// #[resource("url_template", name = "name", mime_type = "mime_type")]
 /// async fn func_name(&self) -> Result<ReadResourceResult> { }
 /// ```
 ///
-/// - "url_template" (optional) : このメソッドで処理するリソースの URL を示す URI Template([RFC 6570])。省略した場合は全ての URL を処理する。
-/// - "name" (optional) : リソース名。省略した場合は関数名が使用される。
-/// - "mime_type" (optional) : リソースの MIME タイプ。
+/// - "url_template" (optional): URI Template ([RFC 6570]) indicating the URL of resources this method handles. If omitted, handles all URLs.
+/// - "name" (optional): Resource name. If omitted, the function name is used.
+/// - "mime_type" (optional): MIME type of the resource.
 ///
-/// 下記のメソッドを実装する。
+/// Implements the following methods:
 ///
-/// - [`resources_list`] (手動実装可)
+/// - [`resources_list`] (can be manually implemented)
 /// - [`resources_read`]
 /// - [`resources_templates_list`]
 ///
-/// 関数の引数は URI Template の変数となる。引数は [`FromStr`](std::str::FromStr) の実装が必要。
+/// Function arguments become URI Template variables. Arguments must implement the following trait:
 ///
-/// URI Template は [RFC 6570] Level2 に準拠。詳細は [`UriTemplate`] を参照のこと。
+/// - [`FromStr`]: Trait for restoring values from strings
 ///
-/// 戻り値: [`Result<impl Into<crate::schema::ReadResourceResult>>`](crate::schema::ReadResourceResult)
+/// URI Templates are specified in [RFC 6570] Level2. The following variables can be used in URI Templates:
+///
+/// - `{var}`
+/// - `{+var}`
+/// - `{#var}`
+///
+/// Return value: [`Result<impl Into<ReadResourceResult>>`]
 ///
 /// ```rust
 /// use mcp_attr::Result;
 /// use mcp_attr::server::{mcp_server, McpServer};
 ///
-/// struct X;
+/// struct ExampleServer;
 ///
 /// #[mcp_server]
-/// impl McpServer for X {
-///   /// 関数の説明 (AI用)
-/// #[resource("my_app://x/y.txt")]
+/// impl McpServer for ExampleServer {
+///   /// Function description (for AI)
+///   #[resource("my_app://x/y.txt")]
 ///   async fn file_one(&self) -> Result<String> {
 ///     Ok(format!("one file"))
 ///   }
 ///
-/// #[resource("my_app://{a}/{+b}")]
+///   #[resource("my_app://{a}/{+b}")]
 ///   async fn file_ab(&self, a: String, b: String) -> Result<String> {
 ///     Ok(format!("{a} and {b}"))
 ///   }
@@ -121,45 +164,48 @@
 /// }
 /// ```
 ///
-/// 自動実装された [`resources_list`] は `#[resource]` 属性で指定された変数の無い URL の一覧を返す。
-/// それ以外の URL を返す場合は `resources_list` を手動で実装する必要がある。
-/// `resources_list` を手動で実装した場合は、`resources_list` は自動実装されない。
+/// The automatically implemented [`resources_list`] returns a list of URLs without variables specified in the `#[resource]` attribute.
+/// If you need to return other URLs, you must manually implement `resources_list`.
+/// If `resources_list` is manually implemented, it is not automatically implemented.
 ///
-/// # `#[tool]`
+/// ### `#[tool]`
 ///
 /// ```rust,ignore
 /// #[tool("name")]
 /// async fn func_name(&self) -> Result<CallToolResult> { }
 /// ```
 ///
-/// - "name" (optional) : ツール名。省略した場合は関数名が使用される。
+/// - "name" (optional): Tool name. If omitted, the function name is used.
 ///
-/// 下記のメソッドを実装する。
+/// Implements the following methods:
 ///
 /// - [`tools_list`]
 /// - [`tools_call`]
 ///
-/// 関数の引数はツールの引数となる。引数は [`serde::de::DeserializeOwned`] + [`JsonSchema`] の実装が必要。
+/// Function arguments become tool arguments. Arguments must implement all of the following traits:
 ///
-/// 引数には `#[arg("name")]` 属性を付与することで名前を指定できる。
-/// 指定しない場合は関数引数名の最初から `_` が取り除かれた名前が使用される。
+/// - [`DeserializeOwned`]: Trait for restoring values from JSON
+/// - [`JsonSchema`]: Trait for generating JSON Schema (JSON Schema is sent to MCP Client so AI can understand argument structure)
 ///
-/// 戻り値: [`Result<impl Into<crate::schema::CallToolResult>>`](crate::schema::CallToolResult)
+/// Arguments can be given names using the `#[arg("name")]` attribute.
+/// If not specified, the name used is the function argument name with leading `_` removed.
+///
+/// Return value: [`Result<impl Into<CallToolResult>>`]
 ///
 /// ```rust
 /// use mcp_attr::Result;
 /// use mcp_attr::server::{mcp_server, McpServer};
 ///
-/// struct X;
+/// struct ExampleServer;
 ///
 /// #[mcp_server]
-/// impl McpServer for X {
-///   /// 関数の説明 (AI用)
+/// impl McpServer for ExampleServer {
+///   /// Function description (for AI)
 ///   #[tool]
 ///   async fn echo(&self,
-///     /// 引数の説明 (AI用)
+///     /// Argument description (for AI)
 ///     a: String,
-///     /// 引数の説明 (AI用)
+///     /// Argument description (for AI)
 ///     #[arg("x")]
 ///     b: String,
 ///   ) -> Result<String> {
@@ -168,14 +214,23 @@
 /// }
 /// ```
 ///
+/// ### Manual Implementation
+///
+/// You can also directly implement `McpServer` methods without using attributes.
+///
+/// Additionally, the following methods do not support implementation through attributes and must be implemented manually:
+///
+/// - [`server_info`]
+/// - [`instructions`]
+/// - [`completion_complete`]
+///
+/// The following method can be overridden with manual implementation over the attribute-based implementation:
+///
+/// - [`resources_list`]
+// #[include_doc("../../../README.md",end("## Testing"))]
+///
+/// [Model Context Protocol]: https://spec.modelcontextprotocol.io/specification/2024-11-05/
 /// [RFC 6570]: https://www.rfc-editor.org/rfc/rfc6570.html
-/// [`prompts_list`]: crate::server::McpServer::prompts_list
-/// [`prompts_get`]: crate::server::McpServer::prompts_get
-/// [`resources_list`]: crate::server::McpServer::resources_list
-/// [`resources_read`]: crate::server::McpServer::resources_read
-/// [`resources_templates_list`]: crate::server::McpServer::resources_templates_list
-/// [`tools_list`]: crate::server::McpServer::tools_list
-/// [`tools_call`]: crate::server::McpServer::tools_call
 /// [`prompts/list`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/server/prompts/#listing-prompts
 /// [`prompts/get`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/server/prompts/#getting-a-prompt
 /// [`resources/list`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/server/resources/#listing-resources
@@ -183,8 +238,34 @@
 /// [`resources/templates/list`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/server/resources/#resource-templates
 /// [`tools/list`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/server/tools/#listing-tools
 /// [`tools/call`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/server/tools/#calling-a-tool
-/// [`FromStr`]: std::str::FromStr
-/// [`JsonSchema`]: schemars::JsonSchema
-/// [`UriTemplate`]: uri_template_ex::UriTemplate
-// #[include_doc("../mcp_server_attr.md",end)]
+/// [`roots/list`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/client/roots/#listing-roots
+/// [`FromStr`]: https://doc.rust-lang.org/std/str/trait.FromStr.html
+/// [`JsonSchema`]: https://docs.rs/schemars/latest/schemars/trait.JsonSchema.html
+/// [`DeserializeOwned`]: https://docs.rs/serde/latest/serde/de/trait.DeserializeOwned.html
+/// [`McpServer`]: https://docs.rs/mcp-attr/latest/mcp_attr/server/trait.McpServer.html
+/// [`McpClient`]: https://docs.rs/mcp-attr/latest/mcp_attr/client/struct.McpClient.html
+/// [`prompts_list`]: https://docs.rs/mcp-attr/latest/mcp_attr/server/trait.McpServer.html#method.prompts_list
+/// [`prompts_get`]: https://docs.rs/mcp-attr/latest/mcp_attr/server/trait.McpServer.html#method.prompts_get
+/// [`resources_list`]: https://docs.rs/mcp-attr/latest/mcp_attr/server/trait.McpServer.html#method.resources_list
+/// [`resources_read`]: https://docs.rs/mcp-attr/latest/mcp_attr/server/trait.McpServer.html#method.resources_read
+/// [`resources_templates_list`]: https://docs.rs/mcp-attr/latest/mcp_attr/server/trait.McpServer.html#method.resources_templates_list
+/// [`tools_list`]: https://docs.rs/mcp-attr/latest/mcp_attr/client/struct.McpClient.html#method.tools_list
+/// [`tools_call`]: https://docs.rs/mcp-attr/latest/mcp_attr/client/struct.McpClient.html#method.tools_call
+/// [`GetPromptResult`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.GetPromptResult.html
+/// [`ReadResourceResult`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.ReadResourceResult.html
+/// [`CallToolResult`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.CallToolResult.html
+/// [`mcp_attr::Error`]: https://docs.rs/mcp-attr/latest/mcp_attr/struct.Error.html
+/// [`mcp_attr::Result`]: https://docs.rs/mcp-attr/latest/mcp_attr/type.Result.html
+/// [`anyhow::Error`]: https://docs.rs/anyhow/latest/anyhow/struct.Error.html
+/// [`std::error::Error + Sync + Send + 'static`]: https://doc.rust-lang.org/std/error/trait.Error.html
+/// [`anyhow::bail!`]: https://docs.rs/anyhow/latest/anyhow/macro.bail.html
+/// [`bail!`]: https://docs.rs/mcp-attr/latest/mcp_attr/macro.bail.html
+/// [`bail_public!`]: https://docs.rs/mcp-attr/latest/mcp_attr/macro.bail_public.html
+/// [`server_info`]: https://docs.rs/mcp-attr/latest/mcp_attr/server/trait.McpServer.html#method.server_info
+/// [`instructions`]: https://docs.rs/mcp-attr/latest/mcp_attr/server/trait.McpServer.html#method.instructions
+/// [`completion_complete`]: https://docs.rs/mcp-attr/latest/mcp_attr/server/trait.McpServer.html#method.completion_complete
+/// [`Result<impl Into<GetPromptResult>>`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.GetPromptResult.html
+/// [`Result<impl Into<ReadResourceResult>>`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.ReadResourceResult.html
+/// [`Result<impl Into<CallToolResult>>`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.CallToolResult.html
+/// [`RequestContext`]: https://docs.rs/mcp-attr/latest/mcp_attr/server/struct.RequestContext.html
 pub use mcp_attr_macros::mcp_server;
