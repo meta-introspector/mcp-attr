@@ -4,7 +4,7 @@
 [![Docs.rs](https://docs.rs/mcp-attr/badge.svg)](https://docs.rs/mcp-attr/)
 [![Actions Status](https://github.com/frozenlib/mcp-attr/workflows/CI/badge.svg)](https://github.com/frozenlib/mcp-attr/actions)
 
-属性と型を活用した宣言的な記述で Model Context Protocol サーバを作るための crate
+宣言的な記述で Model Context Protocol サーバを作るためのライブラリ
 
 ## 特徴
 

@@ -7,9 +7,9 @@ license = "MIT OR Apache-2.0"
 readme = "../README.md"
 repository = "https://github.com/frozenlib/mcp-attr"
 documentation = "https://docs.rs/mcp-attr/"
-keywords = ["mcp", "model-context", "AI", "server"]
+keywords = ["mcp", "model", "context", "protocol"]
 categories = ["development-tools", "api-bindings", "asynchronous"]
-description = "A crate for creating Model Context Protocol servers using declarative descriptions with attributes and types"
+description = "A library for declaratively building Model Context Protocol servers."
 rust-version = "1.85.0"
 include = [
     "/src/**",

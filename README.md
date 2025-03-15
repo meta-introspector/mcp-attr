@@ -4,7 +4,7 @@
 [![Docs.rs](https://docs.rs/mcp-attr/badge.svg)](https://docs.rs/mcp-attr/)
 [![Actions Status](https://github.com/frozenlib/mcp-attr/workflows/CI/badge.svg)](https://github.com/frozenlib/mcp-attr/actions)
 
-A crate for creating Model Context Protocol servers using declarative descriptions with attributes and types.
+A library for declaratively building Model Context Protocol servers.
 
 ## Features
 
