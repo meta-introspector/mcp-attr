@@ -74,21 +74,19 @@ impl McpServer for ExampleServer {
 }
 ```
 
-### Support Status
+## Support Status
 
-The following protocol versions, transports, and methods are supported.
-
-#### Protocol Versions
+### Protocol Versions
 
 - `2024-11-05`
 
-#### Transport
+### Transport
 
 - stdio
 
 SSE is not yet supported. However, transport is extensible, so custom transports can be implemented.
 
-#### Methods
+### Methods
 
 | Attribute                  | [`McpServer`] methods                                                    | Model context protocol methods                                           |
 | -------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
@@ -457,7 +455,7 @@ The following method can be overridden with manual implementation over the attri
 
 - [`resources_list`]
 
-### Testing
+## Testing
 
 With the advent of AI Coding Agents, testing has become even more important.
 AI can hardly write correct code without tests, but with tests, it can write correct code through repeated testing and fixes.
