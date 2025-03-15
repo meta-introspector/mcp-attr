@@ -16,7 +16,7 @@ mcp-attr は人間と AI によって簡単に [Model Context Protocol] サー�
   - 行数が少ないので人間にとって理解しやすく、AI にとってもコンテキストウィンドウの消費が少ない
   - DRY(Don't Repeat Yourself) 原則に従っているので、矛盾のあるコードを防げる
 - **型システムの活用**:
-  - MCP クライアントに送信する情報を型で表現することによりソースコード量が減って可読性が高まる
+  - MCP クライアントに送信する情報を型で表現することによりソースコード量が減り、可読性が高まる
   - 型エラーが AI によるコーディングの助けになる
 
 ## クイックスタート
@@ -425,7 +425,7 @@ impl McpServer for ExampleServer {
 
 MCP サーバは [`RequestContext`] を使用してクライアント機能([`roots/list`]など)を呼び出すことができます。
 
-属性を使用使用して実装されたメソッドで `ResuestContext` を使用するには、メソッドの引数に `&ResuestContext` 型の変数を追加します。
+属性を使用して実装されたメソッドで `ResuestContext` を使用するには、メソッドの引数に `&ResuestContext` 型の変数を追加します。
 
 ```rust
 use mcp_attr::server::{mcp_server, McpServer, RequestContext};
@@ -460,9 +460,9 @@ impl McpServer for ExampleServer {
 ## テスト方法
 
 AI Coding Agent の登場によりテストはより重要になりました。
-AI はテスト無しでは、正しいコードをほとんど書く事ができませんが、テストがあればテストと修正を繰り返すことで正しいコードを書くことができるでしょう。
+AI はテスト無しでは正しいコードをほとんど書く事ができませんが、テストがあればテストと修正を繰り返すことで正しいコードを書くことができるでしょう。
 
-mcp_attr には、プロセス内で MCP サーバと接続するテスト用の [`McpClient`] が含まれています。
+mcp_attr にはプロセス内で MCP サーバと接続するテスト用の [`McpClient`] が含まれています。
 
 ```rust
 use mcp_attr::client::McpClient;
