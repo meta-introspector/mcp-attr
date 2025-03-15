@@ -577,7 +577,7 @@ dependencies = [
 
 [[package]]
 name = "mcp-attr"
-version = "0.0.3"
+version = "0.0.4"
 dependencies = [
  "assert-call",
  "base64",
@@ -615,7 +615,7 @@ dependencies = [
 
 [[package]]
 name = "mcp-attr-macros"
-version = "0.0.1"
+version = "0.0.4"
 dependencies = [
  "proc-macro2",
  "quote",

@@ -27,7 +27,7 @@ mcp-attr は人間と AI によって簡単に [Model Context Protocol] サー�
 
 ```toml
 [dependencies]
-mcp-attr = "0.0.3"
+mcp-attr = "0.0.4"
 tokio = "1.43.0"
 ```
 
