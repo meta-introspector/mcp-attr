@@ -170,21 +170,18 @@ impl McpClientBuilder {
     /// # Example
     ///
     /// ```rust,no_run
-    /// use mcp_attr::client::McpClientBuilder;
-    /// use mcp_attr::schema::Root;
-    /// use tokio::io::{BufReader, BufWriter};
+    /// use mcp_attr::client::{McpClientBuilder, McpClient};
+    /// use tokio::process::Command;
+    /// use jsoncall::Session;
     ///
-    /// # fn example() {
-    /// let roots = vec![Root {
-    ///     name: Some("my_root".to_string()),
-    ///     uri: "/path/to/root".to_string(),
-    /// }];
+    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// let mut command = Command::new("cargo");
+    /// command.args(&["run", "--bin", "mcp-attr", "--example", "char_count"]);
     ///
-    /// let builder = McpClientBuilder::new()
-    ///     .with_expose_internals(true)
-    ///     .with_roots(roots);
-    ///
+    /// let builder = McpClientBuilder::new();
     /// let (handler, options, initialize_params) = builder.build_raw();
+    /// let client = McpClient::initialize(Session::from_command(handler, &mut command, &options)?, initialize_params).await?;
+    /// # Ok(())
     /// # }
     /// ```
     pub fn build_raw(self) -> (impl Handler, SessionOptions, InitializeRequestParams) {
