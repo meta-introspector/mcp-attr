@@ -15,7 +15,7 @@ mod transitivity;
 pub mod utils;
 
 pub use jsoncall;
-pub use jsoncall::{Error, ErrorCode, Result, bail, bail_public};
+pub use jsoncall::{Error, ErrorCode, Result, SessionError, SessionResult, bail, bail_public};
 
 const PROTOCOL_VERSION: &str = "2024-11-05";
 
