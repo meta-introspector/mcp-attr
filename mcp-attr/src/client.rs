@@ -143,7 +143,7 @@ impl McpClientBuilder {
         let (handler, options, p) = self.build_raw();
         McpClient::initialize(Session::new(handler, reader, writer, &options), p).await
     }
-    /// Launches a MCP server process with the specified command and builds a [`McpClient`] client that communicates with it using stdio transport
+    /// Launches a MCP server process with the specified command and builds [`McpClient`] that communicates with it using stdio transport
     pub async fn build_with_command(self, command: &mut Command) -> SessionResult<McpClient> {
         let (handler, options, p) = self.build_raw();
         McpClient::initialize(Session::from_command(handler, command, &options)?, p).await
