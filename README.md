@@ -312,7 +312,7 @@ If not specified, the name used is the function argument name with leading `_` r
 Return value: [`Result<impl Into<GetPromptResult>>`]
 
 ```rust
-use mcp_attr::server::Result;
+use mcp_attr::Result;
 use mcp_attr::server::{mcp_server, McpServer};
 
 struct ExampleServer;
@@ -368,7 +368,7 @@ URI Templates are specified in [RFC 6570] Level2. The following variables can be
 Return value: [`Result<impl Into<ReadResourceResult>>`]
 
 ```rust
-use mcp_attr::server::Result;
+use mcp_attr::Result;
 use mcp_attr::server::{mcp_server, McpServer};
 
 struct ExampleServer;
@@ -422,7 +422,7 @@ If not specified, the name used is the function argument name with leading `_` r
 Return value: [`Result<impl Into<CallToolResult>>`]
 
 ```rust
-use mcp_attr::server::Result;
+use mcp_attr::Result;
 use mcp_attr::server::{mcp_server, McpServer};
 
 struct ExampleServer;

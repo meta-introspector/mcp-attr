@@ -110,7 +110,7 @@ impl ToolEntry {
                 -> ::mcp_attr::Result<::mcp_attr::schema::CallToolResult> {
                     match p.name.as_str() {
                         #(#arms)*
-                        _ => return ::std::result::Result::Err(::mcp_attr::error::tool_not_found(&p.name)),
+                        _ => return ::std::result::Result::Err(::mcp_attr::server::errors::tool_not_found(&p.name)),
                     }
             }
         })

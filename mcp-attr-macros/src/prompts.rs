@@ -107,7 +107,7 @@ impl PromptEntry {
                 -> ::mcp_attr::Result<::mcp_attr::schema::GetPromptResult> {
                     match p.name.as_str() {
                         #(#arms)*
-                        _ => return ::std::result::Result::Err(::mcp_attr::error::prompt_not_found(&p.name)),
+                        _ => return ::std::result::Result::Err(::mcp_attr::server::errors::prompt_not_found(&p.name)),
                     }
                 }
         })

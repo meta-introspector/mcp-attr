@@ -291,7 +291,7 @@
 //! 戻り値: [`Result<impl Into<GetPromptResult>>`]
 //!
 //! ```rust
-//! use mcp_attr::server::Result;
+//! use mcp_attr::Result;
 //! use mcp_attr::server::{mcp_server, McpServer};
 //!
 //! struct ExampleServer;
@@ -347,7 +347,7 @@
 //! 戻り値: [`Result<impl Into<ReadResourceResult>>`]
 //!
 //! ```rust
-//! use mcp_attr::server::Result;
+//! use mcp_attr::Result;
 //! use mcp_attr::server::{mcp_server, McpServer};
 //!
 //! struct ExampleServer;
@@ -401,7 +401,7 @@
 //! 戻り値: [`Result<impl Into<CallToolResult>>`]
 //!
 //! ```rust
-//! use mcp_attr::server::Result;
+//! use mcp_attr::Result;
 //! use mcp_attr::server::{mcp_server, McpServer};
 //!
 //! struct ExampleServer;
@@ -856,7 +856,7 @@
 //! Return value: [`Result<impl Into<GetPromptResult>>`]
 //!
 //! ```rust
-//! use mcp_attr::server::Result;
+//! use mcp_attr::Result;
 //! use mcp_attr::server::{mcp_server, McpServer};
 //!
 //! struct ExampleServer;
@@ -912,7 +912,7 @@
 //! Return value: [`Result<impl Into<ReadResourceResult>>`]
 //!
 //! ```rust
-//! use mcp_attr::server::Result;
+//! use mcp_attr::Result;
 //! use mcp_attr::server::{mcp_server, McpServer};
 //!
 //! struct ExampleServer;
@@ -966,7 +966,7 @@
 //! Return value: [`Result<impl Into<CallToolResult>>`]
 //!
 //! ```rust
-//! use mcp_attr::server::Result;
+//! use mcp_attr::Result;
 //! use mcp_attr::server::{mcp_server, McpServer};
 //!
 //! struct ExampleServer;

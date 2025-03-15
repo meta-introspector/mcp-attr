@@ -1,9 +1,10 @@
+//! Module for implementing MCP server
+
 use std::{future::Future, sync::Arc};
 
-pub use jsoncall::Result;
 use jsoncall::{
     ErrorCode, Handler, Hook, NotificationContext, Params, RequestContextAs, RequestId, Response,
-    Session, SessionContext, SessionOptions, SessionResult, bail_public,
+    Result, Session, SessionContext, SessionOptions, SessionResult, bail_public,
 };
 use serde::{Serialize, de::DeserializeOwned};
 use serde_json::Map;
@@ -11,7 +12,6 @@ use serde_json::Map;
 use crate::{
     PROTOCOL_VERSION,
     common::McpCancellationHook,
-    error::{prompt_not_found, tool_not_found},
     schema::{
         CallToolRequestParams, CallToolResult, CancelledNotificationParams, ClientCapabilities,
         CompleteRequestParams, CompleteResult, CreateMessageRequestParams, CreateMessageResult,
@@ -23,9 +23,11 @@ use crate::{
         ReadResourceRequestParams, ReadResourceResult, Root, ServerCapabilities,
         ServerCapabilitiesPrompts, ServerCapabilitiesResources, ServerCapabilitiesTools,
     },
+    server::errors::{prompt_not_found, tool_not_found},
     utils::Empty,
 };
 
+pub mod errors;
 mod mcp_server_attr;
 
 pub use mcp_server_attr::mcp_server;
@@ -316,13 +318,25 @@ impl<T: McpServer> DynMcpServer for T {
     }
 }
 
+/// Trait for implementing MCP server
 pub trait McpServer: Send + Sync + 'static {
+    /// Returns `server_info` used in the [`initialize`] request response
+    ///
+    /// [`initialize`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/basic/lifecycle/#initialization
     fn server_info(&self) -> Implementation {
         Implementation::from_compile_time_env()
     }
+
+    /// Returns `instructions` used in the [`initialize`] request response
+    ///
+    /// [`initialize`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/basic/lifecycle/#initialization
     fn instructions(&self) -> Option<String> {
         None
     }
+
+    /// Returns `capabilities` used in the [`initialize`] request response
+    ///
+    /// [`initialize`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/basic/lifecycle/#initialization
     fn capabilities(&self) -> ServerCapabilities {
         ServerCapabilities {
             prompts: Some(ServerCapabilitiesPrompts {
@@ -338,6 +352,9 @@ pub trait McpServer: Send + Sync + 'static {
         }
     }
 
+    /// Handles [`prompts/list`]
+    ///
+    /// [`prompts/list`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/server/prompts/#listing-prompts
     #[allow(unused_variables)]
     fn prompts_list(
         &self,
@@ -347,6 +364,9 @@ pub trait McpServer: Send + Sync + 'static {
         async { Ok(ListPromptsResult::default()) }
     }
 
+    /// Handles [`prompts/get`]
+    ///
+    /// [`prompts/get`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/server/prompts/#getting-a-prompt
     #[allow(unused_variables)]
     fn prompts_get(
         &self,
@@ -356,6 +376,9 @@ pub trait McpServer: Send + Sync + 'static {
         async move { Err(prompt_not_found(&p.name)) }
     }
 
+    /// Handles [`resources/list`]
+    ///
+    /// [`resources/list`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/server/resources/#listing-resources
     #[allow(unused_variables)]
     fn resources_list(
         &self,
@@ -365,6 +388,9 @@ pub trait McpServer: Send + Sync + 'static {
         async { Ok(ListResourcesResult::default()) }
     }
 
+    /// Handles [`resources/templates/list`]
+    ///
+    /// [`resources/templates/list`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/server/resources/#resource-templates
     #[allow(unused_variables)]
     fn resources_templates_list(
         &self,
@@ -374,6 +400,9 @@ pub trait McpServer: Send + Sync + 'static {
         async { Ok(ListResourceTemplatesResult::default()) }
     }
 
+    /// Handles [`resources/read`]
+    ///
+    /// [`resources/read`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/server/resources/#reading-resources
     #[allow(unused_variables)]
     fn resources_read(
         &self,
@@ -383,6 +412,9 @@ pub trait McpServer: Send + Sync + 'static {
         async move { bail_public!(ErrorCode::INVALID_PARAMS, "Resource `{}` not found", p.uri) }
     }
 
+    /// Handles [`tools/list`]
+    ///
+    /// [`tools/list`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/server/tools/#listing-tools
     #[allow(unused_variables)]
     fn tools_list(
         &self,
@@ -392,6 +424,9 @@ pub trait McpServer: Send + Sync + 'static {
         async { Ok(ListToolsResult::default()) }
     }
 
+    /// Handles [`tools/call`]
+    ///
+    /// [`tools/call`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/server/tools/#calling-a-tool
     #[allow(unused_variables)]
     fn tools_call(
         &self,
@@ -401,6 +436,9 @@ pub trait McpServer: Send + Sync + 'static {
         async move { Err(tool_not_found(&p.name)) }
     }
 
+    /// Handles [`completion/complete`]
+    ///
+    /// [`completion/complete`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/server/utilities/completion/#completing-a-prompt
     #[allow(unused_variables)]
     fn completion_complete(
         &self,
@@ -410,6 +448,7 @@ pub trait McpServer: Send + Sync + 'static {
         async { Ok(CompleteResult::default()) }
     }
 
+    /// Gets the JSON RPC `Handler`
     fn into_handler(self) -> impl Handler + Send + Sync + 'static
     where
         Self: Sized + Send + Sync + 'static,
@@ -418,11 +457,13 @@ pub trait McpServer: Send + Sync + 'static {
     }
 }
 
+/// Context for retrieving request-related information and calling client features
 pub struct RequestContext {
     session: SessionContext,
     id: RequestId,
     initialize: Arc<InitializeRequestParams>,
 }
+
 impl RequestContext {
     fn new(
         cx: &RequestContextAs<impl Serialize>,
@@ -434,13 +475,22 @@ impl RequestContext {
             initialize,
         }
     }
+
+    /// Gets client information
     pub fn client_info(&self) -> &Implementation {
         &self.initialize.client_info
     }
+
+    /// Gets client capabilities
     pub fn client_capabilities(&self) -> &ClientCapabilities {
         &self.initialize.capabilities
     }
 
+    /// Notifies progress of the request associated with this context
+    ///
+    /// See [`notifications/progress`]
+    ///
+    /// [`notifications/progress`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/server/notifications/#progress-notification
     pub fn progress(&self, progress: f64, total: Option<f64>) {
         self.session
             .notification(
@@ -453,6 +503,8 @@ impl RequestContext {
             )
             .unwrap();
     }
+
+    /// Calls [`sampling/createMessage`]
     pub async fn sampling_create_message(
         &self,
         p: CreateMessageRequestParams,
@@ -461,6 +513,8 @@ impl RequestContext {
             .request("sampling/createMessage", Some(&p))
             .await
     }
+
+    /// Calls [`roots/list`]
     pub async fn roots_list(&self) -> SessionResult<Vec<Root>> {
         let res: ListRootsResult = self
             .session
@@ -470,11 +524,14 @@ impl RequestContext {
     }
 }
 
+/// Runs an MCP server using stdio transport
 pub async fn serve_stdio(server: impl McpServer) -> SessionResult<()> {
     Session::from_stdio(McpServerHandler::new(server), &SessionOptions::default())
         .wait()
         .await
 }
+
+/// Runs an MCP server using stdio transport with specified options
 pub async fn serve_stdio_with(
     server: impl McpServer,
     options: &SessionOptions,

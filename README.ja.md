@@ -290,7 +290,7 @@ async fn func_name(&self) -> Result<GetPromptResult> { }
 戻り値: [`Result<impl Into<GetPromptResult>>`]
 
 ```rust
-use mcp_attr::server::Result;
+use mcp_attr::Result;
 use mcp_attr::server::{mcp_server, McpServer};
 
 struct ExampleServer;
@@ -346,7 +346,7 @@ URI Template は [RFC 6570] Level2 で指定。下記の 3 種類の変数が使
 戻り値: [`Result<impl Into<ReadResourceResult>>`]
 
 ```rust
-use mcp_attr::server::Result;
+use mcp_attr::Result;
 use mcp_attr::server::{mcp_server, McpServer};
 
 struct ExampleServer;
@@ -400,7 +400,7 @@ async fn func_name(&self) -> Result<CallToolResult> { }
 戻り値: [`Result<impl Into<CallToolResult>>`]
 
 ```rust
-use mcp_attr::server::Result;
+use mcp_attr::Result;
 use mcp_attr::server::{mcp_server, McpServer};
 
 struct ExampleServer;

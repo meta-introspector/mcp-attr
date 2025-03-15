@@ -46,7 +46,7 @@
 /// 戻り値: [`Result<impl Into<crate::schema::GetPromptResult>>`](crate::schema::GetPromptResult)
 ///
 /// ```rust
-/// use mcp_attr::server::Result;
+/// use mcp_attr::Result;
 /// use mcp_attr::server::{mcp_server, McpServer};
 ///
 /// struct X;
@@ -96,7 +96,7 @@
 /// 戻り値: [`Result<impl Into<crate::schema::ReadResourceResult>>`](crate::schema::ReadResourceResult)
 ///
 /// ```rust
-/// use mcp_attr::server::Result;
+/// use mcp_attr::Result;
 /// use mcp_attr::server::{mcp_server, McpServer};
 ///
 /// struct X;
@@ -147,7 +147,7 @@
 /// 戻り値: [`Result<impl Into<crate::schema::CallToolResult>>`](crate::schema::CallToolResult)
 ///
 /// ```rust
-/// use mcp_attr::server::Result;
+/// use mcp_attr::Result;
 /// use mcp_attr::server::{mcp_server, McpServer};
 ///
 /// struct X;

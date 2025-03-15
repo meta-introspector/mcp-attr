@@ -1,0 +1,14 @@
+---
+description: ドキュメントの記述方法
+globs: *.rs,*.md
+alwaysApply: false
+---
+
+# 言葉の選び方
+
+- `McpServer` `McpClient` は型名を示し、 MCP Server, MCP Clientは型名ではなく、このcrateが実装するもの以外も含む、より一般的なMCPサーバやMCPクライアントの事を示します。
+
+
+# リンクの付け方
+
+- 

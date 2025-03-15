@@ -2,6 +2,8 @@
 #![allow(clippy::derivable_impls)]
 #![allow(clippy::clone_on_copy)]
 #![allow(irrefutable_let_patterns)]
+#![allow(missing_docs)]
+
 pub use jsoncall::RequestId;
 /// Error types.
 pub mod error {

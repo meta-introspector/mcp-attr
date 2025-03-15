@@ -1,3 +1,5 @@
+#![allow(missing_docs)]
+
 use jsoncall::{ErrorCode, bail_public};
 use schemars::{JsonSchema, schema::Metadata, schema_for};
 use serde::Serialize;

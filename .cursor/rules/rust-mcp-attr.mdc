@@ -1,0 +1,9 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Rustのコードの書き方
+
+- `mcp_attr` に `jsoncall` の型の別名がある場合（例: `jsoncall::Error` -> `mcp_attr::Error` ）は `mcp_attr` で定義された別名を使用します。

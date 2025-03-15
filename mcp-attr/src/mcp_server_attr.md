@@ -45,7 +45,7 @@ async fn func_name(&self) -> Result<GetPromptResult> { }
 戻り値: [`Result<impl Into<crate::schema::GetPromptResult>>`](crate::schema::GetPromptResult)
 
 ```rust
-use mcp_attr::server::Result;
+use mcp_attr::Result;
 use mcp_attr::server::{mcp_server, McpServer};
 
 struct X;
@@ -95,7 +95,7 @@ URI Template は [RFC 6570] Level2 に準拠。詳細は [`UriTemplate`] を参�
 戻り値: [`Result<impl Into<crate::schema::ReadResourceResult>>`](crate::schema::ReadResourceResult)
 
 ```rust
-use mcp_attr::server::Result;
+use mcp_attr::Result;
 use mcp_attr::server::{mcp_server, McpServer};
 
 struct X;
@@ -146,7 +146,7 @@ async fn func_name(&self) -> Result<CallToolResult> { }
 戻り値: [`Result<impl Into<crate::schema::CallToolResult>>`](crate::schema::CallToolResult)
 
 ```rust
-use mcp_attr::server::Result;
+use mcp_attr::Result;
 use mcp_attr::server::{mcp_server, McpServer};
 
 struct X;

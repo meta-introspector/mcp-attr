@@ -1,4 +1,4 @@
-use jsoncall::Result;
+use mcp_attr::Result;
 use mcp_attr::{
     schema::{ListPromptsRequestParams, ListPromptsResult, Prompt},
     server::{McpServer, RequestContext},
