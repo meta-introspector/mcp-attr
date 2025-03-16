@@ -14,10 +14,15 @@ To achieve this goal, it has the following features:
 - **Declarative Description**:
   - Use attributes like `#[mcp_server]` to describe MCP servers with minimal code
   - Fewer lines of code make it easier for humans to understand and consume less context window for AI
-  - Following the DRY (Don't Repeat Yourself) principle helps prevent inconsistent code
+- **DRY (Don't Repeat Yourself) Principle**:
+  - Declarative description ensures code follows the DRY principle
+  - Prevents AI from writing inconsistent code
 - **Leveraging the Type System**:
   - Expressing information sent to MCP clients through types reduces source code volume and improves readability
   - Type errors help AI with coding
+- **`rustfmt` Friendly**:
+  - Only uses attribute macros that can be formatted by `rustfmt`
+  - Ensures AI-generated code can be reliably formatted
 
 ## Quick Start
 
