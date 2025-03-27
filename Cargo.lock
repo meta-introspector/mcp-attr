@@ -577,7 +577,7 @@ dependencies = [
 
 [[package]]
 name = "mcp-attr"
-version = "0.0.4"
+version = "0.0.5"
 dependencies = [
  "assert-call",
  "base64",

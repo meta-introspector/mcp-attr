@@ -32,7 +32,7 @@ Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-mcp-attr = "0.0.4"
+mcp-attr = "0.0.5"
 tokio = "1.43.0"
 ```
 
