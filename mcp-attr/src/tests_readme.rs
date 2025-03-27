@@ -15,10 +15,15 @@
 //! - **宣言的な記述**:
 //!   - `#[mcp_server]` を始めとする属性を使用することで、少ない行数で MCP サーバを記述できる
 //!   - 行数が少ないので人間にとって理解しやすく、AI にとってもコンテキストウィンドウの消費が少ない
-//!   - DRY(Don't Repeat Yourself) 原則に従っているので、矛盾のあるコードを防げる
+//! - **DRY(Don't Repeat Yourself) 原則**:
+//!   - 宣言的な記述により DRY 原則に従ったコードを実現
+//!   - AI が矛盾のあるコードを書く事を防ぐ
 //! - **型システムの活用**:
 //!   - MCP クライアントに送信する情報を型で表現することによりソースコード量が減り、可読性が高まる
 //!   - 型エラーが AI によるコーディングの助けになる
+//! - **`rustfmt` との親和性**:
+//!   - マクロは `rustmft` によるフォーマットが適用される属性マクロのみを利用
+//!   - AI によって生成されたコードを確実に整形できる
 //!
 //! ## クイックスタート
 //!
@@ -101,7 +106,7 @@
 //!
 //! ### サーバの開始
 //!
-//! この crate による Mcp サーバは非同期ランタイム tokio 上で動作します。
+//! この crate による MCP サーバは非同期ランタイム tokio 上で動作します。
 //!
 //! `#[tokio::main]` で非同期ランタイムを起動し `serve_stdio` 関数に `McpServer` トレイトを実装した値を渡すことで
 //! 標準入出力をトランスポートとするサーバが起動します。
@@ -558,10 +563,15 @@
 //! - **Declarative Description**:
 //!   - Use attributes like `#[mcp_server]` to describe MCP servers with minimal code
 //!   - Fewer lines of code make it easier for humans to understand and consume less context window for AI
-//!   - Following the DRY (Don't Repeat Yourself) principle helps prevent inconsistent code
+//! - **DRY (Don't Repeat Yourself) Principle**:
+//!   - Declarative description ensures code follows the DRY principle
+//!   - Prevents AI from writing inconsistent code
 //! - **Leveraging the Type System**:
 //!   - Expressing information sent to MCP clients through types reduces source code volume and improves readability
 //!   - Type errors help AI with coding
+//! - **`rustfmt` Friendly**:
+//!   - Only uses attribute macros that can be formatted by `rustfmt`
+//!   - Ensures AI-generated code can be reliably formatted
 //!
 //! ## Quick Start
 //!
