@@ -3,8 +3,8 @@
 /// By applying this attribute to `impl McpServer for ...` and specifying the attributes listed in the [Methods section](#methods) to methods,
 /// you can implement a Model Context Protocol server.
 ///
-// #[include_doc("../../../README.md",start("### Basic Usage"))]
-/// ### Basic Usage
+// #[include_doc("../../../README.md",start("### Example"))]
+/// ### Example
 ///
 /// ```rust
 /// use std::sync::Mutex;

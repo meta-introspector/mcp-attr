@@ -36,7 +36,7 @@ mcp-attr = "0.0.4"
 tokio = "1.43.0"
 ```
 
-### Basic Usage
+### Example
 
 ```rust
 use std::sync::Mutex;
