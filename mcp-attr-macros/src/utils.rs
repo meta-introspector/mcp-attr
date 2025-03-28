@@ -10,7 +10,7 @@ use quote::{ToTokens, quote};
 use structmeta::{NameArgs, NameValue, StructMeta};
 use syn::{
     Attribute, Expr, FnArg, Ident, ImplItem, ImplItemFn, ItemFn, ItemImpl, Lit, LitStr, Meta, Pat,
-    PatLit, PatType, Path, Result, Type, parse::Parse, parse2, spanned::Spanned,
+    PatLit, PatType, Path, Result, Signature, Type, parse::Parse, parse2, spanned::Spanned,
 };
 use uri_template_ex::UriTemplate;
 
@@ -246,9 +246,9 @@ pub(crate) fn arg_name_of(typed_arg: &PatType) -> Result<String> {
     }
 }
 
-pub(crate) fn ret_span(f: &ImplItemFn) -> Span {
-    match &f.sig.output {
-        syn::ReturnType::Default => f.span(),
+pub(crate) fn ret_span(sig: &Signature, f_span: Span) -> Span {
+    match &sig.output {
+        syn::ReturnType::Default => f_span,
         syn::ReturnType::Type(_, ty) => ty.span(),
     }
 }

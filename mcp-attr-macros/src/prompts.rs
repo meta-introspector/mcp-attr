@@ -10,7 +10,7 @@ use quote::{ToTokens, quote, quote_spanned};
 use structmeta::{NameArgs, NameValue, StructMeta};
 use syn::{
     Attribute, FnArg, Ident, ImplItem, ImplItemFn, ItemFn, ItemImpl, LitStr, Pat, PatType, Path,
-    Result, Type, parse::Parse, parse2, spanned::Spanned,
+    Result, Signature, Type, Visibility, parse::Parse, parse2, spanned::Spanned,
 };
 use uri_template_ex::UriTemplate;
 
@@ -24,18 +24,20 @@ use crate::{
 };
 
 #[derive(StructMeta, Default)]
-pub(crate) struct PromptArgAttr {
+pub struct PromptArgAttr {
     #[struct_meta(unnamed)]
     name: Option<LitStr>,
 }
 
 #[derive(StructMeta, Default)]
-pub(crate) struct PromptAttr {
+pub struct PromptAttr {
     #[struct_meta(unnamed)]
     name: Option<LitStr>,
+    pub dump: bool,
 }
 
-pub(crate) struct PromptEntry {
+pub struct PromptEntry {
+    vis: Visibility,
     name: String,
     fn_ident: Ident,
     description: String,
@@ -43,32 +45,46 @@ pub(crate) struct PromptEntry {
     ret_span: Span,
 }
 impl PromptEntry {
-    pub(crate) fn new(f: &mut ImplItemFn, attr: PromptAttr) -> Result<Self> {
+    pub fn from_impl_item_fn(f: &mut ImplItemFn, attr: PromptAttr) -> Result<Self> {
+        let f_span = f.span();
+        Self::new(&f.vis, &mut f.sig, &f.attrs, f_span, attr)
+    }
+    pub fn from_item_fn(f: &mut ItemFn, attr: PromptAttr) -> Result<Self> {
+        let f_span = f.span();
+        Self::new(&f.vis, &mut f.sig, &f.attrs, f_span, attr)
+    }
+    fn new(
+        vis: &Visibility,
+        sig: &mut Signature,
+        attrs: &[Attribute],
+        f_span: Span,
+        attr: PromptAttr,
+    ) -> Result<Self> {
         let name = attr
             .name
             .map(|n| n.value())
-            .unwrap_or_else(|| f.sig.ident.to_string());
-        let description = get_doc(&f.attrs);
-        let args = f
-            .sig
+            .unwrap_or_else(|| sig.ident.to_string());
+        let description = get_doc(attrs);
+        let args = sig
             .inputs
             .iter_mut()
             .map(PromptFnArg::new)
             .collect::<Result<Vec<_>>>()?;
-        let fn_ident = f.sig.ident.clone();
+        let fn_ident = sig.ident.clone();
 
         Ok(Self {
+            vis: vis.clone(),
             name,
             fn_ident,
             description,
             args,
-            ret_span: ret_span(f),
+            ret_span: ret_span(sig, f_span),
         })
     }
     pub fn build_list(items: &[Self]) -> Result<TokenStream> {
         let prompts = items
             .iter()
-            .map(|p| p.build_list_items())
+            .map(|p| p.build_metadata())
             .collect::<Result<Vec<_>>>()?;
         Ok(quote! {
             async fn prompts_list(&self,
@@ -79,7 +95,7 @@ impl PromptEntry {
             }
         })
     }
-    fn build_list_items(&self) -> Result<TokenStream> {
+    fn build_metadata(&self) -> Result<TokenStream> {
         let name = &self.name;
         let description = descriotion_expr(&self.description);
         let args = self
@@ -127,6 +143,32 @@ impl PromptEntry {
                 {
                     return Ok(<::mcp_attr::schema::GetPromptResult as ::std::convert::From<_>>::from(Self::#fn_ident(#(#args,)*).await?));
                 }
+            }
+        })
+    }
+
+    pub fn build_route(&self) -> Result<TokenStream> {
+        let fn_ident = &self.fn_ident;
+        let route_ident = crate::route_ident(fn_ident);
+        let vis = &self.vis;
+        let args = self
+            .args
+            .iter()
+            .map(|a| a.build_get_expr())
+            .collect::<Result<Vec<_>>>()?;
+        let metadata = self.build_metadata()?;
+        Ok(quote! {
+            #vis fn #route_ident() -> ::mcp_attr::Result<::mcp_attr::server::builder::PromptDefinition> {
+                Ok(::mcp_attr::server::builder::PromptDefinition::new(
+                    #metadata,
+                    |p: &::mcp_attr::schema::GetPromptRequestParams, cx: &::mcp_attr::server::RequestContext| {
+                        Box::pin(async move {
+                            Ok(::mcp_attr::schema::GetPromptResult::from(
+                                #fn_ident(#(#args,)*).await?,
+                            ))
+                        })
+                    }
+                ))
             }
         })
     }

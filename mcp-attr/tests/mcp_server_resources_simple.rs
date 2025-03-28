@@ -1,6 +1,6 @@
-use mcp_attr::schema::TextResourceContents;
-use mcp_attr::server::{mcp_server, McpServer};
 use mcp_attr::Result;
+use mcp_attr::schema::TextResourceContents;
+use mcp_attr::server::{McpServer, mcp_server};
 
 struct MyMcpServer;
 

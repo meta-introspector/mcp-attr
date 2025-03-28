@@ -16,6 +16,13 @@ macro_rules! bail {
         return std::result::Result::Err(syn::Error::new($span, std::format!($fmt, $($arg)*)))
     };
 }
+pub fn into_macro_output(input: Result<TokenStream>) -> proc_macro::TokenStream {
+    match input {
+        Ok(s) => s,
+        Err(e) => e.to_compile_error(),
+    }
+    .into()
+}
 
 pub fn is_type(ty: &Type, ns: &[&[&str]], name: &str) -> bool {
     if let Some(a) = get_arguments_of_type(ty, ns, name) {

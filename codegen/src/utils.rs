@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use proc_macro2::TokenStream;
 use std::{
     io::Write,

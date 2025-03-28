@@ -1321,9 +1321,9 @@ checksum = "5a5f39404a5da50712a4c1eecf25e90dd62b613502b7e925fd4e4d19b5c96512"
 
 [[package]]
 name = "uri-template-ex"
-version = "0.0.1"
+version = "0.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a8b32977b21989f82dfb6cda7f04699d371a0fd6fae15b0c8263ffa9fc5e5740"
+checksum = "e1af827ae8e7d68795b5d598a3e7b92832cd9f0cc4f4101600ede8d3056fc37e"
 dependencies = [
  "parse-display",
  "regex",

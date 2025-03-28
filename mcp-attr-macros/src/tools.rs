@@ -6,17 +6,20 @@ use std::{
 };
 
 use proc_macro2::{Span, TokenStream};
-use quote::{ToTokens, quote, quote_spanned};
+use quote::{ToTokens, format_ident, quote, quote_spanned};
 use structmeta::{NameArgs, NameValue, StructMeta};
 use syn::{
     Attribute, FnArg, Ident, ImplItem, ImplItemFn, ItemFn, ItemImpl, LitStr, Pat, Path, Result,
-    Type, parse::Parse, parse2, spanned::Spanned,
+    Signature, Type, Visibility, parse::Parse, parse2, spanned::Spanned,
 };
 use uri_template_ex::UriTemplate;
 
-use crate::utils::{
-    arg_name_of, descriotion_expr, expand_option_ty, get_doc, get_only_attr, is_context, ret_span,
-    take_doc,
+use crate::{
+    route_ident,
+    utils::{
+        arg_name_of, descriotion_expr, expand_option_ty, get_doc, get_only_attr, is_context,
+        ret_span, take_doc,
+    },
 };
 use crate::{
     syn_utils::{get_element, is_path, is_type},
@@ -24,18 +27,20 @@ use crate::{
 };
 
 #[derive(StructMeta, Default)]
-pub(crate) struct ToolArgAttr {
+pub struct ToolArgAttr {
     #[struct_meta(unnamed)]
     name: Option<LitStr>,
 }
 
 #[derive(StructMeta, Default)]
-pub(crate) struct ToolAttr {
+pub struct ToolAttr {
     #[struct_meta(unnamed)]
     name: Option<LitStr>,
+    pub dump: bool,
 }
 
-pub(crate) struct ToolEntry {
+pub struct ToolEntry {
+    vis: Visibility,
     name: String,
     fn_ident: Ident,
     description: String,
@@ -43,31 +48,45 @@ pub(crate) struct ToolEntry {
     ret_span: Span,
 }
 impl ToolEntry {
-    pub(crate) fn new(f: &mut ImplItemFn, attr: ToolAttr) -> Result<Self> {
+    pub fn from_impl_item_fn(f: &mut ImplItemFn, attr: ToolAttr) -> Result<Self> {
+        let f_span = f.span();
+        Self::new(&f.vis, &mut f.sig, &f.attrs, f_span, attr)
+    }
+    pub fn from_item_fn(f: &mut ItemFn, attr: ToolAttr) -> Result<Self> {
+        let f_span = f.span();
+        Self::new(&f.vis, &mut f.sig, &f.attrs, f_span, attr)
+    }
+    fn new(
+        vis: &Visibility,
+        sig: &mut Signature,
+        attrs: &[Attribute],
+        f_span: Span,
+        attr: ToolAttr,
+    ) -> Result<Self> {
         let name = attr
             .name
             .map(|n| n.value())
-            .unwrap_or_else(|| f.sig.ident.to_string());
-        let fn_ident = f.sig.ident.clone();
-        let description = get_doc(&f.attrs);
-        let args = f
-            .sig
+            .unwrap_or_else(|| sig.ident.to_string());
+        let fn_ident = sig.ident.clone();
+        let description = get_doc(attrs);
+        let args = sig
             .inputs
             .iter_mut()
             .map(ToolFnArg::new)
             .collect::<Result<Vec<_>>>()?;
         Ok(Self {
+            vis: vis.clone(),
             name,
             fn_ident,
             description,
             args,
-            ret_span: ret_span(f),
+            ret_span: ret_span(sig, f_span),
         })
     }
     pub fn build_list(items: &[Self]) -> Result<TokenStream> {
         let items = items
             .iter()
-            .map(|t| t.build_list_items())
+            .map(|t| t.build_metadata())
             .collect::<Result<Vec<_>>>()?;
         Ok(quote! {
             async fn tools_list(&self,
@@ -78,7 +97,7 @@ impl ToolEntry {
             }
         })
     }
-    fn build_list_items(&self) -> Result<TokenStream> {
+    fn build_metadata(&self) -> Result<TokenStream> {
         let name = &self.name;
         let description = descriotion_expr(&self.description);
         let args = self
@@ -130,6 +149,31 @@ impl ToolEntry {
                 {
                     return Ok(<::mcp_attr::schema::CallToolResult as ::std::convert::From<_>>::from(Self::#fn_ident(#(#args,)*).await?));
                 }
+            }
+        })
+    }
+    pub fn build_route(&self) -> Result<TokenStream> {
+        let fn_ident = &self.fn_ident;
+        let route_ident = route_ident(fn_ident);
+        let vis = &self.vis;
+        let args = self
+            .args
+            .iter()
+            .map(|a| a.build_call())
+            .collect::<Result<Vec<_>>>()?;
+        let metadata = self.build_metadata()?;
+        Ok(quote! {
+            #vis fn #route_ident() -> ::mcp_attr::Result<::mcp_attr::server::builder::ToolDefinition> {
+                Ok(::mcp_attr::server::builder::ToolDefinition::new(
+                    #metadata,
+                    |p: &::mcp_attr::schema::CallToolRequestParams, cx: &::mcp_attr::server::RequestContext| {
+                        Box::pin(async move {
+                            Ok(::mcp_attr::schema::CallToolResult::from(
+                                #fn_ident(#(#args,)*).await?,
+                            ))
+                        })
+                    }
+                ))
             }
         })
     }

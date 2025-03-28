@@ -1,4 +1,4 @@
-use syn::{parse_quote, Attribute, Ident, Item};
+use syn::{Attribute, Ident, Item, parse_quote};
 
 #[cfg(test)]
 mod tests;

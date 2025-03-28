@@ -3,5 +3,5 @@ members = ["codegen", "mcp-attr-macros", "mcp-attr"]
 resolver = "3"
 
 [workspace.dependencies]
-uri-template-ex = "0.0.1"
+uri-template-ex = "0.0.2"
 schemars = "0.8.22"

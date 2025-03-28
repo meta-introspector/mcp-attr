@@ -7,115 +7,138 @@ use mcp_attr::schema::{
     ListResourceTemplatesRequestParams, ListResourceTemplatesResult, ListResourcesRequestParams,
     ListResourcesResult, ReadResourceRequestParams, ReadResourceResult, Resource, ResourceTemplate,
 };
-use mcp_attr::server::{McpServer, mcp_server};
+use mcp_attr::server::{McpServer, McpServerBuilder, resource, route};
 
-struct MyMcpServer;
+#[resource("http://localhost/a.txt")]
+async fn no_arg() -> Result<&'static str> {
+    Ok("abc")
+}
 
-#[mcp_server]
-impl McpServer for MyMcpServer {
-    #[resource("http://localhost/a.txt")]
-    async fn no_arg(&self) -> Result<&str> {
-        Ok("abc")
-    }
+#[resource("http://localhost/b.txt", name = "xxx")]
+async fn no_arg_with_name() -> Result<&'static str> {
+    Ok("def")
+}
 
-    #[resource("http://localhost/b.txt", name = "xxx")]
-    async fn no_arg_with_name(&self) -> Result<&str> {
-        Ok("def")
-    }
+#[resource("http://localhost/b/{a}", name = "xxx2")]
+async fn arg_with_name(a: String) -> Result<String> {
+    Ok(format!("hello {a}"))
+}
 
-    #[resource("http://localhost/b/{a}", name = "xxx2")]
-    async fn arg_with_name(&self, a: String) -> Result<String> {
+#[resource("http://localhost/c.txt", mime_type = "text/plain")]
+async fn no_arg_with_mime_type() -> Result<&'static str> {
+    Ok("def")
+}
+
+#[resource("http://localhost/c/{a}", mime_type = "text/plain")]
+async fn arg_with_mime_type(a: String) -> Result<String> {
+    Ok(format!("hello {a}"))
+}
+
+#[resource("http://localhost/se/{a}")]
+async fn simple_expansion(a: String) -> Result<String> {
+    Ok(format!("hello {a}"))
+}
+
+#[resource("http://localhost/re/{+a}")]
+async fn reserved_expansion(a: String) -> Result<String> {
+    Ok(format!("hello {a}"))
+}
+
+#[resource("http://localhost/ge/{#a}")]
+async fn fragment_expansion(a: String) -> Result<String> {
+    Ok(format!("hello {a}"))
+}
+
+#[resource("http://localhost/a2/{a}/{b}")]
+async fn arg_2(a: String, b: String) -> Result<String> {
+    Ok(format!("hello {a} {b}"))
+}
+
+#[resource("http://localhost/ao_se/{#a}")]
+async fn arg_opt_simple_expansion(a: Option<String>) -> Result<String> {
+    if let Some(a) = a {
         Ok(format!("hello {a}"))
-    }
-
-    #[resource("http://localhost/c.txt", mime_type = "text/plain")]
-    async fn no_arg_with_mime_type(&self) -> Result<&str> {
-        Ok("def")
-    }
-
-    #[resource("http://localhost/c/{a}", mime_type = "text/plain")]
-    async fn arg_with_mime_type(&self, a: String) -> Result<String> {
-        Ok(format!("hello {a}"))
-    }
-
-    #[resource("http://localhost/se/{a}")]
-    async fn simple_expansion(&self, a: String) -> Result<String> {
-        Ok(format!("hello {a}"))
-    }
-
-    #[resource("http://localhost/re/{+a}")]
-    async fn reserved_expansion(&self, a: String) -> Result<String> {
-        Ok(format!("hello {a}"))
-    }
-
-    #[resource("http://localhost/ge/{#a}")]
-    async fn fragment_expansion(&self, a: String) -> Result<String> {
-        Ok(format!("hello {a}"))
-    }
-
-    #[resource("http://localhost/a2/{a}/{b}")]
-    async fn arg_2(&self, a: String, b: String) -> Result<String> {
-        Ok(format!("hello {a} {b}"))
-    }
-
-    #[resource("http://localhost/ao_se/{#a}")]
-    async fn arg_opt_simple_expansion(&self, a: Option<String>) -> Result<String> {
-        if let Some(a) = a {
-            Ok(format!("hello {a}"))
-        } else {
-            Ok("---".to_string())
-        }
-    }
-
-    #[resource("http://localhost/ao_re/{+a}")]
-    async fn arg_opt_reserved_expansion(&self, a: Option<String>) -> Result<String> {
-        if let Some(a) = a {
-            Ok(format!("hello {a}"))
-        } else {
-            Ok("---".to_string())
-        }
-    }
-
-    #[resource("http://localhost/ao_fe/{#a}")]
-    async fn arg_opt_fragment_expansion(&self, a: Option<String>) -> Result<String> {
-        if let Some(a) = a {
-            Ok(format!("hello {a}"))
-        } else {
-            Ok("---".to_string())
-        }
-    }
-
-    #[resource("http://localhost/au/{arg}")]
-    async fn arg_name_underscore(&self, _arg: String) -> Result<String> {
+    } else {
         Ok("---".to_string())
     }
+}
 
-    #[resource("http://localhost/au2/{_arg}")]
-    async fn arg_name_underscore_2(&self, __arg: String) -> Result<String> {
+#[resource("http://localhost/ao_re/{+a}")]
+async fn arg_opt_reserved_expansion(a: Option<String>) -> Result<String> {
+    if let Some(a) = a {
+        Ok(format!("hello {a}"))
+    } else {
         Ok("---".to_string())
     }
+}
 
-    /// Resource Description
-    #[resource("http://localhost/rd")]
-    async fn resource_description(&self) -> Result<&str> {
-        Ok("resource_description")
+#[resource("http://localhost/ao_fe/{#a}")]
+async fn arg_opt_fragment_expansion(a: Option<String>) -> Result<String> {
+    if let Some(a) = a {
+        Ok(format!("hello {a}"))
+    } else {
+        Ok("---".to_string())
     }
+}
 
-    /// Resource Template Description
-    #[resource("http://localhost/rtd/{a}")]
-    async fn resource_template_description(&self, a: String) -> Result<String> {
-        Ok(format!("resource_template_description {a}"))
-    }
+#[resource("http://localhost/au/{arg}")]
+async fn arg_name_underscore(_arg: String) -> Result<String> {
+    Ok("---".to_string())
+}
 
-    #[resource]
-    async fn all_url(&self, url: String) -> Result<String> {
-        Ok(format!("--{url}---"))
-    }
+#[resource("http://localhost/au2/{_arg}")]
+async fn arg_name_underscore_2(__arg: String) -> Result<String> {
+    Ok("---".to_string())
+}
+
+/// Resource Description
+#[resource("http://localhost/rd")]
+async fn resource_description() -> Result<&'static str> {
+    Ok("resource_description")
+}
+
+/// Resource Template Description
+#[resource("http://localhost/rtd/{a}")]
+async fn resource_template_description(a: String) -> Result<String> {
+    Ok(format!("resource_template_description {a}"))
+}
+
+#[resource]
+async fn all_url(url: String) -> Result<String> {
+    Ok(format!("--{url}---"))
+}
+
+fn build_server() -> Result<impl McpServer> {
+    Ok(McpServerBuilder::new()
+        .route(route![
+            no_arg,
+            no_arg_with_name,
+            arg_with_name,
+            no_arg_with_mime_type,
+            arg_with_mime_type,
+            simple_expansion,
+            reserved_expansion,
+            fragment_expansion,
+            arg_2,
+            arg_opt_simple_expansion,
+            arg_opt_reserved_expansion,
+            arg_opt_fragment_expansion,
+            arg_name_underscore,
+            arg_name_underscore_2,
+            resource_description,
+            resource_template_description,
+            all_url
+        ])
+        .build())
+}
+
+async fn build_client() -> Result<McpClient> {
+    Ok(McpClient::with_server(build_server()?).await?)
 }
 
 #[test]
 async fn list_some() -> Result<()> {
-    let client = McpClient::with_server(MyMcpServer).await?;
+    let client = build_client().await?;
     let a = client
         .resources_list(Some(ListResourcesRequestParams::default()))
         .await?;
@@ -123,9 +146,10 @@ async fn list_some() -> Result<()> {
     assert_eq!(a, e);
     Ok(())
 }
+
 #[test]
 async fn list_none() -> Result<()> {
-    let client = McpClient::with_server(MyMcpServer).await?;
+    let client = build_client().await?;
     let a = client.resources_list(None).await?;
     let e = resources_expected();
     assert_eq!(a, e);
@@ -146,7 +170,7 @@ fn resources_expected() -> ListResourcesResult {
 
 #[test]
 async fn templates_list_some() -> Result<()> {
-    let client = McpClient::with_server(MyMcpServer).await?;
+    let client = build_client().await?;
     let a = client
         .resources_templates_list(Some(ListResourceTemplatesRequestParams::default()))
         .await?;
@@ -154,14 +178,16 @@ async fn templates_list_some() -> Result<()> {
     assert_eq!(a, e);
     Ok(())
 }
+
 #[test]
 async fn templates_list_none() -> Result<()> {
-    let client = McpClient::with_server(MyMcpServer).await?;
+    let client = build_client().await?;
     let a = client.resources_templates_list(None).await?;
     let e = templates_list_expected();
     assert_eq!(a, e);
     Ok(())
 }
+
 fn templates_list_expected() -> ListResourceTemplatesResult {
     vec![
         ResourceTemplate::new("http://localhost/b/{a}", "xxx2"),
@@ -184,7 +210,8 @@ fn templates_list_expected() -> ListResourceTemplatesResult {
 
 #[test]
 async fn read_no_arg() -> Result<()> {
-    let client = McpClient::with_server(MyMcpServer).await?;
+    let server = McpServerBuilder::new().route(route![no_arg]).build();
+    let client = McpClient::with_server(server).await?;
     let a = client
         .resources_read(ReadResourceRequestParams::new("http://localhost/a.txt"))
         .await?;
@@ -195,7 +222,10 @@ async fn read_no_arg() -> Result<()> {
 
 #[test]
 async fn read_no_arg_with_name() -> Result<()> {
-    let client = McpClient::with_server(MyMcpServer).await?;
+    let server = McpServerBuilder::new()
+        .route(route![no_arg_with_name])
+        .build();
+    let client = McpClient::with_server(server).await?;
     let a = client
         .resources_read(ReadResourceRequestParams::new("http://localhost/b.txt"))
         .await?;
@@ -206,7 +236,8 @@ async fn read_no_arg_with_name() -> Result<()> {
 
 #[test]
 async fn read_arg_with_name() -> Result<()> {
-    let client = McpClient::with_server(MyMcpServer).await?;
+    let server = McpServerBuilder::new().route(route![arg_with_name]).build();
+    let client = McpClient::with_server(server).await?;
     let a = client
         .resources_read(ReadResourceRequestParams::new("http://localhost/b/123"))
         .await?;
@@ -217,7 +248,10 @@ async fn read_arg_with_name() -> Result<()> {
 
 #[test]
 async fn read_simple_expansion() -> Result<()> {
-    let client = McpClient::with_server(MyMcpServer).await?;
+    let server = McpServerBuilder::new()
+        .route(route![simple_expansion])
+        .build();
+    let client = McpClient::with_server(server).await?;
     let a = client
         .resources_read(ReadResourceRequestParams::new("http://localhost/se/123"))
         .await?;
@@ -228,7 +262,10 @@ async fn read_simple_expansion() -> Result<()> {
 
 #[test]
 async fn read_simple_expansion_decode() -> Result<()> {
-    let client = McpClient::with_server(MyMcpServer).await?;
+    let server = McpServerBuilder::new()
+        .route(route![simple_expansion])
+        .build();
+    let client = McpClient::with_server(server).await?;
     let a = client
         .resources_read(ReadResourceRequestParams::new(
             "http://localhost/se/%E3%81%82",
@@ -241,7 +278,10 @@ async fn read_simple_expansion_decode() -> Result<()> {
 
 #[test]
 async fn read_reserved_expansion() -> Result<()> {
-    let client = McpClient::with_server(MyMcpServer).await?;
+    let server = McpServerBuilder::new()
+        .route(route![reserved_expansion])
+        .build();
+    let client = McpClient::with_server(server).await?;
     let a = client
         .resources_read(ReadResourceRequestParams::new(
             "http://localhost/re/123/456",
@@ -254,7 +294,10 @@ async fn read_reserved_expansion() -> Result<()> {
 
 #[test]
 async fn read_reserved_expansion_not_decode() -> Result<()> {
-    let client = McpClient::with_server(MyMcpServer).await?;
+    let server = McpServerBuilder::new()
+        .route(route![reserved_expansion])
+        .build();
+    let client = McpClient::with_server(server).await?;
     let a = client
         .resources_read(ReadResourceRequestParams::new(
             "http://localhost/re/%E3%81%82",
@@ -264,9 +307,13 @@ async fn read_reserved_expansion_not_decode() -> Result<()> {
     assert_eq!(a, e);
     Ok(())
 }
+
 #[test]
 async fn read_fragment_expansion() -> Result<()> {
-    let client = McpClient::with_server(MyMcpServer).await?;
+    let server = McpServerBuilder::new()
+        .route(route![fragment_expansion])
+        .build();
+    let client = McpClient::with_server(server).await?;
     let a = client
         .resources_read(ReadResourceRequestParams::new("http://localhost/ge/#123"))
         .await?;
@@ -274,29 +321,3 @@ async fn read_fragment_expansion() -> Result<()> {
     assert_eq!(a, e);
     Ok(())
 }
-
-// #[test]
-// async fn read_simple_expansion_not_match() -> Result<()> {
-//     let client = McpClient::with_server(MyMcpServer).await?;
-//     let a = client
-//         .resources_read(ReadResourceRequestParams::new(
-//             "http://localhost/se/123/456",
-//         ))
-//         .await;
-//     assert_error(a, ErrorCode::INVALID_PARAMS);
-//     Ok(())
-// }
-
-// #[track_caller]
-// fn assert_error<T: std::fmt::Debug>(a: SessionResult<T>, code: ErrorCode) {
-//     match a {
-//         Ok(_) => panic!("expected error.\n{a:#?}"),
-//         Err(e) => {
-//             if let Some(e) = e.error_object() {
-//                 assert_eq!(e.code, code, "{e:#?}");
-//             } else {
-//                 panic!("no error object\n{e:#?}");
-//             }
-//         }
-//     }
-// }

@@ -1,5 +1,5 @@
 use quote::ToTokens;
-use syn::{parse_quote, Ident};
+use syn::{Ident, parse_quote};
 
 #[test]
 fn test_add_derive_to_struct() -> syn::Result<()> {

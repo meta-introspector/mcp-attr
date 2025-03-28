@@ -1,7 +1,7 @@
 use mcp_attr::{
-    schema::{ListResourcesRequestParams, ListResourcesResult, Resource},
-    server::{mcp_server, McpServer, RequestContext},
     Result,
+    schema::{ListResourcesRequestParams, ListResourcesResult, Resource},
+    server::{McpServer, RequestContext, mcp_server},
 };
 
 struct MyMcpServer;

@@ -5,16 +5,20 @@ use std::{
     str::FromStr,
 };
 
-use proc_macro2::TokenStream;
-use quote::{ToTokens, quote};
+use proc_macro2::{Span, TokenStream};
+use quote::{ToTokens, format_ident, quote};
 use structmeta::{NameArgs, NameValue, StructMeta};
 use syn::{
     Attribute, Error, FnArg, Ident, ImplItem, ImplItemFn, ItemFn, ItemImpl, LitStr, Pat, Path,
-    Result, Type, parse::Parse, parse2, spanned::Spanned,
+    Result, Token, Type,
+    parse::{Parse, ParseStream},
+    parse2,
+    punctuated::Punctuated,
+    spanned::Spanned,
 };
 use uri_template_ex::UriTemplate;
 
-use syn_utils::{get_element, is_path, is_type};
+use syn_utils::{get_element, into_macro_output, is_path, is_type};
 use utils::{get_trait_path, is_defined};
 
 use crate::prompts::{PromptAttr, PromptEntry};
@@ -37,7 +41,7 @@ pub fn mcp_server(
 ) -> proc_macro::TokenStream {
     let mut item: TokenStream = item.into();
     let mut es = Vec::new();
-    match build(attr.into(), item.clone(), &mut es) {
+    match build_mcp_server(attr.into(), item.clone(), &mut es) {
         Ok(mut s) => {
             for e in es {
                 s.extend(e.to_compile_error());
@@ -49,7 +53,40 @@ pub fn mcp_server(
     .into()
 }
 
-fn build(attr: TokenStream, item: TokenStream, es: &mut Vec<Error>) -> Result<TokenStream> {
+#[proc_macro]
+pub fn route(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    into_macro_output(build_route(item.into()))
+}
+
+#[proc_macro_attribute]
+pub fn tool(
+    attr: proc_macro::TokenStream,
+    item: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    into_macro_output(build_tool(attr.into(), item.into()))
+}
+
+#[proc_macro_attribute]
+pub fn resource(
+    attr: proc_macro::TokenStream,
+    item: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    into_macro_output(build_resource(attr.into(), item.into()))
+}
+
+#[proc_macro_attribute]
+pub fn prompt(
+    attr: proc_macro::TokenStream,
+    item: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    into_macro_output(build_prompt(attr.into(), item.into()))
+}
+
+fn build_mcp_server(
+    attr: TokenStream,
+    item: TokenStream,
+    es: &mut Vec<Error>,
+) -> Result<TokenStream> {
     let mut item_impl: ItemImpl = parse2(item)?;
     let mut attr: McpAttr = parse2(attr)?;
     let trait_path = get_trait_path(&item_impl)?.clone();
@@ -93,7 +130,7 @@ fn build(attr: TokenStream, item: TokenStream, es: &mut Vec<Error>) -> Result<To
         }
     };
     if attr.dump {
-        panic!("// ===== start generated code =====\n{ts}\n// ===== end generated code =====\n");
+        dump_code(ts);
     }
     Ok(ts)
 }
@@ -118,9 +155,13 @@ impl McpBuilder {
                 return Ok(false);
             };
             match attr {
-                ItemAttr::Prompt(attr) => self.prompts.push(PromptEntry::new(f, attr)?),
-                ItemAttr::Resource(attr) => self.resources.push(ResourceEntry::new(f, attr)?),
-                ItemAttr::Tool(attr) => self.tools.push(ToolEntry::new(f, attr)?),
+                ItemAttr::Prompt(attr) => {
+                    self.prompts.push(PromptEntry::from_impl_item_fn(f, attr)?)
+                }
+                ItemAttr::Resource(attr) => self
+                    .resources
+                    .push(ResourceEntry::from_impl_item_fn(f, attr)?),
+                ItemAttr::Tool(attr) => self.tools.push(ToolEntry::from_impl_item_fn(f, attr)?),
             }
             return Ok(true);
         }
@@ -235,4 +276,78 @@ enum ItemAttr {
     Prompt(PromptAttr),
     Resource(ResourceAttr),
     Tool(ToolAttr),
+}
+
+fn build_route(item: TokenStream) -> Result<TokenStream> {
+    struct PathList(Punctuated<Path, Token![,]>);
+    impl Parse for PathList {
+        fn parse(input: ParseStream) -> Result<Self> {
+            Ok(Self(Punctuated::parse_terminated(input)?))
+        }
+    }
+    let mut path_list: PathList = parse2(item)?;
+    let mut exprs = Vec::new();
+    for mut path in path_list.0 {
+        let last = path.segments.last_mut().unwrap();
+        let fn_ident = last.ident.clone();
+        last.ident = route_ident(&fn_ident);
+        last.ident.set_span(Span::call_site());
+        exprs.push(quote! {
+            {
+                let _dummy = #fn_ident; // Ensure rust-analyzer can rename the function.
+                ::std::convert::Into::<::mcp_attr::server::builder::Route>::into(#path()?)
+            }
+        });
+    }
+    Ok(quote! {
+        [#(#exprs),*]
+    })
+}
+fn route_ident(ident: &Ident) -> Ident {
+    format_ident!("__route_of_{}", ident)
+}
+fn build_tool(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
+    let mut f: ItemFn = parse2(item)?;
+    let attr: ToolAttr = parse2(attr)?;
+    let dump = attr.dump;
+    let e = ToolEntry::from_item_fn(&mut f, attr)?;
+    let ret = e.build_route();
+    Ok(make_extend(f, ret, dump))
+}
+
+fn build_resource(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
+    let mut f: ItemFn = parse2(item)?;
+    let attr: ResourceAttr = parse2(attr)?;
+    let dump = attr.dump;
+    let e = ResourceEntry::from_item_fn(&mut f, attr)?;
+    let ret = e.build_route();
+    Ok(make_extend(f, ret, dump))
+}
+
+fn build_prompt(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
+    let mut f: ItemFn = parse2(item)?;
+    let attr: PromptAttr = parse2(attr)?;
+    let dump = attr.dump;
+    let e = PromptEntry::from_item_fn(&mut f, attr)?;
+    let ret = e.build_route();
+    Ok(make_extend(f, ret, dump))
+}
+
+fn make_extend(source: impl ToTokens, code: Result<TokenStream>, dump: bool) -> TokenStream {
+    let code = match code {
+        Ok(code) => {
+            if dump {
+                dump_code(code);
+            }
+            code
+        }
+        Err(e) => e.to_compile_error(),
+    };
+    quote! {
+        #source
+        #code
+    }
+}
+fn dump_code(code: TokenStream) -> ! {
+    panic!("// ===== start generated code =====\n{code}\n// ===== end generated code =====\n");
 }

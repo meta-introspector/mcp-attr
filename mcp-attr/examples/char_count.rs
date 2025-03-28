@@ -1,8 +1,8 @@
 #![windows_subsystem = "windows"]
 
 use mcp_attr::{
-    server::{mcp_server, serve_stdio, McpServer},
     Result,
+    server::{McpServer, mcp_server, serve_stdio},
 };
 
 #[tokio::main]

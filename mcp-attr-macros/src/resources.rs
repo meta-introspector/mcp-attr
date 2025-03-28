@@ -10,7 +10,7 @@ use quote::{ToTokens, quote, quote_spanned};
 use structmeta::{NameArgs, NameValue, StructMeta};
 use syn::{
     Attribute, FnArg, Ident, ImplItem, ImplItemFn, ItemFn, ItemImpl, LitStr, Pat, Path, Result,
-    Type, parse::Parse, parse2, spanned::Spanned,
+    Signature, Type, Visibility, parse::Parse, parse2, spanned::Spanned,
 };
 use uri_template_ex::UriTemplate;
 
@@ -24,14 +24,16 @@ use crate::{
 };
 
 #[derive(StructMeta, Default)]
-pub(crate) struct ResourceAttr {
+pub struct ResourceAttr {
     #[struct_meta(unnamed)]
     uri: Option<LitStr>,
     name: Option<LitStr>,
     mime_type: Option<LitStr>,
+    pub dump: bool,
 }
 
-pub(crate) struct ResourceEntry {
+pub struct ResourceEntry {
+    vis: Visibility,
     uri: Option<UriTemplate>,
     name: String,
     mime_type: Option<String>,
@@ -42,7 +44,21 @@ pub(crate) struct ResourceEntry {
 }
 
 impl ResourceEntry {
-    pub(crate) fn new(f: &mut ImplItemFn, attr: ResourceAttr) -> Result<Self> {
+    pub fn from_impl_item_fn(f: &mut ImplItemFn, attr: ResourceAttr) -> Result<Self> {
+        let f_span = f.span();
+        Self::new(&f.vis, &mut f.sig, &f.attrs, f_span, attr)
+    }
+    pub fn from_item_fn(f: &mut ItemFn, attr: ResourceAttr) -> Result<Self> {
+        let f_span = f.span();
+        Self::new(&f.vis, &mut f.sig, &f.attrs, f_span, attr)
+    }
+    fn new(
+        vis: &Visibility,
+        sig: &mut Signature,
+        attrs: &[Attribute],
+        f_span: Span,
+        attr: ResourceAttr,
+    ) -> Result<Self> {
         let mut name = None;
         let mut uri = None;
         let mut mime_type = None;
@@ -57,23 +73,23 @@ impl ResourceEntry {
             name = attr.name.map(|n| n.value());
             mime_type = attr.mime_type.map(|m| m.value());
         }
-        let name = name.unwrap_or_else(|| f.sig.ident.to_string());
-        let description = take_doc(&mut f.attrs);
-        let args = f
-            .sig
+        let name = name.unwrap_or_else(|| sig.ident.to_string());
+        let description = take_doc(&mut attrs.to_vec());
+        let args = sig
             .inputs
             .iter()
             .map(|f| ResourceFnArg::new(f, &uri))
             .collect::<Result<Vec<_>>>()?;
-        let fn_ident = f.sig.ident.clone();
+        let fn_ident = sig.ident.clone();
         Ok(Self {
+            vis: vis.clone(),
             name,
             uri,
             mime_type,
             description,
             args,
             fn_ident,
-            ret_span: ret_span(f),
+            ret_span: ret_span(sig, f_span),
         })
     }
     pub fn build_list(items: &[Self]) -> Result<TokenStream> {
@@ -167,6 +183,59 @@ impl ResourceEntry {
                 }
         })
     }
+
+    pub fn build_route(&self) -> Result<TokenStream> {
+        let fn_ident = &self.fn_ident;
+        let route_ident = crate::route_ident(fn_ident);
+        let vis = &self.vis;
+        let args = self
+            .args
+            .iter()
+            .map(|a| a.build_read())
+            .collect::<Result<Vec<_>>>()?;
+        let name = &self.name;
+        let description = if !self.description.is_empty() {
+            let description = &self.description;
+            quote! {
+                .with_description(#description)
+            }
+        } else {
+            quote!()
+        };
+        let mime_type = if let Some(mime_type) = &self.mime_type {
+            quote! {
+                .with_mime_type(#mime_type)
+            }
+        } else {
+            quote!()
+        };
+        let uri = opt_expr(&self.uri, |uri| {
+            let uri = uri.to_string();
+            quote!(#uri)
+        });
+        Ok(quote! {
+            #[allow(clippy::needless_question_mark)]
+            #vis fn #route_ident() -> ::mcp_attr::Result<::mcp_attr::server::builder::ResourceDefinition> {
+                Ok(::mcp_attr::server::builder::ResourceDefinition::new(
+                    #name,
+                    #uri,
+                    |
+                        p: &::mcp_attr::schema::ReadResourceRequestParams,
+                        _captures: &::mcp_attr::helpers::uri_template_ex::Captures,
+                        cx: &::mcp_attr::server::RequestContext | {
+                        Box::pin(async move {
+                            Ok(::mcp_attr::schema::ReadResourceResult::from(
+                                #fn_ident(#(#args,)*).await?,
+                            ))
+                        })
+                    }
+                )?
+                #description
+                #mime_type)
+            }
+        })
+    }
+
     fn build_read_stmt(&self) -> Result<Option<TokenStream>> {
         let description = descriotion_expr(&self.description);
         let name = &self.name;
@@ -185,6 +254,7 @@ impl ResourceEntry {
                     static URI_TEMPLATE : ::std::sync::LazyLock<::mcp_attr::helpers::uri_template_ex::UriTemplate> =
                         ::std::sync::LazyLock::new(|| ::mcp_attr::helpers::uri_template_ex::UriTemplate::new(#uri).unwrap());
                     if let Some(_captures) = URI_TEMPLATE.captures(&p.uri) {
+                        let _captures = &_captures;
                         #[allow(clippy::useless_conversion)]
                         {
                             return Ok(<::mcp_attr::schema::ReadResourceResult as ::std::convert::From<_>>::from(Self::#fn_ident(#(#args,)*).await?));
@@ -264,9 +334,9 @@ impl UriVar {
         let ty = &self.ty;
         let span = self.span;
         Ok(if self.required {
-            quote_spanned!(span=> ::mcp_attr::helpers::parse_resource_arg::<#ty>(&_captures, #index, #name)?)
+            quote_spanned!(span=> ::mcp_attr::helpers::parse_resource_arg::<#ty>(_captures, #index, #name)?)
         } else {
-            quote_spanned!(span=> ::mcp_attr::helpers::parse_resource_arg_opt::<#ty>(&_captures, #index, #name)?)
+            quote_spanned!(span=> ::mcp_attr::helpers::parse_resource_arg_opt::<#ty>(_captures, #index, #name)?)
         })
     }
 }

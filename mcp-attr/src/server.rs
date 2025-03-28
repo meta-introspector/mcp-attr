@@ -26,9 +26,11 @@ use crate::{
     utils::{Empty, ProtocolVersion},
 };
 
+pub mod builder;
 pub mod errors;
 mod mcp_server_attr;
 
+pub use builder::{McpServerBuilder, prompt, resource, route, tool};
 pub use mcp_server_attr::mcp_server;
 
 struct SessionData {
