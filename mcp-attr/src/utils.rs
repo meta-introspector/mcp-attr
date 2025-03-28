@@ -3,6 +3,7 @@
 use std::borrow::Cow;
 
 use base64::Engine;
+use parse_display::Display;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::{Map, Value};
 
@@ -138,6 +139,20 @@ impl<'de, T: TagData> Deserialize<'de> for Tag<T> {
             return Err(serde::de::Error::custom(format!("expected tag {}", T::TAG)));
         }
         Ok(Tag(T::default()))
+    }
+}
+
+#[derive(
+    Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Display, Clone, Copy,
+)]
+pub struct ProtocolVersion(&'static str);
+
+impl ProtocolVersion {
+    pub const LATEST: Self = Self::V_2024_11_05;
+    pub const V_2024_11_05: Self = Self("2024-11-05");
+
+    pub fn as_str(&self) -> &'static str {
+        self.0
     }
 }
 

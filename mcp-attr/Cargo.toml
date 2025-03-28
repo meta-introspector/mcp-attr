@@ -40,6 +40,7 @@ schemars = { workspace = true }
 jsoncall = "0.0.3"
 mcp-attr-macros = { version = "=0.0.4", path = "../mcp-attr-macros" }
 uri-template-ex = { workspace = true }
+parse-display = "0.10.0"
 
 [dev-dependencies]
 tokio = { version = "1.44.0", "features" = ["sync", "rt", "time"] }

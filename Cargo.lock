@@ -586,6 +586,7 @@ dependencies = [
  "jsoncall",
  "mcp-attr-macros",
  "ordered-float",
+ "parse-display",
  "pretty_assertions",
  "schemars",
  "serde",

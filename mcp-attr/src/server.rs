@@ -10,7 +10,6 @@ use serde::{Serialize, de::DeserializeOwned};
 use serde_json::Map;
 
 use crate::{
-    PROTOCOL_VERSION,
     common::McpCancellationHook,
     schema::{
         CallToolRequestParams, CallToolResult, CancelledNotificationParams, ClientCapabilities,
@@ -24,7 +23,7 @@ use crate::{
         ServerCapabilitiesPrompts, ServerCapabilitiesResources, ServerCapabilitiesTools,
     },
     server::errors::{prompt_not_found, tool_not_found},
-    utils::Empty,
+    utils::{Empty, ProtocolVersion},
 };
 
 pub mod errors;
@@ -34,7 +33,7 @@ pub use mcp_server_attr::mcp_server;
 
 struct SessionData {
     initialize: InitializeRequestParams,
-    protocol_version: String,
+    protocol_version: ProtocolVersion,
 }
 
 struct McpServerHandler {
@@ -103,12 +102,9 @@ impl McpServerHandler {
 }
 impl McpServerHandler {
     fn initialize(&mut self, p: InitializeRequestParams) -> Result<InitializeResult> {
-        // if p.protocol_version != PROTOCOL_VERSION {
-        //     bail_public!(ErrorCode::INVALID_PARAMS, "Unsupported protocol version");
-        // }
         self.data = Some(Arc::new(SessionData {
             initialize: p,
-            protocol_version: PROTOCOL_VERSION.to_string(),
+            protocol_version: ProtocolVersion::LATEST,
         }));
         Ok(self.server.initialize_result())
     }
@@ -241,7 +237,7 @@ impl<T: McpServer> DynMcpServer for T {
             capabilities: self.capabilities(),
             instructions: self.instructions(),
             meta: Map::new(),
-            protocol_version: PROTOCOL_VERSION.to_string(),
+            protocol_version: ProtocolVersion::LATEST.to_string(),
             server_info: self.server_info(),
         }
     }
@@ -492,8 +488,8 @@ impl RequestContext {
     }
 
     /// Protocol version of the current session
-    pub fn protocol_version(&self) -> &str {
-        &self.data.protocol_version
+    pub fn protocol_version(&self) -> ProtocolVersion {
+        self.data.protocol_version
     }
 
     /// Notifies progress of the request associated with this context

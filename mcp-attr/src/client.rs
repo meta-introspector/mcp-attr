@@ -14,7 +14,6 @@ use tokio::{
 };
 
 use crate::{
-    PROTOCOL_VERSION,
     common::McpCancellationHook,
     schema::{
         CallToolRequestParams, CallToolResult, CancelledNotificationParams, ClientCapabilities,
@@ -27,7 +26,7 @@ use crate::{
         ReadResourceRequestParams, ReadResourceResult, Root,
     },
     server::McpServer,
-    utils::Empty,
+    utils::{Empty, ProtocolVersion},
 };
 
 /// Trait for implementing [client features]
@@ -204,7 +203,7 @@ impl McpClientBuilder {
         let p = InitializeRequestParams {
             capabilities,
             client_info: self.client_info,
-            protocol_version: PROTOCOL_VERSION.to_string(),
+            protocol_version: ProtocolVersion::LATEST.to_string(),
         };
         (handler, options, p)
     }
