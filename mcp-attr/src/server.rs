@@ -103,9 +103,9 @@ impl McpServerHandler {
 }
 impl McpServerHandler {
     fn initialize(&mut self, p: InitializeRequestParams) -> Result<InitializeResult> {
-        if p.protocol_version != PROTOCOL_VERSION {
-            bail_public!(ErrorCode::INVALID_PARAMS, "Unsupported protocol version");
-        }
+        // if p.protocol_version != PROTOCOL_VERSION {
+        //     bail_public!(ErrorCode::INVALID_PARAMS, "Unsupported protocol version");
+        // }
         self.data = Some(Arc::new(SessionData {
             initialize: p,
             protocol_version: PROTOCOL_VERSION.to_string(),
