@@ -498,7 +498,7 @@ impl RequestContext {
     ///
     /// See [`notifications/progress`]
     ///
-    /// [`notifications/progress`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/server/notifications/#progress-notification
+    /// [`notifications/progress`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/basic/utilities/progress/
     pub fn progress(&self, progress: f64, total: Option<f64>) {
         self.session
             .notification(
@@ -513,6 +513,8 @@ impl RequestContext {
     }
 
     /// Calls [`sampling/createMessage`]
+    ///
+    /// [`sampling/createMessage`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/client/sampling/
     pub async fn sampling_create_message(
         &self,
         p: CreateMessageRequestParams,
@@ -523,6 +525,8 @@ impl RequestContext {
     }
 
     /// Calls [`roots/list`]
+    ///
+    /// [`roots/list`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/client/roots/
     pub async fn roots_list(&self) -> SessionResult<Vec<Root>> {
         let res: ListRootsResult = self
             .session
