@@ -148,8 +148,9 @@ impl<'de, T: TagData> Deserialize<'de> for Tag<T> {
 pub struct ProtocolVersion(&'static str);
 
 impl ProtocolVersion {
-    pub const LATEST: Self = Self::V_2024_11_05;
+    pub const LATEST: Self = Self::V_2025_03_26;
     pub const V_2024_11_05: Self = Self("2024-11-05");
+    pub const V_2025_03_26: Self = Self("2025-03-26");
 
     pub fn as_str(&self) -> &'static str {
         self.0

@@ -104,11 +104,15 @@ impl McpServerHandler {
 }
 impl McpServerHandler {
     fn initialize(&mut self, p: InitializeRequestParams) -> Result<InitializeResult> {
+        let mut protocol_version = ProtocolVersion::LATEST;
+        if p.protocol_version == ProtocolVersion::V_2024_11_05.as_str() {
+            protocol_version = ProtocolVersion::V_2024_11_05;
+        }
         self.data = Some(Arc::new(SessionData {
             initialize: p,
-            protocol_version: ProtocolVersion::LATEST,
+            protocol_version,
         }));
-        Ok(self.server.initialize_result())
+        Ok(self.server.initialize_result(protocol_version))
     }
     fn initialized(&mut self, _p: Option<InitializedNotificationParams>) -> Result<()> {
         if self.data.is_none() {
@@ -175,7 +179,7 @@ impl McpServerHandler {
 }
 
 trait DynMcpServer: Send + Sync + 'static {
-    fn initialize_result(&self) -> InitializeResult;
+    fn initialize_result(&self, protocol_version: ProtocolVersion) -> InitializeResult;
 
     fn dyn_prompts_list(
         self: Arc<Self>,
@@ -234,12 +238,12 @@ trait DynMcpServer: Send + Sync + 'static {
     ) -> Result<Response>;
 }
 impl<T: McpServer> DynMcpServer for T {
-    fn initialize_result(&self) -> InitializeResult {
+    fn initialize_result(&self, protocol_version: ProtocolVersion) -> InitializeResult {
         InitializeResult {
             capabilities: self.capabilities(),
             instructions: self.instructions(),
             meta: Map::new(),
-            protocol_version: ProtocolVersion::LATEST.to_string(),
+            protocol_version: protocol_version.as_str().to_string(),
             server_info: self.server_info(),
         }
     }
