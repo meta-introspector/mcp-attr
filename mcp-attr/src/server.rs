@@ -499,13 +499,14 @@ impl RequestContext {
     /// See [`notifications/progress`]
     ///
     /// [`notifications/progress`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/basic/utilities/progress/
-    pub fn progress(&self, progress: f64, total: Option<f64>) {
+    pub fn progress(&self, progress: f64, total: Option<f64>, message: Option<String>) {
         self.session
             .notification(
                 "notifications/progress",
                 Some(&ProgressNotificationParams {
                     progress,
                     total,
+                    message,
                     progress_token: self.id.clone(),
                 }),
             )

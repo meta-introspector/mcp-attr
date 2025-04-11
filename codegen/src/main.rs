@@ -4,7 +4,7 @@ use mcp_attr_codegen::utils::save;
 fn main() -> Result<()> {
     save(
         mcp_attr_codegen::schema::build_schema(
-            "./external/modelcontextprotocol-specification/schema/2024-11-05/schema.json",
+            "./external/modelcontextprotocol-specification/schema/2025-03-26/schema.json",
         )?,
         "./mcp-attr/src/schema.rs",
     )?;

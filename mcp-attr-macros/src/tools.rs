@@ -113,6 +113,7 @@ impl ToolEntry {
                     name: #name.into(),
                     input_schema,
                     description: #description,
+                    annotations: None,
                 }
             }
         })

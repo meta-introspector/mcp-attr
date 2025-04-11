@@ -9,15 +9,15 @@ use url::Url;
 use crate::{
     Result,
     schema::{
-        BlobResourceContents, CallToolRequestParams, CallToolResult, CallToolResultContentItem,
-        CompleteRequestParams, CompleteRequestParamsArgument, CompleteRequestParamsRef,
-        CompleteResult, CompleteResultCompletion, EmbeddedResource, EmbeddedResourceResource,
-        GetPromptRequestParams, GetPromptResult, ImageContent, Implementation, ListPromptsResult,
-        ListResourceTemplatesResult, ListResourcesResult, ListRootsResult, ListToolsResult, Prompt,
-        PromptArgument, PromptMessage, PromptMessageContent, PromptReference,
-        ReadResourceRequestParams, ReadResourceResult, ReadResourceResultContentsItem, Resource,
-        ResourceAnnotations, ResourceReference, ResourceTemplate, ResourceTemplateAnnotations,
-        Role, Root, TextContent, TextResourceContents, Tool, ToolInputSchema,
+        Annotations, BlobResourceContents, CallToolRequestParams, CallToolResult,
+        CallToolResultContentItem, CompleteRequestParams, CompleteRequestParamsArgument,
+        CompleteRequestParamsRef, CompleteResult, CompleteResultCompletion, EmbeddedResource,
+        EmbeddedResourceResource, GetPromptRequestParams, GetPromptResult, ImageContent,
+        Implementation, ListPromptsResult, ListResourceTemplatesResult, ListResourcesResult,
+        ListRootsResult, ListToolsResult, Prompt, PromptArgument, PromptMessage,
+        PromptMessageContent, PromptReference, ReadResourceRequestParams, ReadResourceResult,
+        ReadResourceResultContentsItem, Resource, ResourceReference, ResourceTemplate, Role, Root,
+        TextContent, TextResourceContents, Tool, ToolAnnotations, ToolInputSchema,
     },
     utils::Base64Bytes,
 };
@@ -196,7 +196,7 @@ impl Resource {
         self.mime_type = Some(mime_type.to_string());
         self
     }
-    pub fn with_annotations(mut self, annotations: impl Into<ResourceAnnotations>) -> Self {
+    pub fn with_annotations(mut self, annotations: impl Into<Annotations>) -> Self {
         self.annotations = Some(annotations.into());
         self
     }
@@ -223,7 +223,7 @@ impl ResourceTemplate {
         self.mime_type = Some(mime_type.to_string());
         self
     }
-    pub fn with_annotations(mut self, annotations: impl Into<ResourceTemplateAnnotations>) -> Self {
+    pub fn with_annotations(mut self, annotations: impl Into<Annotations>) -> Self {
         self.annotations = Some(annotations.into());
         self
     }
@@ -242,10 +242,15 @@ impl Tool {
             name: name.to_string(),
             description: None,
             input_schema,
+            annotations: None,
         }
     }
     pub fn with_description(mut self, description: &str) -> Self {
         self.description = Some(description.to_string());
+        self
+    }
+    pub fn with_annotations(mut self, annotations: impl Into<ToolAnnotations>) -> Self {
+        self.annotations = Some(annotations.into());
         self
     }
 }
