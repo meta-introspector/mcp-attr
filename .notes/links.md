@@ -34,18 +34,18 @@
 
 ## MCP Specification Links
 
-- [prompts/list](https://spec.modelcontextprotocol.io/specification/2024-11-05/server/prompts/#listing-prompts)
-- [prompts/get](https://spec.modelcontextprotocol.io/specification/2024-11-05/server/prompts/#getting-a-prompt)
-- [resources/list](https://spec.modelcontextprotocol.io/specification/2024-11-05/server/resources/#listing-resources)
-- [resources/read](https://spec.modelcontextprotocol.io/specification/2024-11-05/server/resources/#reading-resources)
-- [resources/templates/list](https://spec.modelcontextprotocol.io/specification/2024-11-05/server/resources/#resource-templates)
-- [tools/list](https://spec.modelcontextprotocol.io/specification/2024-11-05/server/tools/#listing-tools)
-- [tools/call](https://spec.modelcontextprotocol.io/specification/2024-11-05/server/tools/#calling-a-tool)
-- [roots/list](https://spec.modelcontextprotocol.io/specification/2024-11-05/client/roots/#listing-roots)
-- [sampling/createMessage](https://spec.modelcontextprotocol.io/specification/2024-11-05/client/sampling/#creating-a-message)
-- [completion/complete](https://spec.modelcontextprotocol.io/specification/2024-11-05/server/utilities/completion/#requesting-completions)
-- [initialize](https://spec.modelcontextprotocol.io/specification/2024-11-05/basic/lifecycle/#initialization)
-- [ping](https://spec.modelcontextprotocol.io/specification/2024-11-05/basic/utilities/ping/)
+- [prompts/list](https://modelcontextprotocol.io/specification/2025-03-26/server/prompts/#listing-prompts)
+- [prompts/get](https://modelcontextprotocol.io/specification/2025-03-26/server/prompts/#getting-a-prompt)
+- [resources/list](https://modelcontextprotocol.io/specification/2025-03-26/server/resources/#listing-resources)
+- [resources/read](https://modelcontextprotocol.io/specification/2025-03-26/server/resources/#reading-resources)
+- [resources/templates/list](https://modelcontextprotocol.io/specification/2025-03-26/server/resources/#resource-templates)
+- [tools/list](https://modelcontextprotocol.io/specification/2025-03-26/server/tools/#listing-tools)
+- [tools/call](https://modelcontextprotocol.io/specification/2025-03-26/server/tools/#calling-tools)
+- [roots/list](https://modelcontextprotocol.io/specification/2025-03-26/client/roots/#listing-roots)
+- [sampling/createMessage](https://modelcontextprotocol.io/specification/2025-03-26/client/sampling/#creating-messages)
+- [completion/complete](https://modelcontextprotocol.io/specification/2025-03-26/server/utilities/completion/#requesting-completions)
+- [initialize](https://modelcontextprotocol.io/specification/2025-03-26/basic/lifecycle/#initialization)
+- [ping](https://modelcontextprotocol.io/specification/2025-03-26/basic/utilities/ping/)
 
 ## Standards
 

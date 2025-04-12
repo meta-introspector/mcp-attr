@@ -28,9 +28,11 @@
 /// #[mcp_server]
 /// impl McpServer for ExampleServer {
 ///     /// Description sent to MCP client
-///     #[prompt]
-///     async fn example_prompt(&self) -> Result<&str> {
-///         Ok("Hello!")
+///     #[tool]
+///     async fn add_count(&self, message: String) -> Result<String> {
+///         let mut state = self.0.lock().unwrap();
+///         state.count += 1;
+///         Ok(format!("Echo: {message} {}", state.count))
 ///     }
 ///
 ///     #[resource("my_app://files/{name}.txt")]
@@ -38,11 +40,9 @@
 ///         Ok(format!("Content of {name}.txt"))
 ///     }
 ///
-///     #[tool]
-///     async fn add_count(&self, message: String) -> Result<String> {
-///         let mut state = self.0.lock().unwrap();
-///         state.count += 1;
-///         Ok(format!("Echo: {message} {}", state.count))
+///     #[prompt]
+///     async fn example_prompt(&self) -> Result<&str> {
+///         Ok("Hello!")
 ///     }
 /// }
 /// ```
@@ -229,16 +229,16 @@
 /// - [`resources_list`]
 // #[include_doc("../../../README.md",end("## Testing"))]
 ///
-/// [Model Context Protocol]: https://spec.modelcontextprotocol.io/specification/2024-11-05/
+/// [Model Context Protocol]: https://modelcontextprotocol.io/specification/2025-03-26/
 /// [RFC 6570]: https://www.rfc-editor.org/rfc/rfc6570.html
-/// [`prompts/list`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/server/prompts/#listing-prompts
-/// [`prompts/get`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/server/prompts/#getting-a-prompt
-/// [`resources/list`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/server/resources/#listing-resources
-/// [`resources/read`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/server/resources/#reading-resources
-/// [`resources/templates/list`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/server/resources/#resource-templates
-/// [`tools/list`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/server/tools/#listing-tools
-/// [`tools/call`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/server/tools/#calling-a-tool
-/// [`roots/list`]: https://spec.modelcontextprotocol.io/specification/2024-11-05/client/roots/#listing-roots
+/// [`prompts/list`]: https://modelcontextprotocol.io/specification/2025-03-26/server/prompts/#listing-prompts
+/// [`prompts/get`]: https://modelcontextprotocol.io/specification/2025-03-26/server/prompts/#getting-a-prompt
+/// [`resources/list`]: https://modelcontextprotocol.io/specification/2025-03-26/server/resources/#listing-resources
+/// [`resources/read`]: https://modelcontextprotocol.io/specification/2025-03-26/server/resources/#reading-resources
+/// [`resources/templates/list`]: https://modelcontextprotocol.io/specification/2025-03-26/server/resources/#resource-templates
+/// [`tools/list`]: https://modelcontextprotocol.io/specification/2025-03-26/server/tools/#listing-tools
+/// [`tools/call`]: https://modelcontextprotocol.io/specification/2025-03-26/server/tools/#calling-tools
+/// [`roots/list`]: https://modelcontextprotocol.io/specification/2025-03-26/client/roots/#listing-roots
 /// [`FromStr`]: https://doc.rust-lang.org/std/str/trait.FromStr.html
 /// [`JsonSchema`]: https://docs.rs/schemars/latest/schemars/trait.JsonSchema.html
 /// [`DeserializeOwned`]: https://docs.rs/serde/latest/serde/de/trait.DeserializeOwned.html
