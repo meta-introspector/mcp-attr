@@ -61,9 +61,11 @@
 //! #[mcp_server]
 //! impl McpServer for ExampleServer {
 //!     /// MCPクライアントに送信される解説
-//!     #[prompt]
-//!     async fn example_prompt(&self) -> Result<&str> {
-//!         Ok("Hello!")
+//!     #[tool]
+//!     async fn add_count(&self, message: String) -> Result<String> {
+//!         let mut state = self.0.lock().unwrap();
+//!         state.count += 1;
+//!         Ok(format!("Echo: {message} {}", state.count))
 //!     }
 //!
 //!     #[resource("my_app://files/{name}.txt")]
@@ -71,11 +73,9 @@
 //!         Ok(format!("Content of {name}.txt"))
 //!     }
 //!
-//!     #[tool]
-//!     async fn add_count(&self, message: String) -> Result<String> {
-//!         let mut state = self.0.lock().unwrap();
-//!         state.count += 1;
-//!         Ok(format!("Echo: {message} {}", state.count))
+//!     #[prompt]
+//!     async fn example_prompt(&self) -> Result<&str> {
+//!         Ok("Hello!")
 //!     }
 //! }
 //! ```
@@ -127,7 +127,7 @@
 //!
 //! #[mcp_server]
 //! impl McpServer for ExampleServer {
-//!   #[prompt]
+//!   #[tool]
 //!   async fn hello(&self) -> Result<&str> {
 //!     Ok("Hello, world!")
 //!   }
