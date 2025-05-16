@@ -175,6 +175,7 @@ impl PromptEntry {
 }
 
 #[derive(Debug)]
+#[allow(clippy::large_enum_variant)]
 enum PromptFnArg {
     Property(PromptArg),
     Context(Span),

@@ -180,6 +180,7 @@ impl ToolEntry {
     }
 }
 
+#[allow(clippy::large_enum_variant)]
 enum ToolFnArg {
     Property(ToolArg),
     Context(Span),
