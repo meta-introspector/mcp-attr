@@ -19,7 +19,7 @@ use crate::{
         ReadResourceResultContentsItem, Resource, ResourceReference, ResourceTemplate, Role, Root,
         TextContent, TextResourceContents, Tool, ToolAnnotations, ToolInputSchema,
     },
-    utils::Base64Bytes,
+    utils::{Base64Bytes, Json},
 };
 use std::{
     collections::BTreeMap,
@@ -499,5 +499,21 @@ impl ResourceReference {
             uri: uri.to_string(),
             type_: "ref/resource".to_string(),
         }
+    }
+}
+
+impl<T> From<Json<T>> for TextContent {
+    fn from(value: Json<T>) -> Self {
+        TextContent::new(value.into_string())
+    }
+}
+impl<T> From<Json<T>> for CallToolResult {
+    fn from(value: Json<T>) -> Self {
+        CallToolResultContentItem::from(value).into()
+    }
+}
+impl<T> From<Json<T>> for CallToolResultContentItem {
+    fn from(value: Json<T>) -> Self {
+        TextContent::from(value).into()
     }
 }

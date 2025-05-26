@@ -1,6 +1,6 @@
 //! Types used in the MCP protocol that are not defined in the schema
 
-use std::borrow::Cow;
+use std::{borrow::Cow, marker::PhantomData};
 
 use base64::Engine;
 use parse_display::Display;
@@ -154,6 +154,27 @@ impl ProtocolVersion {
 
     pub fn as_str(&self) -> &'static str {
         self.0
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Display)]
+#[display("{json}")]
+pub struct Json<T> {
+    json: String,
+    _marker: PhantomData<T>,
+}
+
+impl<T: Serialize> Json<T> {
+    pub fn from(value: &T) -> Result<Self, serde_json::Error> {
+        Ok(Self {
+            json: serde_json::to_string(value)?,
+            _marker: PhantomData,
+        })
+    }
+}
+impl<T> Json<T> {
+    pub fn into_string(self) -> String {
+        self.json
     }
 }
 
