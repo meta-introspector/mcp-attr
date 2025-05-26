@@ -1,7 +1,7 @@
 #![allow(missing_docs)]
 
 use jsoncall::{ErrorCode, bail_public};
-use schemars::{JsonSchema, schema::Metadata, schema_for};
+use schemars::{JsonSchema, r#gen::SchemaSettings, schema::Metadata};
 use serde::Serialize;
 use serde_json::{Value, to_value};
 use url::Url;
@@ -269,7 +269,11 @@ impl ToolInputSchema {
         description: &str,
         required: bool,
     ) -> Result<()> {
-        let mut root = schema_for!(T);
+        let mut settings = SchemaSettings::default();
+        settings.inline_subschemas = true;
+        let g = settings.into_generator();
+        let mut root = g.into_root_schema_for::<T>();
+
         if !description.is_empty() {
             let metadata = root
                 .schema
