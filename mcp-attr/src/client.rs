@@ -34,18 +34,6 @@ use crate::{
 /// Used with [`McpClientBuilder::with_handler`] to create an MCP client that supports client features.
 ///
 /// [client features]: https://modelcontextprotocol.io/specification/2025-03-26/client/
-/// [`sampling/createMessage`](https://modelcontextprotocol.io/specification/2025-03-26/client/sampling/#creating-messages)
-/// [`roots/list`]: https://modelcontextprotocol.io/specification/2025-03-26/client/roots/#listing-roots
-/// [`initialize`]: https://modelcontextprotocol.io/specification/2025-03-26/client/initialize/
-/// [`prompts/list`]: https://modelcontextprotocol.io/specification/2025-03-26/client/prompts/#listing-prompts
-/// [`prompts/get`]: https://modelcontextprotocol.io/specification/2025-03-26/client/prompts/#getting-a-prompt
-/// [`resources/list`]: https://modelcontextprotocol.io/specification/2025-03-26/client/resources/#listing-resources
-/// [`resources/templates/list`]: https://modelcontextprotocol.io/specification/2025-03-26/client/resources/#listing-resource-templates
-/// [`resources/read`]: https://modelcontextprotocol.io/specification/2025-03-26/client/resources/#reading-a-resource
-/// [`tools/list`]: https://modelcontextprotocol.io/specification/2025-03-26/client/tools/#listing-tools
-/// [`tools/call`]: https://modelcontextprotocol.io/specification/2025-03-26/client/tools/#calling-tools
-/// [`completion/complete`]: https://modelcontextprotocol.io/specification/2025-03-26/client/completion/#completing-a-prompt
-/// [`ping`]: https://modelcontextprotocol.io/specification/2025-03-26/basic/utilities/ping/
 pub trait McpClientHandler {
     /// [`sampling/createMessage`](https://modelcontextprotocol.io/specification/2025-03-26/client/sampling/#creating-messages)
     fn create_message(
