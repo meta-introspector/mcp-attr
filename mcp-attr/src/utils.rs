@@ -167,7 +167,7 @@ pub struct Json<T> {
 impl<T: Serialize> Json<T> {
     pub fn from(value: &T) -> Result<Self, serde_json::Error> {
         Ok(Self {
-            json: serde_json::to_string(value)?,
+            json: serde_json::to_string_pretty(value)?,
             _marker: PhantomData,
         })
     }
