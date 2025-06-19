@@ -178,6 +178,8 @@
 //!
 //! メソッドや引数にドキュメントコメントを付けると、この情報が MCP クライアントに送信され、AI はメソッドや引数の意味を理解できるようになります。
 //!
+//! また、`description` 属性パラメータを使用して説明を指定することもできます。ドキュメントコメントと description 属性の両方が指定されている場合、description 属性が優先されます。
+//!
 //! ```rust
 //! use mcp_attr::server::{mcp_server, McpServer};
 //! use mcp_attr::Result;
@@ -276,11 +278,12 @@
 //! ### `#[prompt]`
 //!
 //! ```rust,ignore
-//! #[prompt("name")]
+//! #[prompt("name", description = "..")]
 //! async fn func_name(&self) -> Result<GetPromptResult> { }
 //! ```
 //!
 //! - "name" (optional) : プロンプト名。省略した場合は関数名が使用される。
+//! - "description" (optional) : AI向けの関数説明。ドキュメントコメントより優先される。
 //!
 //! 下記のメソッドを実装する。
 //!
@@ -326,13 +329,14 @@
 //! ### `#[resource]`
 //!
 //! ```rust,ignore
-//! #[resource("url_template", name = "name", mime_type = "mime_type")]
+//! #[resource("url_template", name = "..", mime_type = "..", description = "..")]
 //! async fn func_name(&self) -> Result<ReadResourceResult> { }
 //! ```
 //!
 //! - "url_template" (optional) : このメソッドで処理するリソースの URL を示す URI Template([RFC 6570])。省略した場合は全ての URL を処理する。
 //! - "name" (optional) : リソース名。省略した場合は関数名が使用される。
 //! - "mime_type" (optional) : リソースの MIME タイプ。
+//! - "description" (optional) : AI向けの関数説明。ドキュメントコメントより優先される。
 //!
 //! 下記のメソッドを実装する。
 //!
@@ -385,11 +389,12 @@
 //! ### `#[tool]`
 //!
 //! ```rust,ignore
-//! #[tool("name")]
+//! #[tool("name", description = "..")]
 //! async fn func_name(&self) -> Result<CallToolResult> { }
 //! ```
 //!
 //! - "name" (optional) : ツール名。省略した場合は関数名が使用される。
+//! - "description" (optional) : AI向けの関数説明。ドキュメントコメントより優先される。
 //!
 //! 下記のメソッドを実装する。
 //!
@@ -725,6 +730,8 @@
 //!
 //! Adding documentation comments to methods and arguments sends this information to the MCP client, allowing the AI to understand their meaning.
 //!
+//! You can also specify descriptions using the `description` attribute parameter. When both documentation comments and description attributes are specified, the description attribute takes precedence.
+//!
 //! ```rust
 //! use mcp_attr::server::{mcp_server, McpServer};
 //! use mcp_attr::Result;
@@ -845,11 +852,12 @@
 //! ### `#[prompt]`
 //!
 //! ```rust,ignore
-//! #[prompt("name")]
+//! #[prompt("name", description = "..")]
 //! async fn func_name(&self) -> Result<GetPromptResult> { }
 //! ```
 //!
 //! - "name" (optional): Prompt name. If omitted, the function name is used.
+//! - "description" (optional): Function description for AI. Takes precedence over documentation comments.
 //!
 //! Implements the following methods:
 //!
@@ -895,13 +903,14 @@
 //! ### `#[resource]`
 //!
 //! ```rust,ignore
-//! #[resource("url_template", name = "name", mime_type = "mime_type")]
+//! #[resource("url_template", name = "..", mime_type = "..", description = "..")]
 //! async fn func_name(&self) -> Result<ReadResourceResult> { }
 //! ```
 //!
 //! - "url_template" (optional): URI Template ([RFC 6570]) indicating the URL of resources this method handles. If omitted, handles all URLs.
 //! - "name" (optional): Resource name. If omitted, the function name is used.
 //! - "mime_type" (optional): MIME type of the resource.
+//! - "description" (optional): Function description for AI. Takes precedence over documentation comments.
 //!
 //! Implements the following methods:
 //!
@@ -954,11 +963,12 @@
 //! ### `#[tool]`
 //!
 //! ```rust,ignore
-//! #[tool("name")]
+//! #[tool("name", description = "..")]
 //! async fn func_name(&self) -> Result<CallToolResult> { }
 //! ```
 //!
 //! - "name" (optional): Tool name. If omitted, the function name is used.
+//! - "description" (optional): Function description for AI. Takes precedence over documentation comments.
 //!
 //! Implements the following methods:
 //!
