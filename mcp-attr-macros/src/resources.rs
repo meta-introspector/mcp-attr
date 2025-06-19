@@ -28,7 +28,7 @@ pub struct ResourceAttr {
     #[struct_meta(unnamed)]
     uri: Option<LitStr>,
     name: Option<LitStr>,
-    description: Option<Expr>,
+    description: Option<LitStr>,
     mime_type: Option<LitStr>,
     pub dump: bool,
 }
@@ -39,7 +39,7 @@ pub struct ResourceEntry {
     name: String,
     mime_type: Option<String>,
     description: String,
-    attr_description: Option<Expr>,
+    attr_description: Option<LitStr>,
     args: Vec<ResourceFnArg>,
     fn_ident: Ident,
     ret_span: Span,
@@ -125,7 +125,8 @@ impl ResourceEntry {
         let uri = uri.expand(());
         let mime_type = opt_expr(&self.mime_type, |x| quote!(#x.to_string()));
         let description = if let Some(attr_desc) = &self.attr_description {
-            expr_to_option(&Some(attr_desc.clone()))
+            let desc_value = attr_desc.value();
+            quote!(Some(#desc_value.into()))
         } else {
             descriotion_expr(&self.description)
         };
@@ -167,7 +168,8 @@ impl ResourceEntry {
         let uri = uri.to_string();
         let mime_type = opt_expr(&self.mime_type, |x| quote!(#x.to_string()));
         let description = if let Some(attr_desc) = &self.attr_description {
-            expr_to_option(&Some(attr_desc.clone()))
+            let desc_value = attr_desc.value();
+            quote!(Some(#desc_value.into()))
         } else {
             descriotion_expr(&self.description)
         };
@@ -209,7 +211,12 @@ impl ResourceEntry {
             .map(|a| a.build_read())
             .collect::<Result<Vec<_>>>()?;
         let name = &self.name;
-        let description = if !self.description.is_empty() {
+        let description = if let Some(attr_desc) = &self.attr_description {
+            let desc_value = attr_desc.value();
+            quote! {
+                .with_description(#desc_value)
+            }
+        } else if !self.description.is_empty() {
             let description = &self.description;
             quote! {
                 .with_description(#description)
@@ -253,7 +260,8 @@ impl ResourceEntry {
 
     fn build_read_stmt(&self) -> Result<Option<TokenStream>> {
         let description = if let Some(attr_desc) = &self.attr_description {
-            expr_to_option(&Some(attr_desc.clone()))
+            let desc_value = attr_desc.value();
+            quote!(Some(#desc_value.into()))
         } else {
             descriotion_expr(&self.description)
         };

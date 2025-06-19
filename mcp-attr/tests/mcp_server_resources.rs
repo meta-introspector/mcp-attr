@@ -111,6 +111,27 @@ impl McpServer for MyMcpServer {
     async fn all_url(&self, url: String) -> Result<String> {
         Ok(format!("--{url}---"))
     }
+
+    #[resource("http://localhost/desc.txt", description = "Resource with description attribute")]
+    async fn resource_with_description_attr(&self) -> Result<&str> {
+        Ok("description_attr")
+    }
+
+    /// Resource with doc comment
+    #[resource("http://localhost/priority.txt", description = "Resource description from attribute")]
+    async fn resource_description_priority(&self) -> Result<&str> {
+        Ok("priority_test")
+    }
+
+    #[resource("http://localhost/name_desc.txt", name = "custom_name", description = "Resource with name and description")]
+    async fn resource_name_and_description(&self) -> Result<&str> {
+        Ok("name_and_desc")
+    }
+
+    #[resource("http://localhost/template_desc/{a}", description = "Template with description")]
+    async fn resource_template_with_description(&self, a: String) -> Result<String> {
+        Ok(format!("template_desc {a}"))
+    }
 }
 
 #[test]
@@ -140,6 +161,12 @@ fn resources_expected() -> ListResourcesResult {
             .with_mime_type("text/plain"),
         Resource::new("http://localhost/rd", "resource_description")
             .with_description("Resource Description"),
+        Resource::new("http://localhost/desc.txt", "resource_with_description_attr")
+            .with_description("Resource with description attribute"),
+        Resource::new("http://localhost/priority.txt", "resource_description_priority")
+            .with_description("Resource description from attribute"),
+        Resource::new("http://localhost/name_desc.txt", "custom_name")
+            .with_description("Resource with name and description"),
     ]
     .into()
 }
@@ -178,6 +205,8 @@ fn templates_list_expected() -> ListResourceTemplatesResult {
         ResourceTemplate::new("http://localhost/au2/{_arg}", "arg_name_underscore_2"),
         ResourceTemplate::new("http://localhost/rtd/{a}", "resource_template_description")
             .with_description("Resource Template Description"),
+        ResourceTemplate::new("http://localhost/template_desc/{a}", "resource_template_with_description")
+            .with_description("Template with description"),
     ]
     .into()
 }

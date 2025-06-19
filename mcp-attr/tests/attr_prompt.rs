@@ -73,6 +73,22 @@ async fn arg_description(
     Ok(format!("hello {arg}"))
 }
 
+#[prompt(description = "Prompt with attribute description")]
+async fn prompt_attr_description() -> Result<String> {
+    Ok("test".into())
+}
+
+/// This doc comment should be ignored
+#[prompt(description = "Attribute wins")]
+async fn prompt_priority_test() -> Result<String> {
+    Ok("test".into())
+}
+
+#[prompt("custom_prompt_name", description = "Named prompt with description")]
+async fn prompt_name_with_description() -> Result<String> {
+    Ok("test".into())
+}
+
 fn build_server() -> Result<impl McpServer> {
     Ok(McpServerBuilder::new()
         .route(route![
@@ -86,7 +102,10 @@ fn build_server() -> Result<impl McpServer> {
             arg_attr_name,
             arg_attr_name_underscore,
             prompt_description,
-            arg_description
+            arg_description,
+            prompt_attr_description,
+            prompt_priority_test,
+            prompt_name_with_description
         ])
         .build())
 }
@@ -135,6 +154,9 @@ fn prompts_expected() -> ListPromptsResult {
         Prompt::new("arg_description").with_arguments(vec![
             PromptArgument::new("arg", true).with_description("Arg description"),
         ]),
+        Prompt::new("prompt_attr_description").with_description("Prompt with attribute description"),
+        Prompt::new("prompt_priority_test").with_description("Attribute wins"),
+        Prompt::new("custom_prompt_name").with_description("Named prompt with description"),
     ]
     .into()
 }

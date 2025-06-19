@@ -84,6 +84,22 @@ impl McpServer for MyMcpServer {
     ) -> Result<String> {
         Ok(format!("hello {arg}"))
     }
+
+    #[tool(description = "Tool with description attribute")]
+    async fn tool_with_description_attr(&self) -> Result<&str> {
+        Ok("description_attr")
+    }
+
+    /// Tool with doc comment
+    #[tool(description = "Tool description from attribute")]
+    async fn tool_description_priority(&self) -> Result<&str> {
+        Ok("priority_test")
+    }
+
+    #[tool("custom_name", description = "Tool with name and description")]
+    async fn tool_name_and_description(&self) -> Result<&str> {
+        Ok("name_and_desc")
+    }
 }
 
 #[test]
@@ -145,6 +161,12 @@ fn tools_expected() -> Result<ListToolsResult> {
             "arg_description",
             ToolInputSchema::new().with_property::<String>("arg", "Arg description", true)?,
         ),
+        Tool::new("tool_with_description_attr", ToolInputSchema::new())
+            .with_description("Tool with description attribute"),
+        Tool::new("tool_description_priority", ToolInputSchema::new())
+            .with_description("Tool description from attribute"),
+        Tool::new("custom_name", ToolInputSchema::new())
+            .with_description("Tool with name and description"),
     ]
     .into())
 }

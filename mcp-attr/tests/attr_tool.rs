@@ -75,6 +75,22 @@ async fn arg_description(
     Ok(format!("hello {arg}"))
 }
 
+#[tool(description = "Tool with attribute description")]
+async fn tool_attr_description() -> Result<()> {
+    Ok(())
+}
+
+/// This doc comment should be ignored
+#[tool(description = "Attribute wins")]
+async fn tool_priority_test() -> Result<()> {
+    Ok(())
+}
+
+#[tool("custom_tool_name", description = "Named tool with description")]
+async fn tool_name_with_description() -> Result<()> {
+    Ok(())
+}
+
 fn build_server() -> Result<impl McpServer> {
     Ok(McpServerBuilder::new()
         .route(route![
@@ -88,7 +104,10 @@ fn build_server() -> Result<impl McpServer> {
             arg_attr_name,
             arg_attr_name_underscore,
             tool_description,
-            arg_description
+            arg_description,
+            tool_attr_description,
+            tool_priority_test,
+            tool_name_with_description
         ])
         .build())
 }
@@ -155,6 +174,9 @@ fn tools_expected() -> Result<ListToolsResult> {
             "arg_description",
             ToolInputSchema::new().with_property::<String>("arg", "Arg description", true)?,
         ),
+        Tool::new("tool_attr_description", ToolInputSchema::new()).with_description("Tool with attribute description"),
+        Tool::new("tool_priority_test", ToolInputSchema::new()).with_description("Attribute wins"),
+        Tool::new("custom_tool_name", ToolInputSchema::new()).with_description("Named tool with description"),
     ]
     .into())
 }

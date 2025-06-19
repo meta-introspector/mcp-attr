@@ -76,6 +76,22 @@ impl McpServer for MyMcpServer {
     ) -> Result<String> {
         Ok(format!("hello {arg}"))
     }
+
+    #[prompt(description = "Prompt with description attribute")]
+    async fn prompt_with_description_attr(&self) -> Result<&str> {
+        Ok("description_attr")
+    }
+
+    /// Prompt with doc comment
+    #[prompt(description = "Prompt description from attribute")]
+    async fn prompt_description_priority(&self) -> Result<&str> {
+        Ok("priority_test")
+    }
+
+    #[prompt("custom_name", description = "Prompt with name and description")]
+    async fn prompt_name_and_description(&self) -> Result<&str> {
+        Ok("name_and_desc")
+    }
 }
 
 #[test]
@@ -118,6 +134,9 @@ fn prompts_expected() -> ListPromptsResult {
         Prompt::new("arg_description").with_arguments(vec![
             PromptArgument::new("arg", true).with_description("Arg description"),
         ]),
+        Prompt::new("prompt_with_description_attr").with_description("Prompt with description attribute"),
+        Prompt::new("prompt_description_priority").with_description("Prompt description from attribute"),
+        Prompt::new("custom_name").with_description("Prompt with name and description"),
     ]
     .into()
 }

@@ -108,6 +108,22 @@ async fn all_url(url: String) -> Result<String> {
     Ok(format!("--{url}---"))
 }
 
+#[resource("http://localhost/attr_desc", description = "Resource with attribute description")]
+async fn resource_attr_description() -> Result<String> {
+    Ok("test".into())
+}
+
+/// This doc comment should be ignored
+#[resource("http://localhost/priority", description = "Attribute wins")]
+async fn resource_priority_test() -> Result<String> {
+    Ok("test".into())
+}
+
+#[resource("http://localhost/named", name = "custom_resource_name", description = "Named resource with description")]
+async fn resource_name_with_description() -> Result<String> {
+    Ok("test".into())
+}
+
 fn build_server() -> Result<impl McpServer> {
     Ok(McpServerBuilder::new()
         .route(route![
@@ -127,7 +143,10 @@ fn build_server() -> Result<impl McpServer> {
             arg_name_underscore_2,
             resource_description,
             resource_template_description,
-            all_url
+            all_url,
+            resource_attr_description,
+            resource_priority_test,
+            resource_name_with_description
         ])
         .build())
 }
@@ -164,6 +183,12 @@ fn resources_expected() -> ListResourcesResult {
             .with_mime_type("text/plain"),
         Resource::new("http://localhost/rd", "resource_description")
             .with_description("Resource Description"),
+        Resource::new("http://localhost/attr_desc", "resource_attr_description")
+            .with_description("Resource with attribute description"),
+        Resource::new("http://localhost/priority", "resource_priority_test")
+            .with_description("Attribute wins"),
+        Resource::new("http://localhost/named", "custom_resource_name")
+            .with_description("Named resource with description"),
     ]
     .into()
 }
