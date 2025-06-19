@@ -69,6 +69,13 @@ impl McpServer for MyMcpServer {
         Ok(())
     }
 
+    /// Tool description line1
+    /// Tool description line2
+    #[tool]
+    async fn tool_description_multiline(&self) -> Result<()> {
+        Ok(())
+    }
+
     #[tool]
     async fn arg_description(
         &self,
@@ -132,6 +139,8 @@ fn tools_expected() -> Result<ListToolsResult> {
             ToolInputSchema::new().with_property::<String>("_xxx", "", true)?,
         ),
         Tool::new("tool_description", ToolInputSchema::new()).with_description("Tool description"),
+        Tool::new("tool_description_multiline", ToolInputSchema::new())
+            .with_description("Tool description line1\nTool description line2"),
         Tool::new(
             "arg_description",
             ToolInputSchema::new().with_property::<String>("arg", "Arg description", true)?,
