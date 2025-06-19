@@ -132,6 +132,15 @@ impl McpServer for MyMcpServer {
     async fn resource_template_with_description(&self, a: String) -> Result<String> {
         Ok(format!("template_desc {a}"))
     }
+
+    #[resource("http://localhost/expr_test.txt", description = get_expr_description())]
+    async fn resource_expr_test(&self) -> Result<&str> {
+        Ok("expr_test")
+    }
+}
+
+fn get_expr_description() -> &'static str {
+    "Description from expression"
 }
 
 #[test]
@@ -167,6 +176,8 @@ fn resources_expected() -> ListResourcesResult {
             .with_description("Resource description from attribute"),
         Resource::new("http://localhost/name_desc.txt", "custom_name")
             .with_description("Resource with name and description"),
+        Resource::new("http://localhost/expr_test.txt", "resource_expr_test")
+            .with_description("Description from expression"),
     ]
     .into()
 }

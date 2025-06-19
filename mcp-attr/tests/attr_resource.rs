@@ -124,6 +124,15 @@ async fn resource_name_with_description() -> Result<String> {
     Ok("test".into())
 }
 
+fn get_resource_expr_description() -> &'static str {
+    "Resource with expr description"
+}
+
+#[resource("http://localhost/expr_desc.txt", description = get_resource_expr_description())]
+async fn resource_expr_description() -> Result<&'static str> {
+    Ok("expr_desc")
+}
+
 fn build_server() -> Result<impl McpServer> {
     Ok(McpServerBuilder::new()
         .route(route![
@@ -146,7 +155,8 @@ fn build_server() -> Result<impl McpServer> {
             all_url,
             resource_attr_description,
             resource_priority_test,
-            resource_name_with_description
+            resource_name_with_description,
+            resource_expr_description
         ])
         .build())
 }
@@ -189,6 +199,8 @@ fn resources_expected() -> ListResourcesResult {
             .with_description("Attribute wins"),
         Resource::new("http://localhost/named", "custom_resource_name")
             .with_description("Named resource with description"),
+        Resource::new("http://localhost/expr_desc.txt", "resource_expr_description")
+            .with_description("Resource with expr description"),
     ]
     .into()
 }

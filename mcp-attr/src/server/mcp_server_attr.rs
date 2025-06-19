@@ -62,11 +62,12 @@
 /// ### `#[prompt]`
 ///
 /// ```rust,ignore
-/// #[prompt("name")]
+/// #[prompt("name", description = "..")]
 /// async fn func_name(&self) -> Result<GetPromptResult> { }
 /// ```
 ///
 /// - "name" (optional): Prompt name. If omitted, the function name is used.
+/// - "description" (optional): Function description for AI. Takes precedence over documentation comments.
 ///
 /// Implements the following methods:
 ///
@@ -112,13 +113,14 @@
 /// ### `#[resource]`
 ///
 /// ```rust,ignore
-/// #[resource("url_template", name = "name", mime_type = "mime_type")]
+/// #[resource("url_template", name = "..", mime_type = "..", description = "..")]
 /// async fn func_name(&self) -> Result<ReadResourceResult> { }
 /// ```
 ///
 /// - "url_template" (optional): URI Template ([RFC 6570]) indicating the URL of resources this method handles. If omitted, handles all URLs.
 /// - "name" (optional): Resource name. If omitted, the function name is used.
 /// - "mime_type" (optional): MIME type of the resource.
+/// - "description" (optional): Function description for AI. Takes precedence over documentation comments.
 ///
 /// Implements the following methods:
 ///
@@ -171,11 +173,12 @@
 /// ### `#[tool]`
 ///
 /// ```rust,ignore
-/// #[tool("name")]
+/// #[tool("name", description = "..")]
 /// async fn func_name(&self) -> Result<CallToolResult> { }
 /// ```
 ///
 /// - "name" (optional): Tool name. If omitted, the function name is used.
+/// - "description" (optional): Function description for AI. Takes precedence over documentation comments.
 ///
 /// Implements the following methods:
 ///

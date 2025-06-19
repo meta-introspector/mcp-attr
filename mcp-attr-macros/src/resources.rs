@@ -9,14 +9,14 @@ use proc_macro2::{Span, TokenStream};
 use quote::{ToTokens, quote, quote_spanned};
 use structmeta::{NameArgs, NameValue, StructMeta};
 use syn::{
-    Attribute, Expr, FnArg, Ident, ImplItem, ImplItemFn, ItemFn, ItemImpl, LitStr, Pat, Path, Result,
-    Signature, Type, Visibility, parse::Parse, parse2, spanned::Spanned,
+    Attribute, Expr, FnArg, Ident, ImplItem, ImplItemFn, ItemFn, ItemImpl, LitStr, Pat, Path,
+    Result, Signature, Type, Visibility, parse::Parse, parse2, spanned::Spanned,
 };
 use uri_template_ex::UriTemplate;
 
 use crate::utils::{
-    descriotion_expr, expand_option_ty, expr_to_option, get_doc, get_only_attr, is_context, opt_expr, ret_span,
-    take_doc,
+    descriotion_expr, expand_option_ty, expr_to_option, get_doc, get_only_attr, is_context,
+    opt_expr, ret_span, take_doc,
 };
 use crate::{
     syn_utils::{get_element, is_path, is_type},
@@ -28,7 +28,7 @@ pub struct ResourceAttr {
     #[struct_meta(unnamed)]
     uri: Option<LitStr>,
     name: Option<LitStr>,
-    description: Option<LitStr>,
+    description: Option<Expr>,
     mime_type: Option<LitStr>,
     pub dump: bool,
 }
@@ -39,7 +39,7 @@ pub struct ResourceEntry {
     name: String,
     mime_type: Option<String>,
     description: String,
-    attr_description: Option<LitStr>,
+    attr_description: Option<Expr>,
     args: Vec<ResourceFnArg>,
     fn_ident: Ident,
     ret_span: Span,
@@ -124,9 +124,8 @@ impl ResourceEntry {
         let name = &self.name;
         let uri = uri.expand(());
         let mime_type = opt_expr(&self.mime_type, |x| quote!(#x.to_string()));
-        let description = if let Some(attr_desc) = &self.attr_description {
-            let desc_value = attr_desc.value();
-            quote!(Some(#desc_value.into()))
+        let description = if let Some(_) = &self.attr_description {
+            expr_to_option(&self.attr_description)
         } else {
             descriotion_expr(&self.description)
         };
@@ -167,9 +166,8 @@ impl ResourceEntry {
         let name = &self.name;
         let uri = uri.to_string();
         let mime_type = opt_expr(&self.mime_type, |x| quote!(#x.to_string()));
-        let description = if let Some(attr_desc) = &self.attr_description {
-            let desc_value = attr_desc.value();
-            quote!(Some(#desc_value.into()))
+        let description = if let Some(_) = &self.attr_description {
+            expr_to_option(&self.attr_description)
         } else {
             descriotion_expr(&self.description)
         };
@@ -212,9 +210,8 @@ impl ResourceEntry {
             .collect::<Result<Vec<_>>>()?;
         let name = &self.name;
         let description = if let Some(attr_desc) = &self.attr_description {
-            let desc_value = attr_desc.value();
             quote! {
-                .with_description(#desc_value)
+                .with_description(#attr_desc)
             }
         } else if !self.description.is_empty() {
             let description = &self.description;
@@ -259,9 +256,8 @@ impl ResourceEntry {
     }
 
     fn build_read_stmt(&self) -> Result<Option<TokenStream>> {
-        let description = if let Some(attr_desc) = &self.attr_description {
-            let desc_value = attr_desc.value();
-            quote!(Some(#desc_value.into()))
+        let description = if let Some(_) = &self.attr_description {
+            expr_to_option(&self.attr_description)
         } else {
             descriotion_expr(&self.description)
         };
