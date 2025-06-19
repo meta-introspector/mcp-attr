@@ -9,7 +9,7 @@ use proc_macro2::{Span, TokenStream};
 use quote::{ToTokens, format_ident, quote, quote_spanned};
 use structmeta::{NameArgs, NameValue, StructMeta};
 use syn::{
-    Attribute, FnArg, Ident, ImplItem, ImplItemFn, ItemFn, ItemImpl, LitStr, Pat, Path, Result,
+    Attribute, Expr, FnArg, Ident, ImplItem, ImplItemFn, ItemFn, ItemImpl, LitStr, Pat, Path, Result,
     Signature, Type, Visibility, parse::Parse, parse2, spanned::Spanned,
 };
 use uri_template_ex::UriTemplate;
@@ -17,7 +17,7 @@ use uri_template_ex::UriTemplate;
 use crate::{
     route_ident,
     utils::{
-        arg_name_of, descriotion_expr, expand_option_ty, get_doc, get_only_attr, is_context,
+        arg_name_of, descriotion_expr, expand_option_ty, expr_to_option, get_doc, get_only_attr, is_context,
         ret_span, take_doc,
     },
 };
@@ -36,6 +36,7 @@ pub struct ToolArgAttr {
 pub struct ToolAttr {
     #[struct_meta(unnamed)]
     name: Option<LitStr>,
+    description: Option<Expr>,
     pub dump: bool,
 }
 
@@ -44,6 +45,7 @@ pub struct ToolEntry {
     name: String,
     fn_ident: Ident,
     description: String,
+    attr_description: Option<Expr>,
     args: Vec<ToolFnArg>,
     ret_span: Span,
 }
@@ -68,7 +70,12 @@ impl ToolEntry {
             .map(|n| n.value())
             .unwrap_or_else(|| sig.ident.to_string());
         let fn_ident = sig.ident.clone();
-        let description = get_doc(attrs);
+        let description = if attr.description.is_some() {
+            // 属性にdescriptionがある場合は、それを文字列として保存（後でbuild_metadataで処理）
+            String::new()
+        } else {
+            get_doc(attrs)
+        };
         let args = sig
             .inputs
             .iter_mut()
@@ -79,6 +86,7 @@ impl ToolEntry {
             name,
             fn_ident,
             description,
+            attr_description: attr.description,
             args,
             ret_span: ret_span(sig, f_span),
         })
@@ -99,7 +107,11 @@ impl ToolEntry {
     }
     fn build_metadata(&self) -> Result<TokenStream> {
         let name = &self.name;
-        let description = descriotion_expr(&self.description);
+        let description = if let Some(attr_desc) = &self.attr_description {
+            expr_to_option(&Some(attr_desc.clone()))
+        } else {
+            descriotion_expr(&self.description)
+        };
         let args = self
             .args
             .iter()

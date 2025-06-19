@@ -9,13 +9,13 @@ use proc_macro2::{Span, TokenStream};
 use quote::{ToTokens, quote, quote_spanned};
 use structmeta::{NameArgs, NameValue, StructMeta};
 use syn::{
-    Attribute, FnArg, Ident, ImplItem, ImplItemFn, ItemFn, ItemImpl, LitStr, Pat, Path, Result,
+    Attribute, Expr, FnArg, Ident, ImplItem, ImplItemFn, ItemFn, ItemImpl, LitStr, Pat, Path, Result,
     Signature, Type, Visibility, parse::Parse, parse2, spanned::Spanned,
 };
 use uri_template_ex::UriTemplate;
 
 use crate::utils::{
-    descriotion_expr, expand_option_ty, get_doc, get_only_attr, is_context, opt_expr, ret_span,
+    descriotion_expr, expand_option_ty, expr_to_option, get_doc, get_only_attr, is_context, opt_expr, ret_span,
     take_doc,
 };
 use crate::{
@@ -28,6 +28,7 @@ pub struct ResourceAttr {
     #[struct_meta(unnamed)]
     uri: Option<LitStr>,
     name: Option<LitStr>,
+    description: Option<Expr>,
     mime_type: Option<LitStr>,
     pub dump: bool,
 }
@@ -38,6 +39,7 @@ pub struct ResourceEntry {
     name: String,
     mime_type: Option<String>,
     description: String,
+    attr_description: Option<Expr>,
     args: Vec<ResourceFnArg>,
     fn_ident: Ident,
     ret_span: Span,
@@ -74,7 +76,11 @@ impl ResourceEntry {
             mime_type = attr.mime_type.map(|m| m.value());
         }
         let name = name.unwrap_or_else(|| sig.ident.to_string());
-        let description = take_doc(&mut attrs.to_vec());
+        let description = if attr.description.is_some() {
+            String::new()
+        } else {
+            take_doc(&mut attrs.to_vec())
+        };
         let args = sig
             .inputs
             .iter()
@@ -87,6 +93,7 @@ impl ResourceEntry {
             uri,
             mime_type,
             description,
+            attr_description: attr.description,
             args,
             fn_ident,
             ret_span: ret_span(sig, f_span),
@@ -117,7 +124,11 @@ impl ResourceEntry {
         let name = &self.name;
         let uri = uri.expand(());
         let mime_type = opt_expr(&self.mime_type, |x| quote!(#x.to_string()));
-        let description = descriotion_expr(&self.description);
+        let description = if let Some(attr_desc) = &self.attr_description {
+            expr_to_option(&Some(attr_desc.clone()))
+        } else {
+            descriotion_expr(&self.description)
+        };
         Ok(Some(quote! {
             ::mcp_attr::schema::Resource {
                 name: #name.to_string(),
@@ -155,7 +166,11 @@ impl ResourceEntry {
         let name = &self.name;
         let uri = uri.to_string();
         let mime_type = opt_expr(&self.mime_type, |x| quote!(#x.to_string()));
-        let description = descriotion_expr(&self.description);
+        let description = if let Some(attr_desc) = &self.attr_description {
+            expr_to_option(&Some(attr_desc.clone()))
+        } else {
+            descriotion_expr(&self.description)
+        };
         Ok(Some(quote! {
             ::mcp_attr::schema::ResourceTemplate {
                 name: #name.to_string(),
@@ -237,7 +252,11 @@ impl ResourceEntry {
     }
 
     fn build_read_stmt(&self) -> Result<Option<TokenStream>> {
-        let description = descriotion_expr(&self.description);
+        let description = if let Some(attr_desc) = &self.attr_description {
+            expr_to_option(&Some(attr_desc.clone()))
+        } else {
+            descriotion_expr(&self.description)
+        };
         let name = &self.name;
         let mime_type = opt_expr(&self.mime_type, |x| quote!(#x.to_string()));
         let args = self

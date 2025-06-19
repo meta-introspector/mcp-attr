@@ -9,13 +9,13 @@ use proc_macro2::{Span, TokenStream};
 use quote::{ToTokens, quote, quote_spanned};
 use structmeta::{NameArgs, NameValue, StructMeta};
 use syn::{
-    Attribute, FnArg, Ident, ImplItem, ImplItemFn, ItemFn, ItemImpl, LitStr, Pat, PatType, Path,
+    Attribute, Expr, FnArg, Ident, ImplItem, ImplItemFn, ItemFn, ItemImpl, LitStr, Pat, PatType, Path,
     Result, Signature, Type, Visibility, parse::Parse, parse2, spanned::Spanned,
 };
 use uri_template_ex::UriTemplate;
 
 use crate::utils::{
-    arg_name_of, descriotion_expr, expand_option_ty, get_doc, get_only_attr, is_context, ret_span,
+    arg_name_of, descriotion_expr, expand_option_ty, expr_to_option, get_doc, get_only_attr, is_context, ret_span,
     take_doc,
 };
 use crate::{
@@ -33,6 +33,7 @@ pub struct PromptArgAttr {
 pub struct PromptAttr {
     #[struct_meta(unnamed)]
     name: Option<LitStr>,
+    description: Option<Expr>,
     pub dump: bool,
 }
 
@@ -41,6 +42,7 @@ pub struct PromptEntry {
     name: String,
     fn_ident: Ident,
     description: String,
+    attr_description: Option<Expr>,
     args: Vec<PromptFnArg>,
     ret_span: Span,
 }
@@ -64,7 +66,11 @@ impl PromptEntry {
             .name
             .map(|n| n.value())
             .unwrap_or_else(|| sig.ident.to_string());
-        let description = get_doc(attrs);
+        let description = if attr.description.is_some() {
+            String::new()
+        } else {
+            get_doc(attrs)
+        };
         let args = sig
             .inputs
             .iter_mut()
@@ -77,6 +83,7 @@ impl PromptEntry {
             name,
             fn_ident,
             description,
+            attr_description: attr.description,
             args,
             ret_span: ret_span(sig, f_span),
         })
@@ -97,7 +104,11 @@ impl PromptEntry {
     }
     fn build_metadata(&self) -> Result<TokenStream> {
         let name = &self.name;
-        let description = descriotion_expr(&self.description);
+        let description = if let Some(attr_desc) = &self.attr_description {
+            expr_to_option(&Some(attr_desc.clone()))
+        } else {
+            descriotion_expr(&self.description)
+        };
         let args = self
             .args
             .iter()

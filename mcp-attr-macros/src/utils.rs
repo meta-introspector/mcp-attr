@@ -232,6 +232,14 @@ pub(crate) fn opt_expr<T>(s: &Option<T>, f: impl FnOnce(&T) -> TokenStream) -> T
     }
 }
 
+pub(crate) fn expr_to_option(expr: &Option<Expr>) -> TokenStream {
+    if let Some(expr) = expr {
+        quote!(Some((#expr).into()))
+    } else {
+        quote!(None)
+    }
+}
+
 pub(crate) fn arg_name_of(typed_arg: &PatType) -> Result<String> {
     match &*typed_arg.pat {
         Pat::Ident(pat_ident) => {
