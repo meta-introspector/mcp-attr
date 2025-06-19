@@ -177,6 +177,8 @@ MCP クライアントが MCP サーバのメソッドを呼び出すには、�
 
 メソッドや引数にドキュメントコメントを付けると、この情報が MCP クライアントに送信され、AI はメソッドや引数の意味を理解できるようになります。
 
+また、`description` 属性パラメータを使用して説明を指定することもできます。ドキュメントコメントと description 属性の両方が指定されている場合、description 属性が優先されます。
+
 ```rust
 use mcp_attr::server::{mcp_server, McpServer};
 use mcp_attr::Result;
@@ -275,11 +277,12 @@ impl McpServer for ExampleServer {
 ### `#[prompt]`
 
 ```rust,ignore
-#[prompt("name")]
+#[prompt("name", description = "..")]
 async fn func_name(&self) -> Result<GetPromptResult> { }
 ```
 
 - "name" (optional) : プロンプト名。省略した場合は関数名が使用される。
+- "description" (optional) : AI向けの関数説明。ドキュメントコメントより優先される。
 
 下記のメソッドを実装する。
 
@@ -325,13 +328,14 @@ impl McpServer for ExampleServer {
 ### `#[resource]`
 
 ```rust,ignore
-#[resource("url_template", name = "name", mime_type = "mime_type")]
+#[resource("url_template", name = "..", mime_type = "..", description = "..")]
 async fn func_name(&self) -> Result<ReadResourceResult> { }
 ```
 
 - "url_template" (optional) : このメソッドで処理するリソースの URL を示す URI Template([RFC 6570])。省略した場合は全ての URL を処理する。
 - "name" (optional) : リソース名。省略した場合は関数名が使用される。
 - "mime_type" (optional) : リソースの MIME タイプ。
+- "description" (optional) : AI向けの関数説明。ドキュメントコメントより優先される。
 
 下記のメソッドを実装する。
 
@@ -384,11 +388,12 @@ impl McpServer for ExampleServer {
 ### `#[tool]`
 
 ```rust,ignore
-#[tool("name")]
+#[tool("name", description = "..")]
 async fn func_name(&self) -> Result<CallToolResult> { }
 ```
 
 - "name" (optional) : ツール名。省略した場合は関数名が使用される。
+- "description" (optional) : AI向けの関数説明。ドキュメントコメントより優先される。
 
 下記のメソッドを実装する。
 

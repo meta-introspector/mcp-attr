@@ -175,6 +175,8 @@ For an MCP client to call MCP server methods, the AI needs to understand the mea
 
 Adding documentation comments to methods and arguments sends this information to the MCP client, allowing the AI to understand their meaning.
 
+You can also specify descriptions using the `description` attribute parameter. When both documentation comments and description attributes are specified, the description attribute takes precedence.
+
 ```rust
 use mcp_attr::server::{mcp_server, McpServer};
 use mcp_attr::Result;
@@ -295,11 +297,12 @@ impl McpServer for ExampleServer {
 ### `#[prompt]`
 
 ```rust,ignore
-#[prompt("name")]
+#[prompt("name", description = "..")]
 async fn func_name(&self) -> Result<GetPromptResult> { }
 ```
 
 - "name" (optional): Prompt name. If omitted, the function name is used.
+- "description" (optional): Function description for AI. Takes precedence over documentation comments.
 
 Implements the following methods:
 
@@ -345,13 +348,14 @@ impl McpServer for ExampleServer {
 ### `#[resource]`
 
 ```rust,ignore
-#[resource("url_template", name = "name", mime_type = "mime_type")]
+#[resource("url_template", name = "..", mime_type = "..", description = "..")]
 async fn func_name(&self) -> Result<ReadResourceResult> { }
 ```
 
 - "url_template" (optional): URI Template ([RFC 6570]) indicating the URL of resources this method handles. If omitted, handles all URLs.
 - "name" (optional): Resource name. If omitted, the function name is used.
 - "mime_type" (optional): MIME type of the resource.
+- "description" (optional): Function description for AI. Takes precedence over documentation comments.
 
 Implements the following methods:
 
@@ -404,11 +408,12 @@ If `resources_list` is manually implemented, it is not automatically implemented
 ### `#[tool]`
 
 ```rust,ignore
-#[tool("name")]
+#[tool("name", description = "..")]
 async fn func_name(&self) -> Result<CallToolResult> { }
 ```
 
 - "name" (optional): Tool name. If omitted, the function name is used.
+- "description" (optional): Function description for AI. Takes precedence over documentation comments.
 
 Implements the following methods:
 
