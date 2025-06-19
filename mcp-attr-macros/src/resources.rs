@@ -124,7 +124,7 @@ impl ResourceEntry {
         let name = &self.name;
         let uri = uri.expand(());
         let mime_type = opt_expr(&self.mime_type, |x| quote!(#x.to_string()));
-        let description = if let Some(_) = &self.attr_description {
+        let description = if self.attr_description.is_some() {
             expr_to_option(&self.attr_description)
         } else {
             descriotion_expr(&self.description)
@@ -166,7 +166,7 @@ impl ResourceEntry {
         let name = &self.name;
         let uri = uri.to_string();
         let mime_type = opt_expr(&self.mime_type, |x| quote!(#x.to_string()));
-        let description = if let Some(_) = &self.attr_description {
+        let description = if self.attr_description.is_some() {
             expr_to_option(&self.attr_description)
         } else {
             descriotion_expr(&self.description)
@@ -256,7 +256,7 @@ impl ResourceEntry {
     }
 
     fn build_read_stmt(&self) -> Result<Option<TokenStream>> {
-        let description = if let Some(_) = &self.attr_description {
+        let description = if self.attr_description.is_some() {
             expr_to_option(&self.attr_description)
         } else {
             descriotion_expr(&self.description)

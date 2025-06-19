@@ -108,7 +108,10 @@ async fn all_url(url: String) -> Result<String> {
     Ok(format!("--{url}---"))
 }
 
-#[resource("http://localhost/attr_desc", description = "Resource with attribute description")]
+#[resource(
+    "http://localhost/attr_desc",
+    description = "Resource with attribute description"
+)]
 async fn resource_attr_description() -> Result<String> {
     Ok("test".into())
 }
@@ -119,7 +122,11 @@ async fn resource_priority_test() -> Result<String> {
     Ok("test".into())
 }
 
-#[resource("http://localhost/named", name = "custom_resource_name", description = "Named resource with description")]
+#[resource(
+    "http://localhost/named",
+    name = "custom_resource_name",
+    description = "Named resource with description"
+)]
 async fn resource_name_with_description() -> Result<String> {
     Ok("test".into())
 }
@@ -199,8 +206,11 @@ fn resources_expected() -> ListResourcesResult {
             .with_description("Attribute wins"),
         Resource::new("http://localhost/named", "custom_resource_name")
             .with_description("Named resource with description"),
-        Resource::new("http://localhost/expr_desc.txt", "resource_expr_description")
-            .with_description("Resource with expr description"),
+        Resource::new(
+            "http://localhost/expr_desc.txt",
+            "resource_expr_description",
+        )
+        .with_description("Resource with expr description"),
     ]
     .into()
 }

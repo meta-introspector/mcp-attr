@@ -174,9 +174,11 @@ fn tools_expected() -> Result<ListToolsResult> {
             "arg_description",
             ToolInputSchema::new().with_property::<String>("arg", "Arg description", true)?,
         ),
-        Tool::new("tool_attr_description", ToolInputSchema::new()).with_description("Tool with attribute description"),
+        Tool::new("tool_attr_description", ToolInputSchema::new())
+            .with_description("Tool with attribute description"),
         Tool::new("tool_priority_test", ToolInputSchema::new()).with_description("Attribute wins"),
-        Tool::new("custom_tool_name", ToolInputSchema::new()).with_description("Named tool with description"),
+        Tool::new("custom_tool_name", ToolInputSchema::new())
+            .with_description("Named tool with description"),
     ]
     .into())
 }

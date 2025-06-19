@@ -9,14 +9,14 @@ use proc_macro2::{Span, TokenStream};
 use quote::{ToTokens, quote, quote_spanned};
 use structmeta::{NameArgs, NameValue, StructMeta};
 use syn::{
-    Attribute, Expr, FnArg, Ident, ImplItem, ImplItemFn, ItemFn, ItemImpl, LitStr, Pat, PatType, Path,
-    Result, Signature, Type, Visibility, parse::Parse, parse2, spanned::Spanned,
+    Attribute, Expr, FnArg, Ident, ImplItem, ImplItemFn, ItemFn, ItemImpl, LitStr, Pat, PatType,
+    Path, Result, Signature, Type, Visibility, parse::Parse, parse2, spanned::Spanned,
 };
 use uri_template_ex::UriTemplate;
 
 use crate::utils::{
-    arg_name_of, descriotion_expr, expand_option_ty, expr_to_option, get_doc, get_only_attr, is_context, ret_span,
-    take_doc,
+    arg_name_of, descriotion_expr, expand_option_ty, expr_to_option, get_doc, get_only_attr,
+    is_context, ret_span, take_doc,
 };
 use crate::{
     syn_utils::{get_element, is_path, is_type},

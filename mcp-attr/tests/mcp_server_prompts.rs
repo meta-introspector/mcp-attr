@@ -134,8 +134,10 @@ fn prompts_expected() -> ListPromptsResult {
         Prompt::new("arg_description").with_arguments(vec![
             PromptArgument::new("arg", true).with_description("Arg description"),
         ]),
-        Prompt::new("prompt_with_description_attr").with_description("Prompt with description attribute"),
-        Prompt::new("prompt_description_priority").with_description("Prompt description from attribute"),
+        Prompt::new("prompt_with_description_attr")
+            .with_description("Prompt with description attribute"),
+        Prompt::new("prompt_description_priority")
+            .with_description("Prompt description from attribute"),
         Prompt::new("custom_name").with_description("Prompt with name and description"),
     ]
     .into()
