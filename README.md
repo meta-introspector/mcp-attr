@@ -106,10 +106,10 @@ SSE is not yet supported. However, transport is extensible, so custom transports
 
 MCP servers created with this crate run on the tokio async runtime.
 
-Start the server by launching the async runtime with `#[tokio::main]` and passing a value implementing the `McpServer` trait to the `serve_stdio` function,
+Start the server by launching the async runtime with `#[tokio::main]` and passing a value implementing the [`McpServer`] trait to the [`serve_stdio`] function,
 which starts a server using standard input/output as transport.
 
-While you can implement the `McpServer` trait manually, you can implement it more efficiently in a declarative way by using the `#[mcp_server]` attribute.
+While you can implement the `McpServer` trait manually, you can implement it more efficiently in a declarative way by using the [`#[mcp_server]`](https://docs.rs/mcp-attr/latest/mcp_attr/server/attr.mcp_server.html) attribute.
 
 ```rust
 use mcp_attr::server::{mcp_server, McpServer, serve_stdio};
@@ -548,3 +548,4 @@ Unless you explicitly state otherwise, any contribution intentionally submitted 
 [`Result<impl Into<ReadResourceResult>>`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.ReadResourceResult.html
 [`Result<impl Into<CallToolResult>>`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.CallToolResult.html
 [`RequestContext`]: https://docs.rs/mcp-attr/latest/mcp_attr/server/struct.RequestContext.html
+[`serve_stdio`]: https://docs.rs/mcp-attr/latest/mcp_attr/server/fn.serve_stdio.html

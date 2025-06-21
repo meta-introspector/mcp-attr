@@ -108,10 +108,10 @@ SSE は未対応です。ただし、トランスポートは拡張可能なた�
 
 この crate による MCP サーバは非同期ランタイム tokio 上で動作します。
 
-`#[tokio::main]` で非同期ランタイムを起動し `serve_stdio` 関数に `McpServer` トレイトを実装した値を渡すことで
+`#[tokio::main]` で非同期ランタイムを起動し [`serve_stdio`] 関数に [`McpServer`] トレイトを実装した値を渡すことで
 標準入出力をトランスポートとするサーバが起動します。
 
-`McpServer` トレイトは手動で実装することもできますが、`#[mcp_server]` 属性を付与することで宣言的な方法で効率的に実装できます。
+`McpServer` トレイトは手動で実装することもできますが、[`#[mcp_server]`](https://docs.rs/mcp-attr/latest/mcp_attr/server/attr.mcp_server.html) 属性を付与することで宣言的な方法で効率的に実装できます。
 
 ```rust
 use mcp_attr::server::{mcp_server, McpServer, serve_stdio};
@@ -550,3 +550,4 @@ Unless you explicitly state otherwise, any contribution intentionally submitted 
 [`Result<impl Into<ReadResourceResult>>`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.ReadResourceResult.html
 [`Result<impl Into<CallToolResult>>`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.CallToolResult.html
 [`RequestContext`]: https://docs.rs/mcp-attr/latest/mcp_attr/server/struct.RequestContext.html
+[`serve_stdio`]: https://docs.rs/mcp-attr/latest/mcp_attr/server/fn.serve_stdio.html
