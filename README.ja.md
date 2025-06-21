@@ -21,7 +21,7 @@ mcp-attr は人間と AI によって簡単に [Model Context Protocol] サー�
   - MCP クライアントに送信する情報を型で表現することによりソースコード量が減り、可読性が高まる
   - 型エラーが AI によるコーディングの助けになる
 - **`rustfmt` との親和性**:
-  - マクロは `rustmft` によるフォーマットが適用される属性マクロのみを利用
+  - マクロは `rustfmt` によるフォーマットが適用される属性マクロのみを利用
   - AI によって生成されたコードを確実に整形できる
 
 ## クイックスタート
@@ -400,7 +400,7 @@ async fn func_name(&self) -> Result<CallToolResult> { }
 - [`tools_list`]
 - [`tools_call`]
 
-関数の引数はツールの引数となる。引数は下記のすべてのトレイトの実装が必要の実装が必要。
+関数の引数はツールの引数となる。引数は下記のすべてのトレイトの実装が必要。
 
 - [`DeserializeOwned`]: JSON から値を復元する為のトレイト
 - [`JsonSchema`]: JSON Schema を生成する為のトレイト（JSON Schema は MCP Client に送信され、AI が引数の構造を理解できるようになる）

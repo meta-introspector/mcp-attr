@@ -22,7 +22,7 @@
 //!   - MCP クライアントに送信する情報を型で表現することによりソースコード量が減り、可読性が高まる
 //!   - 型エラーが AI によるコーディングの助けになる
 //! - **`rustfmt` との親和性**:
-//!   - マクロは `rustmft` によるフォーマットが適用される属性マクロのみを利用
+//!   - マクロは `rustfmt` によるフォーマットが適用される属性マクロのみを利用
 //!   - AI によって生成されたコードを確実に整形できる
 //!
 //! ## クイックスタート
@@ -109,10 +109,10 @@
 //!
 //! この crate による MCP サーバは非同期ランタイム tokio 上で動作します。
 //!
-//! `#[tokio::main]` で非同期ランタイムを起動し `serve_stdio` 関数に `McpServer` トレイトを実装した値を渡すことで
+//! `#[tokio::main]` で非同期ランタイムを起動し [`serve_stdio`] 関数に [`McpServer`] トレイトを実装した値を渡すことで
 //! 標準入出力をトランスポートとするサーバが起動します。
 //!
-//! `McpServer` トレイトは手動で実装することもできますが、`#[mcp_server]` 属性を付与することで宣言的な方法で効率的に実装できます。
+//! `McpServer` トレイトは手動で実装することもできますが、[`#[mcp_server]`](https://docs.rs/mcp-attr/latest/mcp_attr/server/attr.mcp_server.html) 属性を付与することで宣言的な方法で効率的に実装できます。
 //!
 //! ```rust
 //! use mcp_attr::server::{mcp_server, McpServer, serve_stdio};
@@ -401,7 +401,7 @@
 //! - [`tools_list`]
 //! - [`tools_call`]
 //!
-//! 関数の引数はツールの引数となる。引数は下記のすべてのトレイトの実装が必要の実装が必要。
+//! 関数の引数はツールの引数となる。引数は下記のすべてのトレイトの実装が必要。
 //!
 //! - [`DeserializeOwned`]: JSON から値を復元する為のトレイト
 //! - [`JsonSchema`]: JSON Schema を生成する為のトレイト（JSON Schema は MCP Client に送信され、AI が引数の構造を理解できるようになる）
@@ -551,6 +551,7 @@
 //! [`Result<impl Into<ReadResourceResult>>`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.ReadResourceResult.html
 //! [`Result<impl Into<CallToolResult>>`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.CallToolResult.html
 //! [`RequestContext`]: https://docs.rs/mcp-attr/latest/mcp_attr/server/struct.RequestContext.html
+//! [`serve_stdio`]: https://docs.rs/mcp-attr/latest/mcp_attr/server/fn.serve_stdio.html
 // #![include_doc("../../README.ja.md", end)]
 // #![include_doc("../../README.md", start)]
 //! # mcp-attr
@@ -661,10 +662,10 @@
 //!
 //! MCP servers created with this crate run on the tokio async runtime.
 //!
-//! Start the server by launching the async runtime with `#[tokio::main]` and passing a value implementing the `McpServer` trait to the `serve_stdio` function,
+//! Start the server by launching the async runtime with `#[tokio::main]` and passing a value implementing the [`McpServer`] trait to the [`serve_stdio`] function,
 //! which starts a server using standard input/output as transport.
 //!
-//! While you can implement the `McpServer` trait manually, you can implement it more efficiently in a declarative way by using the `#[mcp_server]` attribute.
+//! While you can implement the `McpServer` trait manually, you can implement it more efficiently in a declarative way by using the [`#[mcp_server]`](https://docs.rs/mcp-attr/latest/mcp_attr/server/attr.mcp_server.html) attribute.
 //!
 //! ```rust
 //! use mcp_attr::server::{mcp_server, McpServer, serve_stdio};
@@ -1103,4 +1104,5 @@
 //! [`Result<impl Into<ReadResourceResult>>`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.ReadResourceResult.html
 //! [`Result<impl Into<CallToolResult>>`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.CallToolResult.html
 //! [`RequestContext`]: https://docs.rs/mcp-attr/latest/mcp_attr/server/struct.RequestContext.html
+//! [`serve_stdio`]: https://docs.rs/mcp-attr/latest/mcp_attr/server/fn.serve_stdio.html
 // #![include_doc("../../README.md", end)]
