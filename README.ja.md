@@ -401,7 +401,7 @@ async fn func_name(&self) -> Result<CallToolResult> { }
 
 - "name" (optional) : ツール名。省略した場合は関数名が使用される。
 - "description" (optional) : AI向けの関数説明。ドキュメントコメントより優先される。
-- "destructive" (optional) : ツールが破壊的な更新を実行する可能性がある場合は `true` (デフォルト: `true`)
+- "destructive" (optional) : ツールが破壊的な更新を実行する可能性がある場合は `true`、追加的な更新のみを実行する場合は `false` (デフォルト: `true`)
 - "idempotent" (optional) : 同じ引数でツールを繰り返し呼び出しても追加の効果がない場合は `true` (デフォルト: `false`)
 - "read_only" (optional) : ツールが環境を変更しない場合は `true` (デフォルト: `false`)
 - "open_world" (optional) : ツールが外部エンティティの「オープンワールド」とやり取りする可能性がある場合は `true` (デフォルト: `true`)
