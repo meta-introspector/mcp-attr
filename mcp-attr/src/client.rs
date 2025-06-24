@@ -73,11 +73,7 @@ impl<T: McpClientHandler + Send + Sync + 'static> DynSamplingHandler for T {
 ///
 /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 /// let server = MyServer;
-/// let roots = vec![Root {
-///     name: Some("my_root".to_string()),
-///     uri: "/path/to/root".to_string(),
-///     meta: Default::default(),
-/// }];
+/// let roots = vec![Root::new("/path/to/root").with_name("my_root")];
 ///
 /// let client = McpClientBuilder::new()
 ///     .with_expose_internals(true)
