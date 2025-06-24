@@ -9,8 +9,8 @@ use proc_macro2::{Span, TokenStream};
 use quote::{ToTokens, format_ident, quote, quote_spanned};
 use structmeta::{NameArgs, NameValue, StructMeta};
 use syn::{
-    Attribute, Expr, FnArg, Ident, ImplItem, ImplItemFn, ItemFn, ItemImpl, LitStr, Pat, Path,
-    Result, Signature, Type, Visibility, parse::Parse, parse2, spanned::Spanned,
+    Attribute, Expr, FnArg, Ident, ImplItem, ImplItemFn, ItemFn, ItemImpl, LitBool, LitStr, Pat,
+    Path, Result, Signature, Type, Visibility, parse::Parse, parse2, spanned::Spanned,
 };
 use uri_template_ex::UriTemplate;
 
@@ -38,6 +38,10 @@ pub struct ToolAttr {
     name: Option<LitStr>,
     description: Option<Expr>,
     pub dump: bool,
+    destructive: Option<NameValue<Option<LitBool>>>,
+    idempotent: Option<NameValue<Option<LitBool>>>,
+    open_world: Option<NameValue<Option<LitBool>>>,
+    read_only: Option<NameValue<Option<LitBool>>>,
 }
 
 pub struct ToolEntry {
@@ -48,6 +52,15 @@ pub struct ToolEntry {
     attr_description: Option<Expr>,
     args: Vec<ToolFnArg>,
     ret_span: Span,
+    tool_annotations: Option<ToolAnnotationsData>,
+}
+
+#[derive(Clone)]
+struct ToolAnnotationsData {
+    destructive_hint: Option<bool>,
+    idempotent_hint: Option<bool>,
+    open_world_hint: Option<bool>,
+    read_only_hint: Option<bool>,
 }
 impl ToolEntry {
     pub fn from_impl_item_fn(f: &mut ImplItemFn, attr: ToolAttr) -> Result<Self> {
@@ -65,13 +78,13 @@ impl ToolEntry {
         f_span: Span,
         attr: ToolAttr,
     ) -> Result<Self> {
+        let tool_annotations = build_tool_annotations(&attr)?;
         let name = attr
             .name
             .map(|n| n.value())
             .unwrap_or_else(|| sig.ident.to_string());
         let fn_ident = sig.ident.clone();
         let description = if attr.description.is_some() {
-            // 属性にdescriptionがある場合は、それを文字列として保存（後でbuild_metadataで処理）
             String::new()
         } else {
             get_doc(attrs)
@@ -89,6 +102,7 @@ impl ToolEntry {
             attr_description: attr.description,
             args,
             ret_span: ret_span(sig, f_span),
+            tool_annotations,
         })
     }
     pub fn build_list(items: &[Self]) -> Result<TokenStream> {
@@ -117,6 +131,26 @@ impl ToolEntry {
             .iter()
             .map(|a| a.build_list())
             .collect::<Result<Vec<TokenStream>>>()?;
+
+        let annotations = if let Some(ref tool_annotations) = self.tool_annotations {
+            let destructive_hint = option_bool_to_tokens(&tool_annotations.destructive_hint);
+            let idempotent_hint = option_bool_to_tokens(&tool_annotations.idempotent_hint);
+            let open_world_hint = option_bool_to_tokens(&tool_annotations.open_world_hint);
+            let read_only_hint = option_bool_to_tokens(&tool_annotations.read_only_hint);
+
+            quote! {
+                Some(::mcp_attr::schema::ToolAnnotations {
+                    destructive_hint: #destructive_hint,
+                    idempotent_hint: #idempotent_hint,
+                    open_world_hint: #open_world_hint,
+                    read_only_hint: #read_only_hint,
+                    title: None,
+                })
+            }
+        } else {
+            quote! { None }
+        };
+
         Ok(quote! {
             {
                 let mut input_schema = ::mcp_attr::schema::ToolInputSchema::new();
@@ -125,7 +159,7 @@ impl ToolEntry {
                     name: #name.into(),
                     input_schema,
                     description: #description,
-                    annotations: None,
+                    annotations: #annotations,
                     meta: Default::default(),
                     output_schema: None,
                     title: None,
@@ -277,5 +311,45 @@ impl ToolArg {
                 quote_spanned! {span=> ::mcp_attr::helpers::parse_tool_arg_opt::<#ty>(&p.arguments, #name)?},
             )
         }
+    }
+}
+
+fn parse_optional_bool(attr: &Option<NameValue<Option<LitBool>>>) -> Result<Option<bool>> {
+    match attr {
+        None => Ok(None),
+        Some(name_value) => match &name_value.value {
+            None => Ok(Some(true)),
+            Some(lit_bool) => Ok(Some(lit_bool.value)),
+        },
+    }
+}
+
+fn build_tool_annotations(attr: &ToolAttr) -> Result<Option<ToolAnnotationsData>> {
+    let destructive_hint = parse_optional_bool(&attr.destructive)?;
+    let idempotent_hint = parse_optional_bool(&attr.idempotent)?;
+    let open_world_hint = parse_optional_bool(&attr.open_world)?;
+    let read_only_hint = parse_optional_bool(&attr.read_only)?;
+
+    if destructive_hint.is_none()
+        && idempotent_hint.is_none()
+        && open_world_hint.is_none()
+        && read_only_hint.is_none()
+    {
+        return Ok(None);
+    }
+
+    Ok(Some(ToolAnnotationsData {
+        destructive_hint,
+        idempotent_hint,
+        open_world_hint,
+        read_only_hint,
+    }))
+}
+
+fn option_bool_to_tokens(opt: &Option<bool>) -> TokenStream {
+    match opt {
+        None => quote! { None },
+        Some(true) => quote! { Some(true) },
+        Some(false) => quote! { Some(false) },
     }
 }
