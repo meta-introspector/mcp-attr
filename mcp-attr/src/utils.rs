@@ -3,7 +3,7 @@
 use std::{borrow::Cow, marker::PhantomData};
 
 use base64::Engine;
-use parse_display::Display;
+use parse_display::{Display, ParseError};
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::{Map, Value};
 
@@ -150,12 +150,24 @@ impl<'de, T: TagData> Deserialize<'de> for Tag<T> {
 pub struct ProtocolVersion(&'static str);
 
 impl ProtocolVersion {
-    pub const LATEST: Self = Self::V_2025_03_26;
+    pub const LATEST: Self = Self::V_2025_06_18;
     pub const V_2024_11_05: Self = Self("2024-11-05");
     pub const V_2025_03_26: Self = Self("2025-03-26");
+    pub const V_2025_06_18: Self = Self("2025-06-18");
 
     pub fn as_str(&self) -> &'static str {
         self.0
+    }
+}
+impl std::str::FromStr for ProtocolVersion {
+    type Err = ParseError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "2024-11-05" => Ok(Self::V_2024_11_05),
+            "2025-03-26" => Ok(Self::V_2025_03_26),
+            "2025-06-18" => Ok(Self::V_2025_06_18),
+            _ => Err(ParseError::new()),
+        }
     }
 }
 

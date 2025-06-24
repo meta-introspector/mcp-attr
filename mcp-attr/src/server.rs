@@ -104,10 +104,10 @@ impl McpServerHandler {
 }
 impl McpServerHandler {
     fn initialize(&mut self, p: InitializeRequestParams) -> Result<InitializeResult> {
-        let mut protocol_version = ProtocolVersion::LATEST;
-        if p.protocol_version == ProtocolVersion::V_2024_11_05.as_str() {
-            protocol_version = ProtocolVersion::V_2024_11_05;
-        }
+        let protocol_version = p
+            .protocol_version
+            .parse::<ProtocolVersion>()
+            .unwrap_or(ProtocolVersion::LATEST);
         self.data = Some(Arc::new(SessionData {
             initialize: p,
             protocol_version,
