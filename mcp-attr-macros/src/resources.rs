@@ -15,7 +15,7 @@ use syn::{
 use uri_template_ex::UriTemplate;
 
 use crate::utils::{
-    descriotion_expr, expand_option_ty, expr_to_option, get_doc, get_only_attr, is_context,
+    description_expr, expand_option_ty, expr_to_option, get_doc, get_only_attr, is_context,
     opt_expr, ret_span, take_doc,
 };
 use crate::{
@@ -127,7 +127,7 @@ impl ResourceEntry {
         let description = if self.attr_description.is_some() {
             expr_to_option(&self.attr_description)
         } else {
-            descriotion_expr(&self.description)
+            description_expr(&self.description)
         };
         Ok(Some(quote! {
             ::mcp_attr::schema::Resource {
@@ -171,7 +171,7 @@ impl ResourceEntry {
         let description = if self.attr_description.is_some() {
             expr_to_option(&self.attr_description)
         } else {
-            descriotion_expr(&self.description)
+            description_expr(&self.description)
         };
         Ok(Some(quote! {
             ::mcp_attr::schema::ResourceTemplate {
@@ -263,7 +263,7 @@ impl ResourceEntry {
         let description = if self.attr_description.is_some() {
             expr_to_option(&self.attr_description)
         } else {
-            descriotion_expr(&self.description)
+            description_expr(&self.description)
         };
         let name = &self.name;
         let mime_type = opt_expr(&self.mime_type, |x| quote!(#x.to_string()));

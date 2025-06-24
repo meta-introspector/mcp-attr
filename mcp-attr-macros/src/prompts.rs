@@ -15,7 +15,7 @@ use syn::{
 use uri_template_ex::UriTemplate;
 
 use crate::utils::{
-    arg_name_of, descriotion_expr, expand_option_ty, expr_to_option, get_doc, get_only_attr,
+    arg_name_of, description_expr, expand_option_ty, expr_to_option, get_doc, get_only_attr,
     is_context, ret_span, take_doc,
 };
 use crate::{
@@ -107,7 +107,7 @@ impl PromptEntry {
         let description = if let Some(attr_desc) = &self.attr_description {
             expr_to_option(&Some(attr_desc.clone()))
         } else {
-            descriotion_expr(&self.description)
+            description_expr(&self.description)
         };
         let args = self
             .args
@@ -249,7 +249,7 @@ struct PromptArg {
 impl PromptArg {
     fn build_list(&self) -> Result<TokenStream> {
         let name = &self.name;
-        let description = descriotion_expr(&self.description);
+        let description = description_expr(&self.description);
         let required = self.required;
         Ok(quote! {
             ::mcp_attr::schema::PromptArgument {

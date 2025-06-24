@@ -215,7 +215,7 @@ pub(crate) fn expand_option_ty(ty: &Type) -> (Type, bool) {
     }
 }
 
-pub(crate) fn descriotion_expr(s: &str) -> TokenStream {
+pub(crate) fn description_expr(s: &str) -> TokenStream {
     if s.is_empty() {
         quote!(None)
     } else {

@@ -41,7 +41,7 @@ struct SessionData {
 struct McpServerHandler {
     server: Arc<dyn DynMcpServer>,
     data: Option<Arc<SessionData>>,
-    is_initizlized: bool,
+    is_initialized: bool,
 }
 impl Handler for McpServerHandler {
     fn hook(&self) -> Arc<dyn Hook> {
@@ -58,7 +58,7 @@ impl Handler for McpServerHandler {
             "ping" => return cx.handle(self.ping(params.to_opt()?)),
             _ => {}
         }
-        let (Some(data), true) = (&self.data, self.is_initizlized) else {
+        let (Some(data), true) = (&self.data, self.is_initialized) else {
             bail_public!(_, "Server not initialized");
         };
         let d = data.clone();
@@ -98,7 +98,7 @@ impl McpServerHandler {
         Self {
             server: Arc::new(server),
             data: None,
-            is_initizlized: false,
+            is_initialized: false,
         }
     }
 }
@@ -121,7 +121,7 @@ impl McpServerHandler {
                 "`initialize` request must be called before `initialized` notification"
             );
         }
-        self.is_initizlized = true;
+        self.is_initialized = true;
         Ok(())
     }
     fn ping(&self, _p: Option<PingRequestParams>) -> Result<Empty> {
