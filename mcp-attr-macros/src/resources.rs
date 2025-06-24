@@ -137,6 +137,8 @@ impl ResourceEntry {
                 description: #description,
                 size: None,
                 annotations: None,
+                meta: Default::default(),
+                title: None,
             }
         }))
     }
@@ -178,6 +180,8 @@ impl ResourceEntry {
                 mime_type: #mime_type,
                 description: #description,
                 annotations: None,
+                meta: Default::default(),
+                title: None,
             }
         }))
     }

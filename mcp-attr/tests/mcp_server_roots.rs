@@ -5,7 +5,7 @@ use tokio::test;
 
 use mcp_attr::Result;
 use mcp_attr::client::McpClientBuilder;
-use mcp_attr::schema::{CallToolRequestParams, CallToolResult, CallToolResultContentItem, Root};
+use mcp_attr::schema::{CallToolRequestParams, CallToolResult, ContentBlock, Root};
 use mcp_attr::server::{McpServer, RequestContext, mcp_server};
 
 struct MyMcpServer;
@@ -43,7 +43,7 @@ async fn list_roots() -> Result<()> {
     let a = client
         .tools_call(CallToolRequestParams::new("echo_roots"))
         .await?;
-    let e: Vec<CallToolResultContentItem> = files.iter().map(|x| x.as_str().into()).collect();
+    let e: Vec<ContentBlock> = files.iter().map(|x| x.as_str().into()).collect();
     let e: CallToolResult = e.into();
     assert_eq!(a, e);
     Ok(())

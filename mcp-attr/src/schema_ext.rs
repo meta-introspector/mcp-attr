@@ -10,16 +10,16 @@ use crate::{
     Result,
     schema::{
         Annotations, BlobResourceContents, CallToolRequestParams, CallToolResult,
-        CallToolResultContentItem, CompleteRequestParams, CompleteRequestParamsArgument,
+        ContentBlock, CompleteRequestParams, CompleteRequestParamsArgument,
         CompleteRequestParamsRef, CompleteResult, CompleteResultCompletion, EmbeddedResource,
         EmbeddedResourceResource, GetPromptRequestParams, GetPromptResult, ImageContent,
         Implementation, ListPromptsResult, ListResourceTemplatesResult, ListResourcesResult,
         ListRootsResult, ListToolsResult, Prompt, PromptArgument, PromptMessage,
-        PromptMessageContent, PromptReference, ReadResourceRequestParams, ReadResourceResult,
-        ReadResourceResultContentsItem, Resource, ResourceReference, ResourceTemplate, Role, Root,
+        PromptReference, ReadResourceRequestParams, ReadResourceResult,
+        ReadResourceResultContentsItem, Resource, ResourceTemplateReference, ResourceTemplate, Role, Root,
         TextContent, TextResourceContents, Tool, ToolAnnotations, ToolInputSchema,
     },
-    utils::{Base64Bytes, Json},
+    utils::Base64Bytes,
 };
 use std::{
     collections::BTreeMap,
@@ -50,8 +50,8 @@ impl From<PromptMessage> for GetPromptResult {
         vec![message].into()
     }
 }
-impl From<PromptMessageContent> for PromptMessage {
-    fn from(content: PromptMessageContent) -> Self {
+impl From<ContentBlock> for PromptMessage {
+    fn from(content: ContentBlock) -> Self {
         PromptMessage {
             content,
             role: Role::User,
@@ -102,23 +102,24 @@ impl From<Vec<Tool>> for ListToolsResult {
         }
     }
 }
-impl<T: Into<CallToolResultContentItem>> From<Vec<T>> for CallToolResult {
+impl<T: Into<ContentBlock>> From<Vec<T>> for CallToolResult {
     fn from(content: Vec<T>) -> Self {
         CallToolResult {
             content: content.into_iter().map(|c| c.into()).collect(),
             is_error: None,
             meta: Default::default(),
+            structured_content: Default::default(),
         }
     }
 }
 impl From<()> for CallToolResult {
     fn from(_: ()) -> Self {
-        Vec::<CallToolResultContentItem>::new().into()
+        Vec::<ContentBlock>::new().into()
     }
 }
 
-impl From<CallToolResultContentItem> for CallToolResult {
-    fn from(content: CallToolResultContentItem) -> Self {
+impl From<ContentBlock> for CallToolResult {
+    fn from(content: ContentBlock) -> Self {
         vec![content].into()
     }
 }
@@ -148,6 +149,8 @@ impl Prompt {
             name: name.to_string(),
             arguments: vec![],
             description: None,
+            meta: Default::default(),
+            title: None,
         }
     }
     pub fn with_description(mut self, description: &str) -> Self {
@@ -165,6 +168,7 @@ impl PromptArgument {
             name: name.to_string(),
             description: None,
             required: Some(required),
+            title: None,
         }
     }
     pub fn with_description(mut self, description: &str) -> Self {
@@ -186,6 +190,8 @@ impl Resource {
             mime_type: None,
             annotations: None,
             size: None,
+            meta: Default::default(),
+            title: None,
         }
     }
     pub fn with_description(mut self, description: &str) -> Self {
@@ -213,6 +219,8 @@ impl ResourceTemplate {
             annotations: None,
             description: None,
             mime_type: None,
+            meta: Default::default(),
+            title: None,
         }
     }
     pub fn with_description(mut self, description: &str) -> Self {
@@ -243,6 +251,9 @@ impl Tool {
             description: None,
             input_schema,
             annotations: None,
+            meta: Default::default(),
+            output_schema: None,
+            title: None,
         }
     }
     pub fn with_description(mut self, description: &str) -> Self {
@@ -330,6 +341,7 @@ impl TextContent {
             text: text.to_string(),
             annotations: None,
             type_: "text".to_string(),
+            meta: Default::default(),
         }
     }
 }
@@ -351,6 +363,7 @@ impl ImageContent {
             mime_type: mime_type.to_string(),
             annotations: None,
             type_: "image".to_string(),
+            meta: Default::default(),
         }
     }
 }
@@ -361,6 +374,7 @@ impl EmbeddedResource {
             annotations: None,
             resource: resource.into(),
             type_: "resource".to_string(),
+            meta: Default::default(),
         }
     }
 }
@@ -393,6 +407,7 @@ impl Implementation {
         Self {
             name: name.to_string(),
             version: version.to_string(),
+            title: None,
         }
     }
     pub fn from_compile_time_env() -> Self {
@@ -405,6 +420,7 @@ impl Root {
         Self {
             uri: uri.to_string(),
             name: None,
+            meta: Default::default(),
         }
     }
     pub fn with_name(mut self, name: impl Display) -> Self {
@@ -469,7 +485,11 @@ impl From<&[&str]> for CompleteResultCompletion {
 
 impl CompleteRequestParams {
     pub fn new(r: CompleteRequestParamsRef, argument: CompleteRequestParamsArgument) -> Self {
-        Self { argument, ref_: r }
+        Self { 
+            argument, 
+            ref_: r,
+            context: Default::default(),
+        }
     }
 }
 impl CompleteRequestParamsArgument {
@@ -486,7 +506,7 @@ impl CompleteRequestParamsRef {
         CompleteRequestParamsRef::PromptReference(PromptReference::new(name))
     }
     pub fn new_resource(uri: &str) -> Self {
-        CompleteRequestParamsRef::ResourceReference(ResourceReference::new(uri))
+        CompleteRequestParamsRef::ResourceTemplateReference(ResourceTemplateReference::new(uri))
     }
 }
 impl PromptReference {
@@ -494,30 +514,15 @@ impl PromptReference {
         Self {
             name: name.to_string(),
             type_: "ref/prompt".to_string(),
+            title: None,
         }
     }
 }
-impl ResourceReference {
+impl ResourceTemplateReference {
     pub fn new(uri: &str) -> Self {
         Self {
             uri: uri.to_string(),
             type_: "ref/resource".to_string(),
         }
-    }
-}
-
-impl<T> From<Json<T>> for TextContent {
-    fn from(value: Json<T>) -> Self {
-        TextContent::new(value.into_string())
-    }
-}
-impl<T> From<Json<T>> for CallToolResult {
-    fn from(value: Json<T>) -> Self {
-        CallToolResultContentItem::from(value).into()
-    }
-}
-impl<T> From<Json<T>> for CallToolResultContentItem {
-    fn from(value: Json<T>) -> Self {
-        TextContent::from(value).into()
     }
 }

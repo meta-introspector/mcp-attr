@@ -76,6 +76,7 @@ impl<T: McpClientHandler + Send + Sync + 'static> DynSamplingHandler for T {
 /// let roots = vec![Root {
 ///     name: Some("my_root".to_string()),
 ///     uri: "/path/to/root".to_string(),
+///     meta: Default::default(),
 /// }];
 ///
 /// let client = McpClientBuilder::new()

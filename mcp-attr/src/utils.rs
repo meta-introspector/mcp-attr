@@ -7,6 +7,8 @@ use parse_display::Display;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::{Map, Value};
 
+use crate::schema::{CallToolResult, ContentBlock, TextContent};
+
 /// Type for handling byte sequences as Base64-encoded strings
 ///
 /// This type is used when you want to handle a byte sequence as a Base64-encoded string in JSON serialization,
@@ -175,6 +177,22 @@ impl<T: Serialize> Json<T> {
 impl<T> Json<T> {
     pub fn into_string(self) -> String {
         self.json
+    }
+}
+
+impl<T> From<Json<T>> for TextContent {
+    fn from(value: Json<T>) -> Self {
+        TextContent::new(value.into_string())
+    }
+}
+impl<T> From<Json<T>> for CallToolResult {
+    fn from(value: Json<T>) -> Self {
+        ContentBlock::from(value).into()
+    }
+}
+impl<T> From<Json<T>> for ContentBlock {
+    fn from(value: Json<T>) -> Self {
+        TextContent::from(value).into()
     }
 }
 

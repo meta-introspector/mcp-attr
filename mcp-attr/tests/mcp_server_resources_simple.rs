@@ -13,6 +13,7 @@ impl McpServer for MyMcpServer {
             mime_type: None,
             text,
             uri: format!("http://{a}/{b}"),
+            meta: Default::default(),
         })
     }
 }

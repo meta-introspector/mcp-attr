@@ -126,6 +126,9 @@ impl ToolEntry {
                     input_schema,
                     description: #description,
                     annotations: None,
+                    meta: Default::default(),
+                    output_schema: None,
+                    title: None,
                 }
             }
         })

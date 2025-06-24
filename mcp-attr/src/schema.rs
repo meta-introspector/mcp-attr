@@ -46,6 +46,10 @@ pub mod error {
 ///        "$ref": "#/definitions/Role"
 ///      }
 ///    },
+///    "lastModified": {
+///      "description": "The moment the resource was last modified, as an ISO 8601 formatted string.\n\nShould be an ISO 8601 formatted string (e.g., \"2025-01-12T15:00:58Z\").\n\nExamples: last activity timestamp in an open file, timestamp when the resource\nwas attached, etc.",
+///      "type": "string"
+///    },
 ///    "priority": {
 ///      "description": "Describes how important this data is for operating the server.\n\nA value of 1 means \"most important,\" and indicates that the data is\neffectively required, while 0 means \"least important,\" and indicates that\nthe data is entirely optional.",
 ///      "type": "number",
@@ -63,6 +67,18 @@ pub struct Annotations {
     ///It can include multiple entries to indicate content useful for multiple audiences (e.g., `["user", "assistant"]`).
     #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
     pub audience: ::std::vec::Vec<Role>,
+    ///The moment the resource was last modified, as an ISO 8601 formatted string.
+    ///
+    ///Should be an ISO 8601 formatted string (e.g., "2025-01-12T15:00:58Z").
+    ///
+    ///Examples: last activity timestamp in an open file, timestamp when the resource
+    ///was attached, etc.
+    #[serde(
+        rename = "lastModified",
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub last_modified: ::std::option::Option<::std::string::String>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub priority: ::std::option::Option<f64>,
 }
@@ -75,6 +91,7 @@ impl ::std::default::Default for Annotations {
     fn default() -> Self {
         Self {
             audience: Default::default(),
+            last_modified: Default::default(),
             priority: Default::default(),
         }
     }
@@ -93,6 +110,11 @@ impl ::std::default::Default for Annotations {
 ///    "type"
 ///  ],
 ///  "properties": {
+///    "_meta": {
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+///      "type": "object",
+///      "additionalProperties": {}
+///    },
 ///    "annotations": {
 ///      "description": "Optional annotations for the client.",
 ///      "$ref": "#/definitions/Annotations"
@@ -121,6 +143,13 @@ pub struct AudioContent {
     pub annotations: ::std::option::Option<Annotations>,
     ///The base64-encoded audio data.
     pub data: crate::utils::Base64Bytes,
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
+    #[serde(
+        rename = "_meta",
+        default,
+        skip_serializing_if = "::serde_json::Map::is_empty"
+    )]
+    pub meta: ::serde_json::Map<::std::string::String, ::serde_json::Value>,
     ///The MIME type of the audio. Different providers may support different audio types.
     #[serde(rename = "mimeType")]
     pub mime_type: ::std::string::String,
@@ -129,6 +158,48 @@ pub struct AudioContent {
 }
 impl ::std::convert::From<&AudioContent> for AudioContent {
     fn from(value: &AudioContent) -> Self {
+        value.clone()
+    }
+}
+///Base interface for metadata with name (identifier) and title (display name) properties.
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "Base interface for metadata with name (identifier) and title (display name) properties.",
+///  "type": "object",
+///  "required": [
+///    "name"
+///  ],
+///  "properties": {
+///    "name": {
+///      "description": "Intended for programmatic or logical use, but used as a display name in past specs or fallback (if title isn't present).",
+///      "type": "string"
+///    },
+///    "title": {
+///      "description": "Intended for UI and end-user contexts — optimized to be human-readable and easily understood,\neven by those unfamiliar with domain-specific terminology.\n\nIf not provided, the name should be used for display (except for Tool,\nwhere `annotations.title` should be given precedence over using `name`,\nif present).",
+///      "type": "string"
+///    }
+///  }
+///}
+/// ```
+/// </details>
+#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
+pub struct BaseMetadata {
+    ///Intended for programmatic or logical use, but used as a display name in past specs or fallback (if title isn't present).
+    pub name: ::std::string::String,
+    ///Intended for UI and end-user contexts — optimized to be human-readable and easily understood,
+    ///even by those unfamiliar with domain-specific terminology.
+    ///
+    ///If not provided, the name should be used for display (except for Tool,
+    ///where `annotations.title` should be given precedence over using `name`,
+    ///if present).
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub title: ::std::option::Option<::std::string::String>,
+}
+impl ::std::convert::From<&BaseMetadata> for BaseMetadata {
+    fn from(value: &BaseMetadata) -> Self {
         value.clone()
     }
 }
@@ -144,6 +215,11 @@ impl ::std::convert::From<&AudioContent> for AudioContent {
 ///    "uri"
 ///  ],
 ///  "properties": {
+///    "_meta": {
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+///      "type": "object",
+///      "additionalProperties": {}
+///    },
 ///    "blob": {
 ///      "description": "A base64-encoded string representing the binary data of the item.",
 ///      "type": "string",
@@ -166,6 +242,13 @@ impl ::std::convert::From<&AudioContent> for AudioContent {
 pub struct BlobResourceContents {
     ///A base64-encoded string representing the binary data of the item.
     pub blob: crate::utils::Base64Bytes,
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
+    #[serde(
+        rename = "_meta",
+        default,
+        skip_serializing_if = "::serde_json::Map::is_empty"
+    )]
+    pub meta: ::serde_json::Map<::std::string::String, ::serde_json::Value>,
     ///The MIME type of this resource, if known.
     #[serde(
         rename = "mimeType",
@@ -178,6 +261,50 @@ pub struct BlobResourceContents {
 }
 impl ::std::convert::From<&BlobResourceContents> for BlobResourceContents {
     fn from(value: &BlobResourceContents) -> Self {
+        value.clone()
+    }
+}
+///BooleanSchema
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "type"
+///  ],
+///  "properties": {
+///    "default": {
+///      "type": "boolean"
+///    },
+///    "description": {
+///      "type": "string"
+///    },
+///    "title": {
+///      "type": "string"
+///    },
+///    "type": {
+///      "type": "string",
+///      "const": "boolean"
+///    }
+///  }
+///}
+/// ```
+/// </details>
+#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
+pub struct BooleanSchema {
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub default: ::std::option::Option<bool>,
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub description: ::std::option::Option<::std::string::String>,
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub title: ::std::option::Option<::std::string::String>,
+    #[serde(rename = "type")]
+    pub type_: ::std::string::String,
+}
+impl ::std::convert::From<&BooleanSchema> for BooleanSchema {
+    fn from(value: &BooleanSchema) -> Self {
         value.clone()
     }
 }
@@ -263,52 +390,36 @@ impl ::std::convert::From<&CallToolRequestParams> for CallToolRequestParams {
 }
 ///The server's response to a tool call.
 ///
-///Any errors that originate from the tool SHOULD be reported inside the result
-///object, with `isError` set to true, _not_ as an MCP protocol-level error
-///response. Otherwise, the LLM would not be able to see that an error occurred
-///and self-correct.
-///
-///However, any errors in _finding_ the tool, an error indicating that the
-///server does not support tool calls, or any other exceptional conditions,
-///should be reported as an MCP error response.
-///
 /// <details><summary>JSON schema</summary>
 ///
 /// ```json
 ///{
-///  "description": "The server's response to a tool call.\n\nAny errors that originate from the tool SHOULD be reported inside the result\nobject, with `isError` set to true, _not_ as an MCP protocol-level error\nresponse. Otherwise, the LLM would not be able to see that an error occurred\nand self-correct.\n\nHowever, any errors in _finding_ the tool, an error indicating that the\nserver does not support tool calls, or any other exceptional conditions,\nshould be reported as an MCP error response.",
+///  "description": "The server's response to a tool call.",
 ///  "type": "object",
 ///  "required": [
 ///    "content"
 ///  ],
 ///  "properties": {
 ///    "_meta": {
-///      "description": "This result property is reserved by the protocol to allow clients and servers to attach additional metadata to their responses.",
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///      "type": "object",
 ///      "additionalProperties": {}
 ///    },
 ///    "content": {
+///      "description": "A list of content objects that represent the unstructured result of the tool call.",
 ///      "type": "array",
 ///      "items": {
-///        "anyOf": [
-///          {
-///            "$ref": "#/definitions/TextContent"
-///          },
-///          {
-///            "$ref": "#/definitions/ImageContent"
-///          },
-///          {
-///            "$ref": "#/definitions/AudioContent"
-///          },
-///          {
-///            "$ref": "#/definitions/EmbeddedResource"
-///          }
-///        ]
+///        "$ref": "#/definitions/ContentBlock"
 ///      }
 ///    },
 ///    "isError": {
-///      "description": "Whether the tool call ended in an error.\n\nIf not set, this is assumed to be false (the call was successful).",
+///      "description": "Whether the tool call ended in an error.\n\nIf not set, this is assumed to be false (the call was successful).\n\nAny errors that originate from the tool SHOULD be reported inside the result\nobject, with `isError` set to true, _not_ as an MCP protocol-level error\nresponse. Otherwise, the LLM would not be able to see that an error occurred\nand self-correct.\n\nHowever, any errors in _finding_ the tool, an error indicating that the\nserver does not support tool calls, or any other exceptional conditions,\nshould be reported as an MCP error response.",
 ///      "type": "boolean"
+///    },
+///    "structuredContent": {
+///      "description": "An optional JSON object that represents the structured result of the tool call.",
+///      "type": "object",
+///      "additionalProperties": {}
 ///    }
 ///  }
 ///}
@@ -316,83 +427,44 @@ impl ::std::convert::From<&CallToolRequestParams> for CallToolRequestParams {
 /// </details>
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
 pub struct CallToolResult {
-    pub content: ::std::vec::Vec<CallToolResultContentItem>,
+    ///A list of content objects that represent the unstructured result of the tool call.
+    pub content: ::std::vec::Vec<ContentBlock>,
     ///Whether the tool call ended in an error.
     ///
     ///If not set, this is assumed to be false (the call was successful).
+    ///
+    ///Any errors that originate from the tool SHOULD be reported inside the result
+    ///object, with `isError` set to true, _not_ as an MCP protocol-level error
+    ///response. Otherwise, the LLM would not be able to see that an error occurred
+    ///and self-correct.
+    ///
+    ///However, any errors in _finding_ the tool, an error indicating that the
+    ///server does not support tool calls, or any other exceptional conditions,
+    ///should be reported as an MCP error response.
     #[serde(
         rename = "isError",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
     pub is_error: ::std::option::Option<bool>,
-    ///This result property is reserved by the protocol to allow clients and servers to attach additional metadata to their responses.
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
     #[serde(
         rename = "_meta",
         default,
         skip_serializing_if = "::serde_json::Map::is_empty"
     )]
     pub meta: ::serde_json::Map<::std::string::String, ::serde_json::Value>,
+    ///An optional JSON object that represents the structured result of the tool call.
+    #[serde(
+        rename = "structuredContent",
+        default,
+        skip_serializing_if = "::serde_json::Map::is_empty"
+    )]
+    pub structured_content: ::serde_json::Map<::std::string::String, ::serde_json::Value>,
 }
 impl ::std::convert::From<&CallToolResult> for CallToolResult {
     fn from(value: &CallToolResult) -> Self {
         value.clone()
-    }
-}
-///CallToolResultContentItem
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "anyOf": [
-///    {
-///      "$ref": "#/definitions/TextContent"
-///    },
-///    {
-///      "$ref": "#/definitions/ImageContent"
-///    },
-///    {
-///      "$ref": "#/definitions/AudioContent"
-///    },
-///    {
-///      "$ref": "#/definitions/EmbeddedResource"
-///    }
-///  ]
-///}
-/// ```
-/// </details>
-#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
-#[serde(untagged)]
-pub enum CallToolResultContentItem {
-    TextContent(TextContent),
-    ImageContent(ImageContent),
-    AudioContent(AudioContent),
-    EmbeddedResource(EmbeddedResource),
-}
-impl ::std::convert::From<&Self> for CallToolResultContentItem {
-    fn from(value: &CallToolResultContentItem) -> Self {
-        value.clone()
-    }
-}
-impl ::std::convert::From<TextContent> for CallToolResultContentItem {
-    fn from(value: TextContent) -> Self {
-        Self::TextContent(value)
-    }
-}
-impl ::std::convert::From<ImageContent> for CallToolResultContentItem {
-    fn from(value: ImageContent) -> Self {
-        Self::ImageContent(value)
-    }
-}
-impl ::std::convert::From<AudioContent> for CallToolResultContentItem {
-    fn from(value: AudioContent) -> Self {
-        Self::AudioContent(value)
-    }
-}
-impl ::std::convert::From<EmbeddedResource> for CallToolResultContentItem {
-    fn from(value: EmbeddedResource) -> Self {
-        Self::EmbeddedResource(value)
     }
 }
 ///This notification can be sent by either side to indicate that it is cancelling a previously-issued request.
@@ -496,6 +568,11 @@ impl ::std::convert::From<&CancelledNotificationParams> for CancelledNotificatio
 ///  "description": "Capabilities a client may support. Known capabilities are defined here, in this schema, but this is not a closed set: any client can define its own, additional capabilities.",
 ///  "type": "object",
 ///  "properties": {
+///    "elicitation": {
+///      "description": "Present if the client supports elicitation from the server.",
+///      "type": "object",
+///      "additionalProperties": true
+///    },
 ///    "experimental": {
 ///      "description": "Experimental, non-standard capabilities that the client supports.",
 ///      "type": "object",
@@ -525,6 +602,10 @@ impl ::std::convert::From<&CancelledNotificationParams> for CancelledNotificatio
 /// </details>
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
 pub struct ClientCapabilities {
+    ///Present if the client supports elicitation from the server.
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub elicitation:
+        ::std::option::Option<::serde_json::Map<::std::string::String, ::serde_json::Value>>,
     ///Experimental, non-standard capabilities that the client supports.
     #[serde(
         default,
@@ -549,6 +630,7 @@ impl ::std::convert::From<&ClientCapabilities> for ClientCapabilities {
 impl ::std::default::Default for ClientCapabilities {
     fn default() -> Self {
         Self {
+            elicitation: Default::default(),
             experimental: Default::default(),
             roots: Default::default(),
             sampling: Default::default(),
@@ -667,6 +749,9 @@ impl ::std::convert::From<RootsListChangedNotification> for ClientNotification {
 ///      "$ref": "#/definitions/ListResourcesRequest"
 ///    },
 ///    {
+///      "$ref": "#/definitions/ListResourceTemplatesRequest"
+///    },
+///    {
 ///      "$ref": "#/definitions/ReadResourceRequest"
 ///    },
 ///    {
@@ -703,6 +788,7 @@ pub enum ClientRequest {
     InitializeRequest(InitializeRequest),
     PingRequest(PingRequest),
     ListResourcesRequest(ListResourcesRequest),
+    ListResourceTemplatesRequest(ListResourceTemplatesRequest),
     ReadResourceRequest(ReadResourceRequest),
     SubscribeRequest(SubscribeRequest),
     UnsubscribeRequest(UnsubscribeRequest),
@@ -731,6 +817,11 @@ impl ::std::convert::From<PingRequest> for ClientRequest {
 impl ::std::convert::From<ListResourcesRequest> for ClientRequest {
     fn from(value: ListResourcesRequest) -> Self {
         Self::ListResourcesRequest(value)
+    }
+}
+impl ::std::convert::From<ListResourceTemplatesRequest> for ClientRequest {
+    fn from(value: ListResourceTemplatesRequest) -> Self {
+        Self::ListResourceTemplatesRequest(value)
     }
 }
 impl ::std::convert::From<ReadResourceRequest> for ClientRequest {
@@ -793,6 +884,9 @@ impl ::std::convert::From<CompleteRequest> for ClientRequest {
 ///    },
 ///    {
 ///      "$ref": "#/definitions/ListRootsResult"
+///    },
+///    {
+///      "$ref": "#/definitions/ElicitResult"
 ///    }
 ///  ]
 ///}
@@ -804,6 +898,7 @@ pub enum ClientResult {
     Result(Result),
     CreateMessageResult(CreateMessageResult),
     ListRootsResult(ListRootsResult),
+    ElicitResult(ElicitResult),
 }
 impl ::std::convert::From<&Self> for ClientResult {
     fn from(value: &ClientResult) -> Self {
@@ -823,6 +918,11 @@ impl ::std::convert::From<CreateMessageResult> for ClientResult {
 impl ::std::convert::From<ListRootsResult> for ClientResult {
     fn from(value: ListRootsResult) -> Self {
         Self::ListRootsResult(value)
+    }
+}
+impl ::std::convert::From<ElicitResult> for ClientResult {
+    fn from(value: ElicitResult) -> Self {
+        Self::ElicitResult(value)
     }
 }
 ///A request from the client to the server, to ask for completion options.
@@ -867,13 +967,26 @@ impl ::std::convert::From<ListRootsResult> for ClientResult {
 ///            }
 ///          }
 ///        },
+///        "context": {
+///          "description": "Additional, optional context for completions",
+///          "type": "object",
+///          "properties": {
+///            "arguments": {
+///              "description": "Previously-resolved variables in a URI template or prompt.",
+///              "type": "object",
+///              "additionalProperties": {
+///                "type": "string"
+///              }
+///            }
+///          }
+///        },
 ///        "ref": {
 ///          "anyOf": [
 ///            {
 ///              "$ref": "#/definitions/PromptReference"
 ///            },
 ///            {
-///              "$ref": "#/definitions/ResourceReference"
+///              "$ref": "#/definitions/ResourceTemplateReference"
 ///            }
 ///          ]
 ///        }
@@ -923,13 +1036,26 @@ impl ::std::convert::From<&CompleteRequest> for CompleteRequest {
 ///        }
 ///      }
 ///    },
+///    "context": {
+///      "description": "Additional, optional context for completions",
+///      "type": "object",
+///      "properties": {
+///        "arguments": {
+///          "description": "Previously-resolved variables in a URI template or prompt.",
+///          "type": "object",
+///          "additionalProperties": {
+///            "type": "string"
+///          }
+///        }
+///      }
+///    },
 ///    "ref": {
 ///      "anyOf": [
 ///        {
 ///          "$ref": "#/definitions/PromptReference"
 ///        },
 ///        {
-///          "$ref": "#/definitions/ResourceReference"
+///          "$ref": "#/definitions/ResourceTemplateReference"
 ///        }
 ///      ]
 ///    }
@@ -940,6 +1066,8 @@ impl ::std::convert::From<&CompleteRequest> for CompleteRequest {
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
 pub struct CompleteRequestParams {
     pub argument: CompleteRequestParamsArgument,
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub context: ::std::option::Option<CompleteRequestParamsContext>,
     #[serde(rename = "ref")]
     pub ref_: CompleteRequestParamsRef,
 }
@@ -985,6 +1113,47 @@ impl ::std::convert::From<&CompleteRequestParamsArgument> for CompleteRequestPar
         value.clone()
     }
 }
+///Additional, optional context for completions
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "Additional, optional context for completions",
+///  "type": "object",
+///  "properties": {
+///    "arguments": {
+///      "description": "Previously-resolved variables in a URI template or prompt.",
+///      "type": "object",
+///      "additionalProperties": {
+///        "type": "string"
+///      }
+///    }
+///  }
+///}
+/// ```
+/// </details>
+#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
+pub struct CompleteRequestParamsContext {
+    ///Previously-resolved variables in a URI template or prompt.
+    #[serde(
+        default,
+        skip_serializing_if = ":: std :: collections :: BTreeMap::is_empty"
+    )]
+    pub arguments: ::std::collections::BTreeMap<::std::string::String, ::std::string::String>,
+}
+impl ::std::convert::From<&CompleteRequestParamsContext> for CompleteRequestParamsContext {
+    fn from(value: &CompleteRequestParamsContext) -> Self {
+        value.clone()
+    }
+}
+impl ::std::default::Default for CompleteRequestParamsContext {
+    fn default() -> Self {
+        Self {
+            arguments: Default::default(),
+        }
+    }
+}
 ///CompleteRequestParamsRef
 ///
 /// <details><summary>JSON schema</summary>
@@ -996,7 +1165,7 @@ impl ::std::convert::From<&CompleteRequestParamsArgument> for CompleteRequestPar
 ///      "$ref": "#/definitions/PromptReference"
 ///    },
 ///    {
-///      "$ref": "#/definitions/ResourceReference"
+///      "$ref": "#/definitions/ResourceTemplateReference"
 ///    }
 ///  ]
 ///}
@@ -1006,7 +1175,7 @@ impl ::std::convert::From<&CompleteRequestParamsArgument> for CompleteRequestPar
 #[serde(untagged)]
 pub enum CompleteRequestParamsRef {
     PromptReference(PromptReference),
-    ResourceReference(ResourceReference),
+    ResourceTemplateReference(ResourceTemplateReference),
 }
 impl ::std::convert::From<&Self> for CompleteRequestParamsRef {
     fn from(value: &CompleteRequestParamsRef) -> Self {
@@ -1018,9 +1187,9 @@ impl ::std::convert::From<PromptReference> for CompleteRequestParamsRef {
         Self::PromptReference(value)
     }
 }
-impl ::std::convert::From<ResourceReference> for CompleteRequestParamsRef {
-    fn from(value: ResourceReference) -> Self {
-        Self::ResourceReference(value)
+impl ::std::convert::From<ResourceTemplateReference> for CompleteRequestParamsRef {
+    fn from(value: ResourceTemplateReference) -> Self {
+        Self::ResourceTemplateReference(value)
     }
 }
 ///The server's response to a completion/complete request
@@ -1036,7 +1205,7 @@ impl ::std::convert::From<ResourceReference> for CompleteRequestParamsRef {
 ///  ],
 ///  "properties": {
 ///    "_meta": {
-///      "description": "This result property is reserved by the protocol to allow clients and servers to attach additional metadata to their responses.",
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///      "type": "object",
 ///      "additionalProperties": {}
 ///    },
@@ -1070,7 +1239,7 @@ impl ::std::convert::From<ResourceReference> for CompleteRequestParamsRef {
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq, Default)]
 pub struct CompleteResult {
     pub completion: CompleteResultCompletion,
-    ///This result property is reserved by the protocol to allow clients and servers to attach additional metadata to their responses.
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
     #[serde(
         rename = "_meta",
         default,
@@ -1131,6 +1300,71 @@ pub struct CompleteResultCompletion {
 impl ::std::convert::From<&CompleteResultCompletion> for CompleteResultCompletion {
     fn from(value: &CompleteResultCompletion) -> Self {
         value.clone()
+    }
+}
+///ContentBlock
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "anyOf": [
+///    {
+///      "$ref": "#/definitions/TextContent"
+///    },
+///    {
+///      "$ref": "#/definitions/ImageContent"
+///    },
+///    {
+///      "$ref": "#/definitions/AudioContent"
+///    },
+///    {
+///      "$ref": "#/definitions/ResourceLink"
+///    },
+///    {
+///      "$ref": "#/definitions/EmbeddedResource"
+///    }
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
+#[serde(untagged)]
+pub enum ContentBlock {
+    TextContent(TextContent),
+    ImageContent(ImageContent),
+    AudioContent(AudioContent),
+    ResourceLink(ResourceLink),
+    EmbeddedResource(EmbeddedResource),
+}
+impl ::std::convert::From<&Self> for ContentBlock {
+    fn from(value: &ContentBlock) -> Self {
+        value.clone()
+    }
+}
+impl ::std::convert::From<TextContent> for ContentBlock {
+    fn from(value: TextContent) -> Self {
+        Self::TextContent(value)
+    }
+}
+impl ::std::convert::From<ImageContent> for ContentBlock {
+    fn from(value: ImageContent) -> Self {
+        Self::ImageContent(value)
+    }
+}
+impl ::std::convert::From<AudioContent> for ContentBlock {
+    fn from(value: AudioContent) -> Self {
+        Self::AudioContent(value)
+    }
+}
+impl ::std::convert::From<ResourceLink> for ContentBlock {
+    fn from(value: ResourceLink) -> Self {
+        Self::ResourceLink(value)
+    }
+}
+impl ::std::convert::From<EmbeddedResource> for ContentBlock {
+    fn from(value: EmbeddedResource) -> Self {
+        Self::EmbeddedResource(value)
     }
 }
 ///A request from the server to sample an LLM via the client. The client has full discretion over which model to select. The client should also inform the user before beginning sampling, to allow them to inspect the request (human in the loop) and decide whether to approve it.
@@ -1414,7 +1648,7 @@ impl ::std::convert::TryFrom<::std::string::String> for CreateMessageRequestPara
 ///  ],
 ///  "properties": {
 ///    "_meta": {
-///      "description": "This result property is reserved by the protocol to allow clients and servers to attach additional metadata to their responses.",
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///      "type": "object",
 ///      "additionalProperties": {}
 ///    },
@@ -1449,7 +1683,7 @@ impl ::std::convert::TryFrom<::std::string::String> for CreateMessageRequestPara
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
 pub struct CreateMessageResult {
     pub content: CreateMessageResultContent,
-    ///This result property is reserved by the protocol to allow clients and servers to attach additional metadata to their responses.
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
     #[serde(
         rename = "_meta",
         default,
@@ -1575,6 +1809,418 @@ impl ::std::fmt::Display for Cursor {
         self.0.fmt(f)
     }
 }
+///A request from the server to elicit additional information from the user via the client.
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "A request from the server to elicit additional information from the user via the client.",
+///  "type": "object",
+///  "required": [
+///    "method",
+///    "params"
+///  ],
+///  "properties": {
+///    "method": {
+///      "type": "string",
+///      "const": "elicitation/create"
+///    },
+///    "params": {
+///      "type": "object",
+///      "required": [
+///        "message",
+///        "requestedSchema"
+///      ],
+///      "properties": {
+///        "message": {
+///          "description": "The message to present to the user.",
+///          "type": "string"
+///        },
+///        "requestedSchema": {
+///          "description": "A restricted subset of JSON Schema.\nOnly top-level properties are allowed, without nesting.",
+///          "type": "object",
+///          "required": [
+///            "properties",
+///            "type"
+///          ],
+///          "properties": {
+///            "properties": {
+///              "type": "object",
+///              "additionalProperties": {
+///                "$ref": "#/definitions/PrimitiveSchemaDefinition"
+///              }
+///            },
+///            "required": {
+///              "type": "array",
+///              "items": {
+///                "type": "string"
+///              }
+///            },
+///            "type": {
+///              "type": "string",
+///              "const": "object"
+///            }
+///          }
+///        }
+///      }
+///    }
+///  }
+///}
+/// ```
+/// </details>
+#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
+pub struct ElicitRequest {
+    pub method: ::std::string::String,
+    pub params: ElicitRequestParams,
+}
+impl ::std::convert::From<&ElicitRequest> for ElicitRequest {
+    fn from(value: &ElicitRequest) -> Self {
+        value.clone()
+    }
+}
+///ElicitRequestParams
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "message",
+///    "requestedSchema"
+///  ],
+///  "properties": {
+///    "message": {
+///      "description": "The message to present to the user.",
+///      "type": "string"
+///    },
+///    "requestedSchema": {
+///      "description": "A restricted subset of JSON Schema.\nOnly top-level properties are allowed, without nesting.",
+///      "type": "object",
+///      "required": [
+///        "properties",
+///        "type"
+///      ],
+///      "properties": {
+///        "properties": {
+///          "type": "object",
+///          "additionalProperties": {
+///            "$ref": "#/definitions/PrimitiveSchemaDefinition"
+///          }
+///        },
+///        "required": {
+///          "type": "array",
+///          "items": {
+///            "type": "string"
+///          }
+///        },
+///        "type": {
+///          "type": "string",
+///          "const": "object"
+///        }
+///      }
+///    }
+///  }
+///}
+/// ```
+/// </details>
+#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
+pub struct ElicitRequestParams {
+    ///The message to present to the user.
+    pub message: ::std::string::String,
+    #[serde(rename = "requestedSchema")]
+    pub requested_schema: ElicitRequestParamsRequestedSchema,
+}
+impl ::std::convert::From<&ElicitRequestParams> for ElicitRequestParams {
+    fn from(value: &ElicitRequestParams) -> Self {
+        value.clone()
+    }
+}
+///A restricted subset of JSON Schema.
+///Only top-level properties are allowed, without nesting.
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "A restricted subset of JSON Schema.\nOnly top-level properties are allowed, without nesting.",
+///  "type": "object",
+///  "required": [
+///    "properties",
+///    "type"
+///  ],
+///  "properties": {
+///    "properties": {
+///      "type": "object",
+///      "additionalProperties": {
+///        "$ref": "#/definitions/PrimitiveSchemaDefinition"
+///      }
+///    },
+///    "required": {
+///      "type": "array",
+///      "items": {
+///        "type": "string"
+///      }
+///    },
+///    "type": {
+///      "type": "string",
+///      "const": "object"
+///    }
+///  }
+///}
+/// ```
+/// </details>
+#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
+pub struct ElicitRequestParamsRequestedSchema {
+    pub properties: ::std::collections::BTreeMap<::std::string::String, PrimitiveSchemaDefinition>,
+    #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
+    pub required: ::std::vec::Vec<::std::string::String>,
+    #[serde(rename = "type")]
+    pub type_: ::std::string::String,
+}
+impl ::std::convert::From<&ElicitRequestParamsRequestedSchema>
+    for ElicitRequestParamsRequestedSchema
+{
+    fn from(value: &ElicitRequestParamsRequestedSchema) -> Self {
+        value.clone()
+    }
+}
+///The client's response to an elicitation request.
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "The client's response to an elicitation request.",
+///  "type": "object",
+///  "required": [
+///    "action"
+///  ],
+///  "properties": {
+///    "_meta": {
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+///      "type": "object",
+///      "additionalProperties": {}
+///    },
+///    "action": {
+///      "description": "The user action in response to the elicitation.\n- \"accept\": User submitted the form/confirmed the action\n- \"decline\": User explicitly declined the action\n- \"cancel\": User dismissed without making an explicit choice",
+///      "type": "string",
+///      "enum": [
+///        "accept",
+///        "cancel",
+///        "decline"
+///      ]
+///    },
+///    "content": {
+///      "description": "The submitted form data, only present when action is \"accept\".\nContains values matching the requested schema.",
+///      "type": "object",
+///      "additionalProperties": {
+///        "type": [
+///          "string",
+///          "integer",
+///          "boolean"
+///        ]
+///      }
+///    }
+///  }
+///}
+/// ```
+/// </details>
+#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
+pub struct ElicitResult {
+    ///The user action in response to the elicitation.
+    ///- "accept": User submitted the form/confirmed the action
+    ///- "decline": User explicitly declined the action
+    ///- "cancel": User dismissed without making an explicit choice
+    pub action: ElicitResultAction,
+    ///The submitted form data, only present when action is "accept".
+    ///Contains values matching the requested schema.
+    #[serde(
+        default,
+        skip_serializing_if = ":: std :: collections :: BTreeMap::is_empty"
+    )]
+    pub content: ::std::collections::BTreeMap<::std::string::String, ElicitResultContentValue>,
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
+    #[serde(
+        rename = "_meta",
+        default,
+        skip_serializing_if = "::serde_json::Map::is_empty"
+    )]
+    pub meta: ::serde_json::Map<::std::string::String, ::serde_json::Value>,
+}
+impl ::std::convert::From<&ElicitResult> for ElicitResult {
+    fn from(value: &ElicitResult) -> Self {
+        value.clone()
+    }
+}
+///The user action in response to the elicitation.
+///- "accept": User submitted the form/confirmed the action
+///- "decline": User explicitly declined the action
+///- "cancel": User dismissed without making an explicit choice
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "The user action in response to the elicitation.\n- \"accept\": User submitted the form/confirmed the action\n- \"decline\": User explicitly declined the action\n- \"cancel\": User dismissed without making an explicit choice",
+///  "type": "string",
+///  "enum": [
+///    "accept",
+///    "cancel",
+///    "decline"
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(
+    :: serde :: Deserialize,
+    :: serde :: Serialize,
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd,
+)]
+pub enum ElicitResultAction {
+    #[serde(rename = "accept")]
+    Accept,
+    #[serde(rename = "cancel")]
+    Cancel,
+    #[serde(rename = "decline")]
+    Decline,
+}
+impl ::std::convert::From<&Self> for ElicitResultAction {
+    fn from(value: &ElicitResultAction) -> Self {
+        value.clone()
+    }
+}
+impl ::std::fmt::Display for ElicitResultAction {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match *self {
+            Self::Accept => write!(f, "accept"),
+            Self::Cancel => write!(f, "cancel"),
+            Self::Decline => write!(f, "decline"),
+        }
+    }
+}
+impl ::std::str::FromStr for ElicitResultAction {
+    type Err = self::error::ConversionError;
+    fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+        match value {
+            "accept" => Ok(Self::Accept),
+            "cancel" => Ok(Self::Cancel),
+            "decline" => Ok(Self::Decline),
+            _ => Err("invalid value".into()),
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for ElicitResultAction {
+    type Error = self::error::ConversionError;
+    fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for ElicitResultAction {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for ElicitResultAction {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+///ElicitResultContentValue
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": [
+///    "string",
+///    "integer",
+///    "boolean"
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
+#[serde(untagged)]
+pub enum ElicitResultContentValue {
+    Boolean(bool),
+    String(::std::string::String),
+    Integer(i64),
+}
+impl ::std::convert::From<&Self> for ElicitResultContentValue {
+    fn from(value: &ElicitResultContentValue) -> Self {
+        value.clone()
+    }
+}
+impl ::std::str::FromStr for ElicitResultContentValue {
+    type Err = self::error::ConversionError;
+    fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+        if let Ok(v) = value.parse() {
+            Ok(Self::Boolean(v))
+        } else if let Ok(v) = value.parse() {
+            Ok(Self::String(v))
+        } else if let Ok(v) = value.parse() {
+            Ok(Self::Integer(v))
+        } else {
+            Err("string conversion failed for all variants".into())
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for ElicitResultContentValue {
+    type Error = self::error::ConversionError;
+    fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for ElicitResultContentValue {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for ElicitResultContentValue {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::fmt::Display for ElicitResultContentValue {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match self {
+            Self::Boolean(x) => x.fmt(f),
+            Self::String(x) => x.fmt(f),
+            Self::Integer(x) => x.fmt(f),
+        }
+    }
+}
+impl ::std::convert::From<bool> for ElicitResultContentValue {
+    fn from(value: bool) -> Self {
+        Self::Boolean(value)
+    }
+}
+impl ::std::convert::From<i64> for ElicitResultContentValue {
+    fn from(value: i64) -> Self {
+        Self::Integer(value)
+    }
+}
 ///The contents of a resource, embedded into a prompt or tool call result.
 ///
 ///It is up to the client how best to render embedded resources for the benefit
@@ -1591,6 +2237,11 @@ impl ::std::fmt::Display for Cursor {
 ///    "type"
 ///  ],
 ///  "properties": {
+///    "_meta": {
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+///      "type": "object",
+///      "additionalProperties": {}
+///    },
 ///    "annotations": {
 ///      "description": "Optional annotations for the client.",
 ///      "$ref": "#/definitions/Annotations"
@@ -1618,6 +2269,13 @@ pub struct EmbeddedResource {
     ///Optional annotations for the client.
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub annotations: ::std::option::Option<Annotations>,
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
+    #[serde(
+        rename = "_meta",
+        default,
+        skip_serializing_if = "::serde_json::Map::is_empty"
+    )]
+    pub meta: ::serde_json::Map<::std::string::String, ::serde_json::Value>,
     pub resource: EmbeddedResourceResource,
     #[serde(rename = "type")]
     pub type_: ::std::string::String,
@@ -1697,6 +2355,66 @@ impl ::std::convert::From<&EmptyResult> for EmptyResult {
 impl ::std::convert::From<Result> for EmptyResult {
     fn from(value: Result) -> Self {
         Self(value)
+    }
+}
+///EnumSchema
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "enum",
+///    "type"
+///  ],
+///  "properties": {
+///    "description": {
+///      "type": "string"
+///    },
+///    "enum": {
+///      "type": "array",
+///      "items": {
+///        "type": "string"
+///      }
+///    },
+///    "enumNames": {
+///      "type": "array",
+///      "items": {
+///        "type": "string"
+///      }
+///    },
+///    "title": {
+///      "type": "string"
+///    },
+///    "type": {
+///      "type": "string",
+///      "const": "string"
+///    }
+///  }
+///}
+/// ```
+/// </details>
+#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
+pub struct EnumSchema {
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub description: ::std::option::Option<::std::string::String>,
+    #[serde(rename = "enum")]
+    pub enum_: ::std::vec::Vec<::std::string::String>,
+    #[serde(
+        rename = "enumNames",
+        default,
+        skip_serializing_if = "::std::vec::Vec::is_empty"
+    )]
+    pub enum_names: ::std::vec::Vec<::std::string::String>,
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub title: ::std::option::Option<::std::string::String>,
+    #[serde(rename = "type")]
+    pub type_: ::std::string::String,
+}
+impl ::std::convert::From<&EnumSchema> for EnumSchema {
+    fn from(value: &EnumSchema) -> Self {
+        value.clone()
     }
 }
 ///Used by the client to get a prompt provided by the server.
@@ -1804,7 +2522,7 @@ impl ::std::convert::From<&GetPromptRequestParams> for GetPromptRequestParams {
 ///  ],
 ///  "properties": {
 ///    "_meta": {
-///      "description": "This result property is reserved by the protocol to allow clients and servers to attach additional metadata to their responses.",
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///      "type": "object",
 ///      "additionalProperties": {}
 ///    },
@@ -1828,7 +2546,7 @@ pub struct GetPromptResult {
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub description: ::std::option::Option<::std::string::String>,
     pub messages: ::std::vec::Vec<PromptMessage>,
-    ///This result property is reserved by the protocol to allow clients and servers to attach additional metadata to their responses.
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
     #[serde(
         rename = "_meta",
         default,
@@ -1855,6 +2573,11 @@ impl ::std::convert::From<&GetPromptResult> for GetPromptResult {
 ///    "type"
 ///  ],
 ///  "properties": {
+///    "_meta": {
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+///      "type": "object",
+///      "additionalProperties": {}
+///    },
 ///    "annotations": {
 ///      "description": "Optional annotations for the client.",
 ///      "$ref": "#/definitions/Annotations"
@@ -1883,6 +2606,13 @@ pub struct ImageContent {
     pub annotations: ::std::option::Option<Annotations>,
     ///The base64-encoded image data.
     pub data: crate::utils::Base64Bytes,
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
+    #[serde(
+        rename = "_meta",
+        default,
+        skip_serializing_if = "::serde_json::Map::is_empty"
+    )]
+    pub meta: ::serde_json::Map<::std::string::String, ::serde_json::Value>,
     ///The MIME type of the image. Different providers may support different image types.
     #[serde(rename = "mimeType")]
     pub mime_type: ::std::string::String,
@@ -1894,13 +2624,13 @@ impl ::std::convert::From<&ImageContent> for ImageContent {
         value.clone()
     }
 }
-///Describes the name and version of an MCP implementation.
+///Describes the name and version of an MCP implementation, with an optional title for UI representation.
 ///
 /// <details><summary>JSON schema</summary>
 ///
 /// ```json
 ///{
-///  "description": "Describes the name and version of an MCP implementation.",
+///  "description": "Describes the name and version of an MCP implementation, with an optional title for UI representation.",
 ///  "type": "object",
 ///  "required": [
 ///    "name",
@@ -1908,6 +2638,11 @@ impl ::std::convert::From<&ImageContent> for ImageContent {
 ///  ],
 ///  "properties": {
 ///    "name": {
+///      "description": "Intended for programmatic or logical use, but used as a display name in past specs or fallback (if title isn't present).",
+///      "type": "string"
+///    },
+///    "title": {
+///      "description": "Intended for UI and end-user contexts — optimized to be human-readable and easily understood,\neven by those unfamiliar with domain-specific terminology.\n\nIf not provided, the name should be used for display (except for Tool,\nwhere `annotations.title` should be given precedence over using `name`,\nif present).",
 ///      "type": "string"
 ///    },
 ///    "version": {
@@ -1919,7 +2654,16 @@ impl ::std::convert::From<&ImageContent> for ImageContent {
 /// </details>
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
 pub struct Implementation {
+    ///Intended for programmatic or logical use, but used as a display name in past specs or fallback (if title isn't present).
     pub name: ::std::string::String,
+    ///Intended for UI and end-user contexts — optimized to be human-readable and easily understood,
+    ///even by those unfamiliar with domain-specific terminology.
+    ///
+    ///If not provided, the name should be used for display (except for Tool,
+    ///where `annotations.title` should be given precedence over using `name`,
+    ///if present).
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub title: ::std::option::Option<::std::string::String>,
     pub version: ::std::string::String,
 }
 impl ::std::convert::From<&Implementation> for Implementation {
@@ -2034,7 +2778,7 @@ impl ::std::convert::From<&InitializeRequestParams> for InitializeRequestParams 
 ///  ],
 ///  "properties": {
 ///    "_meta": {
-///      "description": "This result property is reserved by the protocol to allow clients and servers to attach additional metadata to their responses.",
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///      "type": "object",
 ///      "additionalProperties": {}
 ///    },
@@ -2064,7 +2808,7 @@ pub struct InitializeResult {
     ///This can be used by clients to improve the LLM's understanding of available tools, resources, etc. It can be thought of like a "hint" to the model. For example, this information MAY be added to the system prompt.
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub instructions: ::std::option::Option<::std::string::String>,
-    ///This result property is reserved by the protocol to allow clients and servers to attach additional metadata to their responses.
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
     #[serde(
         rename = "_meta",
         default,
@@ -2102,7 +2846,7 @@ impl ::std::convert::From<&InitializeResult> for InitializeResult {
 ///      "type": "object",
 ///      "properties": {
 ///        "_meta": {
-///          "description": "This parameter name is reserved by MCP to allow clients and servers to attach additional metadata to their notifications.",
+///          "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///          "type": "object",
 ///          "additionalProperties": {}
 ///        }
@@ -2133,7 +2877,7 @@ impl ::std::convert::From<&InitializedNotification> for InitializedNotification 
 ///  "type": "object",
 ///  "properties": {
 ///    "_meta": {
-///      "description": "This parameter name is reserved by MCP to allow clients and servers to attach additional metadata to their notifications.",
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///      "type": "object",
 ///      "additionalProperties": {}
 ///    }
@@ -2144,7 +2888,7 @@ impl ::std::convert::From<&InitializedNotification> for InitializedNotification 
 /// </details>
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
 pub struct InitializedNotificationParams {
-    ///This parameter name is reserved by MCP to allow clients and servers to attach additional metadata to their notifications.
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
     #[serde(
         rename = "_meta",
         default,
@@ -2162,172 +2906,6 @@ impl ::std::default::Default for InitializedNotificationParams {
         Self {
             meta: Default::default(),
         }
-    }
-}
-///A JSON-RPC batch request, as described in https://www.jsonrpc.org/specification#batch.
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "description": "A JSON-RPC batch request, as described in https://www.jsonrpc.org/specification#batch.",
-///  "type": "array",
-///  "items": {
-///    "anyOf": [
-///      {
-///        "$ref": "#/definitions/JSONRPCRequest"
-///      },
-///      {
-///        "$ref": "#/definitions/JSONRPCNotification"
-///      }
-///    ]
-///  }
-///}
-/// ```
-/// </details>
-#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
-#[serde(transparent)]
-pub struct JsonrpcBatchRequest(pub ::std::vec::Vec<JsonrpcBatchRequestItem>);
-impl ::std::ops::Deref for JsonrpcBatchRequest {
-    type Target = ::std::vec::Vec<JsonrpcBatchRequestItem>;
-    fn deref(&self) -> &::std::vec::Vec<JsonrpcBatchRequestItem> {
-        &self.0
-    }
-}
-impl ::std::convert::From<JsonrpcBatchRequest> for ::std::vec::Vec<JsonrpcBatchRequestItem> {
-    fn from(value: JsonrpcBatchRequest) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&JsonrpcBatchRequest> for JsonrpcBatchRequest {
-    fn from(value: &JsonrpcBatchRequest) -> Self {
-        value.clone()
-    }
-}
-impl ::std::convert::From<::std::vec::Vec<JsonrpcBatchRequestItem>> for JsonrpcBatchRequest {
-    fn from(value: ::std::vec::Vec<JsonrpcBatchRequestItem>) -> Self {
-        Self(value)
-    }
-}
-///JsonrpcBatchRequestItem
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "anyOf": [
-///    {
-///      "$ref": "#/definitions/JSONRPCRequest"
-///    },
-///    {
-///      "$ref": "#/definitions/JSONRPCNotification"
-///    }
-///  ]
-///}
-/// ```
-/// </details>
-#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
-#[serde(untagged)]
-pub enum JsonrpcBatchRequestItem {
-    Request(JsonrpcRequest),
-    Notification(JsonrpcNotification),
-}
-impl ::std::convert::From<&Self> for JsonrpcBatchRequestItem {
-    fn from(value: &JsonrpcBatchRequestItem) -> Self {
-        value.clone()
-    }
-}
-impl ::std::convert::From<JsonrpcRequest> for JsonrpcBatchRequestItem {
-    fn from(value: JsonrpcRequest) -> Self {
-        Self::Request(value)
-    }
-}
-impl ::std::convert::From<JsonrpcNotification> for JsonrpcBatchRequestItem {
-    fn from(value: JsonrpcNotification) -> Self {
-        Self::Notification(value)
-    }
-}
-///A JSON-RPC batch response, as described in https://www.jsonrpc.org/specification#batch.
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "description": "A JSON-RPC batch response, as described in https://www.jsonrpc.org/specification#batch.",
-///  "type": "array",
-///  "items": {
-///    "anyOf": [
-///      {
-///        "$ref": "#/definitions/JSONRPCResponse"
-///      },
-///      {
-///        "$ref": "#/definitions/JSONRPCError"
-///      }
-///    ]
-///  }
-///}
-/// ```
-/// </details>
-#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
-#[serde(transparent)]
-pub struct JsonrpcBatchResponse(pub ::std::vec::Vec<JsonrpcBatchResponseItem>);
-impl ::std::ops::Deref for JsonrpcBatchResponse {
-    type Target = ::std::vec::Vec<JsonrpcBatchResponseItem>;
-    fn deref(&self) -> &::std::vec::Vec<JsonrpcBatchResponseItem> {
-        &self.0
-    }
-}
-impl ::std::convert::From<JsonrpcBatchResponse> for ::std::vec::Vec<JsonrpcBatchResponseItem> {
-    fn from(value: JsonrpcBatchResponse) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&JsonrpcBatchResponse> for JsonrpcBatchResponse {
-    fn from(value: &JsonrpcBatchResponse) -> Self {
-        value.clone()
-    }
-}
-impl ::std::convert::From<::std::vec::Vec<JsonrpcBatchResponseItem>> for JsonrpcBatchResponse {
-    fn from(value: ::std::vec::Vec<JsonrpcBatchResponseItem>) -> Self {
-        Self(value)
-    }
-}
-///JsonrpcBatchResponseItem
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "anyOf": [
-///    {
-///      "$ref": "#/definitions/JSONRPCResponse"
-///    },
-///    {
-///      "$ref": "#/definitions/JSONRPCError"
-///    }
-///  ]
-///}
-/// ```
-/// </details>
-#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
-#[serde(untagged)]
-pub enum JsonrpcBatchResponseItem {
-    Response(JsonrpcResponse),
-    Error(JsonrpcError),
-}
-impl ::std::convert::From<&Self> for JsonrpcBatchResponseItem {
-    fn from(value: &JsonrpcBatchResponseItem) -> Self {
-        value.clone()
-    }
-}
-impl ::std::convert::From<JsonrpcResponse> for JsonrpcBatchResponseItem {
-    fn from(value: JsonrpcResponse) -> Self {
-        Self::Response(value)
-    }
-}
-impl ::std::convert::From<JsonrpcError> for JsonrpcBatchResponseItem {
-    fn from(value: JsonrpcError) -> Self {
-        Self::Error(value)
     }
 }
 ///A response to a request that indicates an error occurred.
@@ -2443,171 +3021,44 @@ impl ::std::convert::From<&JsonrpcErrorError> for JsonrpcErrorError {
 ///      "$ref": "#/definitions/JSONRPCNotification"
 ///    },
 ///    {
-///      "description": "A JSON-RPC batch request, as described in https://www.jsonrpc.org/specification#batch.",
-///      "type": "array",
-///      "items": {
-///        "anyOf": [
-///          {
-///            "$ref": "#/definitions/JSONRPCRequest"
-///          },
-///          {
-///            "$ref": "#/definitions/JSONRPCNotification"
-///          }
-///        ]
-///      }
-///    },
-///    {
 ///      "$ref": "#/definitions/JSONRPCResponse"
 ///    },
 ///    {
 ///      "$ref": "#/definitions/JSONRPCError"
-///    },
-///    {
-///      "description": "A JSON-RPC batch response, as described in https://www.jsonrpc.org/specification#batch.",
-///      "type": "array",
-///      "items": {
-///        "anyOf": [
-///          {
-///            "$ref": "#/definitions/JSONRPCResponse"
-///          },
-///          {
-///            "$ref": "#/definitions/JSONRPCError"
-///          }
-///        ]
-///      }
 ///    }
 ///  ]
 ///}
 /// ```
 /// </details>
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
-pub struct JsonrpcMessage {
-    #[serde(
-        flatten,
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub subtype_0: ::std::option::Option<JsonrpcRequest>,
-    #[serde(
-        flatten,
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub subtype_1: ::std::option::Option<JsonrpcNotification>,
-    #[serde(
-        flatten,
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub subtype_2: ::std::option::Option<::std::vec::Vec<JsonrpcMessageSubtype2Item>>,
-    #[serde(
-        flatten,
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub subtype_3: ::std::option::Option<JsonrpcResponse>,
-    #[serde(
-        flatten,
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub subtype_4: ::std::option::Option<JsonrpcError>,
-    #[serde(
-        flatten,
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub subtype_5: ::std::option::Option<::std::vec::Vec<JsonrpcMessageSubtype5Item>>,
+#[serde(untagged)]
+pub enum JsonrpcMessage {
+    Request(JsonrpcRequest),
+    Notification(JsonrpcNotification),
+    Response(JsonrpcResponse),
+    Error(JsonrpcError),
 }
-impl ::std::convert::From<&JsonrpcMessage> for JsonrpcMessage {
+impl ::std::convert::From<&Self> for JsonrpcMessage {
     fn from(value: &JsonrpcMessage) -> Self {
         value.clone()
     }
 }
-impl ::std::default::Default for JsonrpcMessage {
-    fn default() -> Self {
-        Self {
-            subtype_0: Default::default(),
-            subtype_1: Default::default(),
-            subtype_2: Default::default(),
-            subtype_3: Default::default(),
-            subtype_4: Default::default(),
-            subtype_5: Default::default(),
-        }
-    }
-}
-///JsonrpcMessageSubtype2Item
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "anyOf": [
-///    {
-///      "$ref": "#/definitions/JSONRPCRequest"
-///    },
-///    {
-///      "$ref": "#/definitions/JSONRPCNotification"
-///    }
-///  ]
-///}
-/// ```
-/// </details>
-#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
-#[serde(untagged)]
-pub enum JsonrpcMessageSubtype2Item {
-    Request(JsonrpcRequest),
-    Notification(JsonrpcNotification),
-}
-impl ::std::convert::From<&Self> for JsonrpcMessageSubtype2Item {
-    fn from(value: &JsonrpcMessageSubtype2Item) -> Self {
-        value.clone()
-    }
-}
-impl ::std::convert::From<JsonrpcRequest> for JsonrpcMessageSubtype2Item {
+impl ::std::convert::From<JsonrpcRequest> for JsonrpcMessage {
     fn from(value: JsonrpcRequest) -> Self {
         Self::Request(value)
     }
 }
-impl ::std::convert::From<JsonrpcNotification> for JsonrpcMessageSubtype2Item {
+impl ::std::convert::From<JsonrpcNotification> for JsonrpcMessage {
     fn from(value: JsonrpcNotification) -> Self {
         Self::Notification(value)
     }
 }
-///JsonrpcMessageSubtype5Item
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "anyOf": [
-///    {
-///      "$ref": "#/definitions/JSONRPCResponse"
-///    },
-///    {
-///      "$ref": "#/definitions/JSONRPCError"
-///    }
-///  ]
-///}
-/// ```
-/// </details>
-#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
-#[serde(untagged)]
-pub enum JsonrpcMessageSubtype5Item {
-    Response(JsonrpcResponse),
-    Error(JsonrpcError),
-}
-impl ::std::convert::From<&Self> for JsonrpcMessageSubtype5Item {
-    fn from(value: &JsonrpcMessageSubtype5Item) -> Self {
-        value.clone()
-    }
-}
-impl ::std::convert::From<JsonrpcResponse> for JsonrpcMessageSubtype5Item {
+impl ::std::convert::From<JsonrpcResponse> for JsonrpcMessage {
     fn from(value: JsonrpcResponse) -> Self {
         Self::Response(value)
     }
 }
-impl ::std::convert::From<JsonrpcError> for JsonrpcMessageSubtype5Item {
+impl ::std::convert::From<JsonrpcError> for JsonrpcMessage {
     fn from(value: JsonrpcError) -> Self {
         Self::Error(value)
     }
@@ -2636,7 +3087,7 @@ impl ::std::convert::From<JsonrpcError> for JsonrpcMessageSubtype5Item {
 ///      "type": "object",
 ///      "properties": {
 ///        "_meta": {
-///          "description": "This parameter name is reserved by MCP to allow clients and servers to attach additional metadata to their notifications.",
+///          "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///          "type": "object",
 ///          "additionalProperties": {}
 ///        }
@@ -2668,7 +3119,7 @@ impl ::std::convert::From<&JsonrpcNotification> for JsonrpcNotification {
 ///  "type": "object",
 ///  "properties": {
 ///    "_meta": {
-///      "description": "This parameter name is reserved by MCP to allow clients and servers to attach additional metadata to their notifications.",
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///      "type": "object",
 ///      "additionalProperties": {}
 ///    }
@@ -2679,7 +3130,7 @@ impl ::std::convert::From<&JsonrpcNotification> for JsonrpcNotification {
 /// </details>
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
 pub struct JsonrpcNotificationParams {
-    ///This parameter name is reserved by MCP to allow clients and servers to attach additional metadata to their notifications.
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
     #[serde(
         rename = "_meta",
         default,
@@ -2727,13 +3178,15 @@ impl ::std::default::Default for JsonrpcNotificationParams {
 ///      "type": "object",
 ///      "properties": {
 ///        "_meta": {
+///          "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///          "type": "object",
 ///          "properties": {
 ///            "progressToken": {
 ///              "description": "If specified, the caller is requesting out-of-band progress notifications for this request (as represented by notifications/progress). The value of this parameter is an opaque token that will be attached to any subsequent notifications. The receiver is not obligated to provide these notifications.",
 ///              "$ref": "#/definitions/ProgressToken"
 ///            }
-///          }
+///          },
+///          "additionalProperties": {}
 ///        }
 ///      },
 ///      "additionalProperties": {}
@@ -2764,13 +3217,15 @@ impl ::std::convert::From<&JsonrpcRequest> for JsonrpcRequest {
 ///  "type": "object",
 ///  "properties": {
 ///    "_meta": {
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///      "type": "object",
 ///      "properties": {
 ///        "progressToken": {
 ///          "description": "If specified, the caller is requesting out-of-band progress notifications for this request (as represented by notifications/progress). The value of this parameter is an opaque token that will be attached to any subsequent notifications. The receiver is not obligated to provide these notifications.",
 ///          "$ref": "#/definitions/ProgressToken"
 ///        }
-///      }
+///      },
+///      "additionalProperties": {}
 ///    }
 ///  },
 ///  "additionalProperties": {}
@@ -2798,19 +3253,21 @@ impl ::std::default::Default for JsonrpcRequestParams {
         }
     }
 }
-///JsonrpcRequestParamsMeta
+///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
 ///
 /// <details><summary>JSON schema</summary>
 ///
 /// ```json
 ///{
+///  "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///  "type": "object",
 ///  "properties": {
 ///    "progressToken": {
 ///      "description": "If specified, the caller is requesting out-of-band progress notifications for this request (as represented by notifications/progress). The value of this parameter is an opaque token that will be attached to any subsequent notifications. The receiver is not obligated to provide these notifications.",
 ///      "$ref": "#/definitions/ProgressToken"
 ///    }
-///  }
+///  },
+///  "additionalProperties": {}
 ///}
 /// ```
 /// </details>
@@ -2963,7 +3420,7 @@ impl ::std::default::Default for ListPromptsRequestParams {
 ///  ],
 ///  "properties": {
 ///    "_meta": {
-///      "description": "This result property is reserved by the protocol to allow clients and servers to attach additional metadata to their responses.",
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///      "type": "object",
 ///      "additionalProperties": {}
 ///    },
@@ -2983,7 +3440,7 @@ impl ::std::default::Default for ListPromptsRequestParams {
 /// </details>
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq, Default)]
 pub struct ListPromptsResult {
-    ///This result property is reserved by the protocol to allow clients and servers to attach additional metadata to their responses.
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
     #[serde(
         rename = "_meta",
         default,
@@ -3095,7 +3552,7 @@ impl ::std::default::Default for ListResourceTemplatesRequestParams {
 ///  ],
 ///  "properties": {
 ///    "_meta": {
-///      "description": "This result property is reserved by the protocol to allow clients and servers to attach additional metadata to their responses.",
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///      "type": "object",
 ///      "additionalProperties": {}
 ///    },
@@ -3115,7 +3572,7 @@ impl ::std::default::Default for ListResourceTemplatesRequestParams {
 /// </details>
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq, Default)]
 pub struct ListResourceTemplatesResult {
-    ///This result property is reserved by the protocol to allow clients and servers to attach additional metadata to their responses.
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
     #[serde(
         rename = "_meta",
         default,
@@ -3226,7 +3683,7 @@ impl ::std::default::Default for ListResourcesRequestParams {
 ///  ],
 ///  "properties": {
 ///    "_meta": {
-///      "description": "This result property is reserved by the protocol to allow clients and servers to attach additional metadata to their responses.",
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///      "type": "object",
 ///      "additionalProperties": {}
 ///    },
@@ -3246,7 +3703,7 @@ impl ::std::default::Default for ListResourcesRequestParams {
 /// </details>
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq, Default)]
 pub struct ListResourcesResult {
-    ///This result property is reserved by the protocol to allow clients and servers to attach additional metadata to their responses.
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
     #[serde(
         rename = "_meta",
         default,
@@ -3294,13 +3751,15 @@ impl ::std::convert::From<&ListResourcesResult> for ListResourcesResult {
 ///      "type": "object",
 ///      "properties": {
 ///        "_meta": {
+///          "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///          "type": "object",
 ///          "properties": {
 ///            "progressToken": {
 ///              "description": "If specified, the caller is requesting out-of-band progress notifications for this request (as represented by notifications/progress). The value of this parameter is an opaque token that will be attached to any subsequent notifications. The receiver is not obligated to provide these notifications.",
 ///              "$ref": "#/definitions/ProgressToken"
 ///            }
-///          }
+///          },
+///          "additionalProperties": {}
 ///        }
 ///      },
 ///      "additionalProperties": {}
@@ -3329,13 +3788,15 @@ impl ::std::convert::From<&ListRootsRequest> for ListRootsRequest {
 ///  "type": "object",
 ///  "properties": {
 ///    "_meta": {
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///      "type": "object",
 ///      "properties": {
 ///        "progressToken": {
 ///          "description": "If specified, the caller is requesting out-of-band progress notifications for this request (as represented by notifications/progress). The value of this parameter is an opaque token that will be attached to any subsequent notifications. The receiver is not obligated to provide these notifications.",
 ///          "$ref": "#/definitions/ProgressToken"
 ///        }
-///      }
+///      },
+///      "additionalProperties": {}
 ///    }
 ///  },
 ///  "additionalProperties": {}
@@ -3363,19 +3824,21 @@ impl ::std::default::Default for ListRootsRequestParams {
         }
     }
 }
-///ListRootsRequestParamsMeta
+///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
 ///
 /// <details><summary>JSON schema</summary>
 ///
 /// ```json
 ///{
+///  "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///  "type": "object",
 ///  "properties": {
 ///    "progressToken": {
 ///      "description": "If specified, the caller is requesting out-of-band progress notifications for this request (as represented by notifications/progress). The value of this parameter is an opaque token that will be attached to any subsequent notifications. The receiver is not obligated to provide these notifications.",
 ///      "$ref": "#/definitions/ProgressToken"
 ///    }
-///  }
+///  },
+///  "additionalProperties": {}
 ///}
 /// ```
 /// </details>
@@ -3416,7 +3879,7 @@ impl ::std::default::Default for ListRootsRequestParamsMeta {
 ///  ],
 ///  "properties": {
 ///    "_meta": {
-///      "description": "This result property is reserved by the protocol to allow clients and servers to attach additional metadata to their responses.",
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///      "type": "object",
 ///      "additionalProperties": {}
 ///    },
@@ -3432,7 +3895,7 @@ impl ::std::default::Default for ListRootsRequestParamsMeta {
 /// </details>
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
 pub struct ListRootsResult {
-    ///This result property is reserved by the protocol to allow clients and servers to attach additional metadata to their responses.
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
     #[serde(
         rename = "_meta",
         default,
@@ -3534,7 +3997,7 @@ impl ::std::default::Default for ListToolsRequestParams {
 ///  ],
 ///  "properties": {
 ///    "_meta": {
-///      "description": "This result property is reserved by the protocol to allow clients and servers to attach additional metadata to their responses.",
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///      "type": "object",
 ///      "additionalProperties": {}
 ///    },
@@ -3554,7 +4017,7 @@ impl ::std::default::Default for ListToolsRequestParams {
 /// </details>
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq, Default)]
 pub struct ListToolsResult {
-    ///This result property is reserved by the protocol to allow clients and servers to attach additional metadata to their responses.
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
     #[serde(
         rename = "_meta",
         default,
@@ -3937,7 +4400,7 @@ impl ::std::default::Default for ModelPreferences {
 ///      "type": "object",
 ///      "properties": {
 ///        "_meta": {
-///          "description": "This parameter name is reserved by MCP to allow clients and servers to attach additional metadata to their notifications.",
+///          "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///          "type": "object",
 ///          "additionalProperties": {}
 ///        }
@@ -3968,7 +4431,7 @@ impl ::std::convert::From<&Notification> for Notification {
 ///  "type": "object",
 ///  "properties": {
 ///    "_meta": {
-///      "description": "This parameter name is reserved by MCP to allow clients and servers to attach additional metadata to their notifications.",
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///      "type": "object",
 ///      "additionalProperties": {}
 ///    }
@@ -3979,7 +4442,7 @@ impl ::std::convert::From<&Notification> for Notification {
 /// </details>
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
 pub struct NotificationParams {
-    ///This parameter name is reserved by MCP to allow clients and servers to attach additional metadata to their notifications.
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
     #[serde(
         rename = "_meta",
         default,
@@ -3997,6 +4460,135 @@ impl ::std::default::Default for NotificationParams {
         Self {
             meta: Default::default(),
         }
+    }
+}
+///NumberSchema
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "type"
+///  ],
+///  "properties": {
+///    "description": {
+///      "type": "string"
+///    },
+///    "maximum": {
+///      "type": "integer"
+///    },
+///    "minimum": {
+///      "type": "integer"
+///    },
+///    "title": {
+///      "type": "string"
+///    },
+///    "type": {
+///      "type": "string",
+///      "enum": [
+///        "integer",
+///        "number"
+///      ]
+///    }
+///  }
+///}
+/// ```
+/// </details>
+#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
+pub struct NumberSchema {
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub description: ::std::option::Option<::std::string::String>,
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub maximum: ::std::option::Option<i64>,
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub minimum: ::std::option::Option<i64>,
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub title: ::std::option::Option<::std::string::String>,
+    #[serde(rename = "type")]
+    pub type_: NumberSchemaType,
+}
+impl ::std::convert::From<&NumberSchema> for NumberSchema {
+    fn from(value: &NumberSchema) -> Self {
+        value.clone()
+    }
+}
+///NumberSchemaType
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "string",
+///  "enum": [
+///    "integer",
+///    "number"
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(
+    :: serde :: Deserialize,
+    :: serde :: Serialize,
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd,
+)]
+pub enum NumberSchemaType {
+    #[serde(rename = "integer")]
+    Integer,
+    #[serde(rename = "number")]
+    Number,
+}
+impl ::std::convert::From<&Self> for NumberSchemaType {
+    fn from(value: &NumberSchemaType) -> Self {
+        value.clone()
+    }
+}
+impl ::std::fmt::Display for NumberSchemaType {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match *self {
+            Self::Integer => write!(f, "integer"),
+            Self::Number => write!(f, "number"),
+        }
+    }
+}
+impl ::std::str::FromStr for NumberSchemaType {
+    type Err = self::error::ConversionError;
+    fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+        match value {
+            "integer" => Ok(Self::Integer),
+            "number" => Ok(Self::Number),
+            _ => Err("invalid value".into()),
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for NumberSchemaType {
+    type Error = self::error::ConversionError;
+    fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for NumberSchemaType {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for NumberSchemaType {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
     }
 }
 ///PaginatedRequest
@@ -4081,7 +4673,7 @@ impl ::std::default::Default for PaginatedRequestParams {
 ///  "type": "object",
 ///  "properties": {
 ///    "_meta": {
-///      "description": "This result property is reserved by the protocol to allow clients and servers to attach additional metadata to their responses.",
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///      "type": "object",
 ///      "additionalProperties": {}
 ///    },
@@ -4095,7 +4687,7 @@ impl ::std::default::Default for PaginatedRequestParams {
 /// </details>
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
 pub struct PaginatedResult {
-    ///This result property is reserved by the protocol to allow clients and servers to attach additional metadata to their responses.
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
     #[serde(
         rename = "_meta",
         default,
@@ -4144,13 +4736,15 @@ impl ::std::default::Default for PaginatedResult {
 ///      "type": "object",
 ///      "properties": {
 ///        "_meta": {
+///          "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///          "type": "object",
 ///          "properties": {
 ///            "progressToken": {
 ///              "description": "If specified, the caller is requesting out-of-band progress notifications for this request (as represented by notifications/progress). The value of this parameter is an opaque token that will be attached to any subsequent notifications. The receiver is not obligated to provide these notifications.",
 ///              "$ref": "#/definitions/ProgressToken"
 ///            }
-///          }
+///          },
+///          "additionalProperties": {}
 ///        }
 ///      },
 ///      "additionalProperties": {}
@@ -4179,13 +4773,15 @@ impl ::std::convert::From<&PingRequest> for PingRequest {
 ///  "type": "object",
 ///  "properties": {
 ///    "_meta": {
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///      "type": "object",
 ///      "properties": {
 ///        "progressToken": {
 ///          "description": "If specified, the caller is requesting out-of-band progress notifications for this request (as represented by notifications/progress). The value of this parameter is an opaque token that will be attached to any subsequent notifications. The receiver is not obligated to provide these notifications.",
 ///          "$ref": "#/definitions/ProgressToken"
 ///        }
-///      }
+///      },
+///      "additionalProperties": {}
 ///    }
 ///  },
 ///  "additionalProperties": {}
@@ -4213,19 +4809,21 @@ impl ::std::default::Default for PingRequestParams {
         }
     }
 }
-///PingRequestParamsMeta
+///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
 ///
 /// <details><summary>JSON schema</summary>
 ///
 /// ```json
 ///{
+///  "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///  "type": "object",
 ///  "properties": {
 ///    "progressToken": {
 ///      "description": "If specified, the caller is requesting out-of-band progress notifications for this request (as represented by notifications/progress). The value of this parameter is an opaque token that will be attached to any subsequent notifications. The receiver is not obligated to provide these notifications.",
 ///      "$ref": "#/definitions/ProgressToken"
 ///    }
-///  }
+///  },
+///  "additionalProperties": {}
 ///}
 /// ```
 /// </details>
@@ -4248,6 +4846,73 @@ impl ::std::default::Default for PingRequestParamsMeta {
     fn default() -> Self {
         Self {
             progress_token: Default::default(),
+        }
+    }
+}
+///Restricted schema definitions that only allow primitive types
+///without nested objects or arrays.
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "Restricted schema definitions that only allow primitive types\nwithout nested objects or arrays.",
+///  "anyOf": [
+///    {
+///      "$ref": "#/definitions/StringSchema"
+///    },
+///    {
+///      "$ref": "#/definitions/NumberSchema"
+///    },
+///    {
+///      "$ref": "#/definitions/BooleanSchema"
+///    },
+///    {
+///      "$ref": "#/definitions/EnumSchema"
+///    }
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
+pub struct PrimitiveSchemaDefinition {
+    #[serde(
+        flatten,
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub subtype_0: ::std::option::Option<StringSchema>,
+    #[serde(
+        flatten,
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub subtype_1: ::std::option::Option<NumberSchema>,
+    #[serde(
+        flatten,
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub subtype_2: ::std::option::Option<BooleanSchema>,
+    #[serde(
+        flatten,
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub subtype_3: ::std::option::Option<EnumSchema>,
+}
+impl ::std::convert::From<&PrimitiveSchemaDefinition> for PrimitiveSchemaDefinition {
+    fn from(value: &PrimitiveSchemaDefinition) -> Self {
+        value.clone()
+    }
+}
+impl ::std::default::Default for PrimitiveSchemaDefinition {
+    fn default() -> Self {
+        Self {
+            subtype_0: Default::default(),
+            subtype_1: Default::default(),
+            subtype_2: Default::default(),
+            subtype_3: Default::default(),
         }
     }
 }
@@ -4368,6 +5033,11 @@ impl ::std::convert::From<&ProgressNotificationParams> for ProgressNotificationP
 ///    "name"
 ///  ],
 ///  "properties": {
+///    "_meta": {
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+///      "type": "object",
+///      "additionalProperties": {}
+///    },
 ///    "arguments": {
 ///      "description": "A list of arguments to use for templating the prompt.",
 ///      "type": "array",
@@ -4380,7 +5050,11 @@ impl ::std::convert::From<&ProgressNotificationParams> for ProgressNotificationP
 ///      "type": "string"
 ///    },
 ///    "name": {
-///      "description": "The name of the prompt or prompt template.",
+///      "description": "Intended for programmatic or logical use, but used as a display name in past specs or fallback (if title isn't present).",
+///      "type": "string"
+///    },
+///    "title": {
+///      "description": "Intended for UI and end-user contexts — optimized to be human-readable and easily understood,\neven by those unfamiliar with domain-specific terminology.\n\nIf not provided, the name should be used for display (except for Tool,\nwhere `annotations.title` should be given precedence over using `name`,\nif present).",
 ///      "type": "string"
 ///    }
 ///  }
@@ -4395,8 +5069,23 @@ pub struct Prompt {
     ///An optional description of what this prompt provides
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub description: ::std::option::Option<::std::string::String>,
-    ///The name of the prompt or prompt template.
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
+    #[serde(
+        rename = "_meta",
+        default,
+        skip_serializing_if = "::serde_json::Map::is_empty"
+    )]
+    pub meta: ::serde_json::Map<::std::string::String, ::serde_json::Value>,
+    ///Intended for programmatic or logical use, but used as a display name in past specs or fallback (if title isn't present).
     pub name: ::std::string::String,
+    ///Intended for UI and end-user contexts — optimized to be human-readable and easily understood,
+    ///even by those unfamiliar with domain-specific terminology.
+    ///
+    ///If not provided, the name should be used for display (except for Tool,
+    ///where `annotations.title` should be given precedence over using `name`,
+    ///if present).
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub title: ::std::option::Option<::std::string::String>,
 }
 impl ::std::convert::From<&Prompt> for Prompt {
     fn from(value: &Prompt) -> Self {
@@ -4420,12 +5109,16 @@ impl ::std::convert::From<&Prompt> for Prompt {
 ///      "type": "string"
 ///    },
 ///    "name": {
-///      "description": "The name of the argument.",
+///      "description": "Intended for programmatic or logical use, but used as a display name in past specs or fallback (if title isn't present).",
 ///      "type": "string"
 ///    },
 ///    "required": {
 ///      "description": "Whether this argument must be provided.",
 ///      "type": "boolean"
+///    },
+///    "title": {
+///      "description": "Intended for UI and end-user contexts — optimized to be human-readable and easily understood,\neven by those unfamiliar with domain-specific terminology.\n\nIf not provided, the name should be used for display (except for Tool,\nwhere `annotations.title` should be given precedence over using `name`,\nif present).",
+///      "type": "string"
 ///    }
 ///  }
 ///}
@@ -4436,11 +5129,19 @@ pub struct PromptArgument {
     ///A human-readable description of the argument.
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub description: ::std::option::Option<::std::string::String>,
-    ///The name of the argument.
+    ///Intended for programmatic or logical use, but used as a display name in past specs or fallback (if title isn't present).
     pub name: ::std::string::String,
     ///Whether this argument must be provided.
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub required: ::std::option::Option<bool>,
+    ///Intended for UI and end-user contexts — optimized to be human-readable and easily understood,
+    ///even by those unfamiliar with domain-specific terminology.
+    ///
+    ///If not provided, the name should be used for display (except for Tool,
+    ///where `annotations.title` should be given precedence over using `name`,
+    ///if present).
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub title: ::std::option::Option<::std::string::String>,
 }
 impl ::std::convert::From<&PromptArgument> for PromptArgument {
     fn from(value: &PromptArgument) -> Self {
@@ -4467,7 +5168,7 @@ impl ::std::convert::From<&PromptArgument> for PromptArgument {
 ///      "type": "object",
 ///      "properties": {
 ///        "_meta": {
-///          "description": "This parameter name is reserved by MCP to allow clients and servers to attach additional metadata to their notifications.",
+///          "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///          "type": "object",
 ///          "additionalProperties": {}
 ///        }
@@ -4498,7 +5199,7 @@ impl ::std::convert::From<&PromptListChangedNotification> for PromptListChangedN
 ///  "type": "object",
 ///  "properties": {
 ///    "_meta": {
-///      "description": "This parameter name is reserved by MCP to allow clients and servers to attach additional metadata to their notifications.",
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///      "type": "object",
 ///      "additionalProperties": {}
 ///    }
@@ -4509,7 +5210,7 @@ impl ::std::convert::From<&PromptListChangedNotification> for PromptListChangedN
 /// </details>
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
 pub struct PromptListChangedNotificationParams {
-    ///This parameter name is reserved by MCP to allow clients and servers to attach additional metadata to their notifications.
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
     #[serde(
         rename = "_meta",
         default,
@@ -4548,20 +5249,7 @@ impl ::std::default::Default for PromptListChangedNotificationParams {
 ///  ],
 ///  "properties": {
 ///    "content": {
-///      "anyOf": [
-///        {
-///          "$ref": "#/definitions/TextContent"
-///        },
-///        {
-///          "$ref": "#/definitions/ImageContent"
-///        },
-///        {
-///          "$ref": "#/definitions/AudioContent"
-///        },
-///        {
-///          "$ref": "#/definitions/EmbeddedResource"
-///        }
-///      ]
+///      "$ref": "#/definitions/ContentBlock"
 ///    },
 ///    "role": {
 ///      "$ref": "#/definitions/Role"
@@ -4572,68 +5260,12 @@ impl ::std::default::Default for PromptListChangedNotificationParams {
 /// </details>
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
 pub struct PromptMessage {
-    pub content: PromptMessageContent,
+    pub content: ContentBlock,
     pub role: Role,
 }
 impl ::std::convert::From<&PromptMessage> for PromptMessage {
     fn from(value: &PromptMessage) -> Self {
         value.clone()
-    }
-}
-///PromptMessageContent
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "anyOf": [
-///    {
-///      "$ref": "#/definitions/TextContent"
-///    },
-///    {
-///      "$ref": "#/definitions/ImageContent"
-///    },
-///    {
-///      "$ref": "#/definitions/AudioContent"
-///    },
-///    {
-///      "$ref": "#/definitions/EmbeddedResource"
-///    }
-///  ]
-///}
-/// ```
-/// </details>
-#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
-#[serde(untagged)]
-pub enum PromptMessageContent {
-    TextContent(TextContent),
-    ImageContent(ImageContent),
-    AudioContent(AudioContent),
-    EmbeddedResource(EmbeddedResource),
-}
-impl ::std::convert::From<&Self> for PromptMessageContent {
-    fn from(value: &PromptMessageContent) -> Self {
-        value.clone()
-    }
-}
-impl ::std::convert::From<TextContent> for PromptMessageContent {
-    fn from(value: TextContent) -> Self {
-        Self::TextContent(value)
-    }
-}
-impl ::std::convert::From<ImageContent> for PromptMessageContent {
-    fn from(value: ImageContent) -> Self {
-        Self::ImageContent(value)
-    }
-}
-impl ::std::convert::From<AudioContent> for PromptMessageContent {
-    fn from(value: AudioContent) -> Self {
-        Self::AudioContent(value)
-    }
-}
-impl ::std::convert::From<EmbeddedResource> for PromptMessageContent {
-    fn from(value: EmbeddedResource) -> Self {
-        Self::EmbeddedResource(value)
     }
 }
 ///Identifies a prompt.
@@ -4650,7 +5282,11 @@ impl ::std::convert::From<EmbeddedResource> for PromptMessageContent {
 ///  ],
 ///  "properties": {
 ///    "name": {
-///      "description": "The name of the prompt or prompt template",
+///      "description": "Intended for programmatic or logical use, but used as a display name in past specs or fallback (if title isn't present).",
+///      "type": "string"
+///    },
+///    "title": {
+///      "description": "Intended for UI and end-user contexts — optimized to be human-readable and easily understood,\neven by those unfamiliar with domain-specific terminology.\n\nIf not provided, the name should be used for display (except for Tool,\nwhere `annotations.title` should be given precedence over using `name`,\nif present).",
 ///      "type": "string"
 ///    },
 ///    "type": {
@@ -4663,8 +5299,16 @@ impl ::std::convert::From<EmbeddedResource> for PromptMessageContent {
 /// </details>
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
 pub struct PromptReference {
-    ///The name of the prompt or prompt template
+    ///Intended for programmatic or logical use, but used as a display name in past specs or fallback (if title isn't present).
     pub name: ::std::string::String,
+    ///Intended for UI and end-user contexts — optimized to be human-readable and easily understood,
+    ///even by those unfamiliar with domain-specific terminology.
+    ///
+    ///If not provided, the name should be used for display (except for Tool,
+    ///where `annotations.title` should be given precedence over using `name`,
+    ///if present).
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub title: ::std::option::Option<::std::string::String>,
     #[serde(rename = "type")]
     pub type_: ::std::string::String,
 }
@@ -4760,7 +5404,7 @@ impl ::std::convert::From<&ReadResourceRequestParams> for ReadResourceRequestPar
 ///  ],
 ///  "properties": {
 ///    "_meta": {
-///      "description": "This result property is reserved by the protocol to allow clients and servers to attach additional metadata to their responses.",
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///      "type": "object",
 ///      "additionalProperties": {}
 ///    },
@@ -4784,7 +5428,7 @@ impl ::std::convert::From<&ReadResourceRequestParams> for ReadResourceRequestPar
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
 pub struct ReadResourceResult {
     pub contents: ::std::vec::Vec<ReadResourceResultContentsItem>,
-    ///This result property is reserved by the protocol to allow clients and servers to attach additional metadata to their responses.
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
     #[serde(
         rename = "_meta",
         default,
@@ -4853,13 +5497,15 @@ impl ::std::convert::From<BlobResourceContents> for ReadResourceResultContentsIt
 ///      "type": "object",
 ///      "properties": {
 ///        "_meta": {
+///          "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///          "type": "object",
 ///          "properties": {
 ///            "progressToken": {
 ///              "description": "If specified, the caller is requesting out-of-band progress notifications for this request (as represented by notifications/progress). The value of this parameter is an opaque token that will be attached to any subsequent notifications. The receiver is not obligated to provide these notifications.",
 ///              "$ref": "#/definitions/ProgressToken"
 ///            }
-///          }
+///          },
+///          "additionalProperties": {}
 ///        }
 ///      },
 ///      "additionalProperties": {}
@@ -4888,13 +5534,15 @@ impl ::std::convert::From<&Request> for Request {
 ///  "type": "object",
 ///  "properties": {
 ///    "_meta": {
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///      "type": "object",
 ///      "properties": {
 ///        "progressToken": {
 ///          "description": "If specified, the caller is requesting out-of-band progress notifications for this request (as represented by notifications/progress). The value of this parameter is an opaque token that will be attached to any subsequent notifications. The receiver is not obligated to provide these notifications.",
 ///          "$ref": "#/definitions/ProgressToken"
 ///        }
-///      }
+///      },
+///      "additionalProperties": {}
 ///    }
 ///  },
 ///  "additionalProperties": {}
@@ -4922,19 +5570,21 @@ impl ::std::default::Default for RequestParams {
         }
     }
 }
-///RequestParamsMeta
+///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
 ///
 /// <details><summary>JSON schema</summary>
 ///
 /// ```json
 ///{
+///  "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///  "type": "object",
 ///  "properties": {
 ///    "progressToken": {
 ///      "description": "If specified, the caller is requesting out-of-band progress notifications for this request (as represented by notifications/progress). The value of this parameter is an opaque token that will be attached to any subsequent notifications. The receiver is not obligated to provide these notifications.",
 ///      "$ref": "#/definitions/ProgressToken"
 ///    }
-///  }
+///  },
+///  "additionalProperties": {}
 ///}
 /// ```
 /// </details>
@@ -4973,6 +5623,11 @@ impl ::std::default::Default for RequestParamsMeta {
 ///    "uri"
 ///  ],
 ///  "properties": {
+///    "_meta": {
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+///      "type": "object",
+///      "additionalProperties": {}
+///    },
 ///    "annotations": {
 ///      "description": "Optional annotations for the client.",
 ///      "$ref": "#/definitions/Annotations"
@@ -4986,12 +5641,16 @@ impl ::std::default::Default for RequestParamsMeta {
 ///      "type": "string"
 ///    },
 ///    "name": {
-///      "description": "A human-readable name for this resource.\n\nThis can be used by clients to populate UI elements.",
+///      "description": "Intended for programmatic or logical use, but used as a display name in past specs or fallback (if title isn't present).",
 ///      "type": "string"
 ///    },
 ///    "size": {
 ///      "description": "The size of the raw resource content, in bytes (i.e., before base64 encoding or any tokenization), if known.\n\nThis can be used by Hosts to display file sizes and estimate context window usage.",
 ///      "type": "integer"
+///    },
+///    "title": {
+///      "description": "Intended for UI and end-user contexts — optimized to be human-readable and easily understood,\neven by those unfamiliar with domain-specific terminology.\n\nIf not provided, the name should be used for display (except for Tool,\nwhere `annotations.title` should be given precedence over using `name`,\nif present).",
+///      "type": "string"
 ///    },
 ///    "uri": {
 ///      "description": "The URI of this resource.",
@@ -5012,6 +5671,13 @@ pub struct Resource {
     ///This can be used by clients to improve the LLM's understanding of available resources. It can be thought of like a "hint" to the model.
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub description: ::std::option::Option<::std::string::String>,
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
+    #[serde(
+        rename = "_meta",
+        default,
+        skip_serializing_if = "::serde_json::Map::is_empty"
+    )]
+    pub meta: ::serde_json::Map<::std::string::String, ::serde_json::Value>,
     ///The MIME type of this resource, if known.
     #[serde(
         rename = "mimeType",
@@ -5019,15 +5685,21 @@ pub struct Resource {
         skip_serializing_if = "::std::option::Option::is_none"
     )]
     pub mime_type: ::std::option::Option<::std::string::String>,
-    ///A human-readable name for this resource.
-    ///
-    ///This can be used by clients to populate UI elements.
+    ///Intended for programmatic or logical use, but used as a display name in past specs or fallback (if title isn't present).
     pub name: ::std::string::String,
     ///The size of the raw resource content, in bytes (i.e., before base64 encoding or any tokenization), if known.
     ///
     ///This can be used by Hosts to display file sizes and estimate context window usage.
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub size: ::std::option::Option<i64>,
+    ///Intended for UI and end-user contexts — optimized to be human-readable and easily understood,
+    ///even by those unfamiliar with domain-specific terminology.
+    ///
+    ///If not provided, the name should be used for display (except for Tool,
+    ///where `annotations.title` should be given precedence over using `name`,
+    ///if present).
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub title: ::std::option::Option<::std::string::String>,
     ///The URI of this resource.
     pub uri: ::std::string::String,
 }
@@ -5048,6 +5720,11 @@ impl ::std::convert::From<&Resource> for Resource {
 ///    "uri"
 ///  ],
 ///  "properties": {
+///    "_meta": {
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+///      "type": "object",
+///      "additionalProperties": {}
+///    },
 ///    "mimeType": {
 ///      "description": "The MIME type of this resource, if known.",
 ///      "type": "string"
@@ -5063,6 +5740,13 @@ impl ::std::convert::From<&Resource> for Resource {
 /// </details>
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
 pub struct ResourceContents {
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
+    #[serde(
+        rename = "_meta",
+        default,
+        skip_serializing_if = "::serde_json::Map::is_empty"
+    )]
+    pub meta: ::serde_json::Map<::std::string::String, ::serde_json::Value>,
     ///The MIME type of this resource, if known.
     #[serde(
         rename = "mimeType",
@@ -5075,6 +5759,113 @@ pub struct ResourceContents {
 }
 impl ::std::convert::From<&ResourceContents> for ResourceContents {
     fn from(value: &ResourceContents) -> Self {
+        value.clone()
+    }
+}
+///A resource that the server is capable of reading, included in a prompt or tool call result.
+///
+///Note: resource links returned by tools are not guaranteed to appear in the results of `resources/list` requests.
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "A resource that the server is capable of reading, included in a prompt or tool call result.\n\nNote: resource links returned by tools are not guaranteed to appear in the results of `resources/list` requests.",
+///  "type": "object",
+///  "required": [
+///    "name",
+///    "type",
+///    "uri"
+///  ],
+///  "properties": {
+///    "_meta": {
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+///      "type": "object",
+///      "additionalProperties": {}
+///    },
+///    "annotations": {
+///      "description": "Optional annotations for the client.",
+///      "$ref": "#/definitions/Annotations"
+///    },
+///    "description": {
+///      "description": "A description of what this resource represents.\n\nThis can be used by clients to improve the LLM's understanding of available resources. It can be thought of like a \"hint\" to the model.",
+///      "type": "string"
+///    },
+///    "mimeType": {
+///      "description": "The MIME type of this resource, if known.",
+///      "type": "string"
+///    },
+///    "name": {
+///      "description": "Intended for programmatic or logical use, but used as a display name in past specs or fallback (if title isn't present).",
+///      "type": "string"
+///    },
+///    "size": {
+///      "description": "The size of the raw resource content, in bytes (i.e., before base64 encoding or any tokenization), if known.\n\nThis can be used by Hosts to display file sizes and estimate context window usage.",
+///      "type": "integer"
+///    },
+///    "title": {
+///      "description": "Intended for UI and end-user contexts — optimized to be human-readable and easily understood,\neven by those unfamiliar with domain-specific terminology.\n\nIf not provided, the name should be used for display (except for Tool,\nwhere `annotations.title` should be given precedence over using `name`,\nif present).",
+///      "type": "string"
+///    },
+///    "type": {
+///      "type": "string",
+///      "const": "resource_link"
+///    },
+///    "uri": {
+///      "description": "The URI of this resource.",
+///      "type": "string",
+///      "format": "uri"
+///    }
+///  }
+///}
+/// ```
+/// </details>
+#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
+pub struct ResourceLink {
+    ///Optional annotations for the client.
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub annotations: ::std::option::Option<Annotations>,
+    ///A description of what this resource represents.
+    ///
+    ///This can be used by clients to improve the LLM's understanding of available resources. It can be thought of like a "hint" to the model.
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub description: ::std::option::Option<::std::string::String>,
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
+    #[serde(
+        rename = "_meta",
+        default,
+        skip_serializing_if = "::serde_json::Map::is_empty"
+    )]
+    pub meta: ::serde_json::Map<::std::string::String, ::serde_json::Value>,
+    ///The MIME type of this resource, if known.
+    #[serde(
+        rename = "mimeType",
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub mime_type: ::std::option::Option<::std::string::String>,
+    ///Intended for programmatic or logical use, but used as a display name in past specs or fallback (if title isn't present).
+    pub name: ::std::string::String,
+    ///The size of the raw resource content, in bytes (i.e., before base64 encoding or any tokenization), if known.
+    ///
+    ///This can be used by Hosts to display file sizes and estimate context window usage.
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub size: ::std::option::Option<i64>,
+    ///Intended for UI and end-user contexts — optimized to be human-readable and easily understood,
+    ///even by those unfamiliar with domain-specific terminology.
+    ///
+    ///If not provided, the name should be used for display (except for Tool,
+    ///where `annotations.title` should be given precedence over using `name`,
+    ///if present).
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub title: ::std::option::Option<::std::string::String>,
+    #[serde(rename = "type")]
+    pub type_: ::std::string::String,
+    ///The URI of this resource.
+    pub uri: ::std::string::String,
+}
+impl ::std::convert::From<&ResourceLink> for ResourceLink {
+    fn from(value: &ResourceLink) -> Self {
         value.clone()
     }
 }
@@ -5098,7 +5889,7 @@ impl ::std::convert::From<&ResourceContents> for ResourceContents {
 ///      "type": "object",
 ///      "properties": {
 ///        "_meta": {
-///          "description": "This parameter name is reserved by MCP to allow clients and servers to attach additional metadata to their notifications.",
+///          "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///          "type": "object",
 ///          "additionalProperties": {}
 ///        }
@@ -5129,7 +5920,7 @@ impl ::std::convert::From<&ResourceListChangedNotification> for ResourceListChan
 ///  "type": "object",
 ///  "properties": {
 ///    "_meta": {
-///      "description": "This parameter name is reserved by MCP to allow clients and servers to attach additional metadata to their notifications.",
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///      "type": "object",
 ///      "additionalProperties": {}
 ///    }
@@ -5140,7 +5931,7 @@ impl ::std::convert::From<&ResourceListChangedNotification> for ResourceListChan
 /// </details>
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
 pub struct ResourceListChangedNotificationParams {
-    ///This parameter name is reserved by MCP to allow clients and servers to attach additional metadata to their notifications.
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
     #[serde(
         rename = "_meta",
         default,
@@ -5160,6 +5951,96 @@ impl ::std::default::Default for ResourceListChangedNotificationParams {
         Self {
             meta: Default::default(),
         }
+    }
+}
+///A template description for resources available on the server.
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "A template description for resources available on the server.",
+///  "type": "object",
+///  "required": [
+///    "name",
+///    "uriTemplate"
+///  ],
+///  "properties": {
+///    "_meta": {
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+///      "type": "object",
+///      "additionalProperties": {}
+///    },
+///    "annotations": {
+///      "description": "Optional annotations for the client.",
+///      "$ref": "#/definitions/Annotations"
+///    },
+///    "description": {
+///      "description": "A description of what this template is for.\n\nThis can be used by clients to improve the LLM's understanding of available resources. It can be thought of like a \"hint\" to the model.",
+///      "type": "string"
+///    },
+///    "mimeType": {
+///      "description": "The MIME type for all resources that match this template. This should only be included if all resources matching this template have the same type.",
+///      "type": "string"
+///    },
+///    "name": {
+///      "description": "Intended for programmatic or logical use, but used as a display name in past specs or fallback (if title isn't present).",
+///      "type": "string"
+///    },
+///    "title": {
+///      "description": "Intended for UI and end-user contexts — optimized to be human-readable and easily understood,\neven by those unfamiliar with domain-specific terminology.\n\nIf not provided, the name should be used for display (except for Tool,\nwhere `annotations.title` should be given precedence over using `name`,\nif present).",
+///      "type": "string"
+///    },
+///    "uriTemplate": {
+///      "description": "A URI template (according to RFC 6570) that can be used to construct resource URIs.",
+///      "type": "string",
+///      "format": "uri-template"
+///    }
+///  }
+///}
+/// ```
+/// </details>
+#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
+pub struct ResourceTemplate {
+    ///Optional annotations for the client.
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub annotations: ::std::option::Option<Annotations>,
+    ///A description of what this template is for.
+    ///
+    ///This can be used by clients to improve the LLM's understanding of available resources. It can be thought of like a "hint" to the model.
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub description: ::std::option::Option<::std::string::String>,
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
+    #[serde(
+        rename = "_meta",
+        default,
+        skip_serializing_if = "::serde_json::Map::is_empty"
+    )]
+    pub meta: ::serde_json::Map<::std::string::String, ::serde_json::Value>,
+    ///The MIME type for all resources that match this template. This should only be included if all resources matching this template have the same type.
+    #[serde(
+        rename = "mimeType",
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub mime_type: ::std::option::Option<::std::string::String>,
+    ///Intended for programmatic or logical use, but used as a display name in past specs or fallback (if title isn't present).
+    pub name: ::std::string::String,
+    ///Intended for UI and end-user contexts — optimized to be human-readable and easily understood,
+    ///even by those unfamiliar with domain-specific terminology.
+    ///
+    ///If not provided, the name should be used for display (except for Tool,
+    ///where `annotations.title` should be given precedence over using `name`,
+    ///if present).
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub title: ::std::option::Option<::std::string::String>,
+    ///A URI template (according to RFC 6570) that can be used to construct resource URIs.
+    #[serde(rename = "uriTemplate")]
+    pub uri_template: ::std::string::String,
+}
+impl ::std::convert::From<&ResourceTemplate> for ResourceTemplate {
+    fn from(value: &ResourceTemplate) -> Self {
+        value.clone()
     }
 }
 ///A reference to a resource or resource template definition.
@@ -5189,82 +6070,14 @@ impl ::std::default::Default for ResourceListChangedNotificationParams {
 /// ```
 /// </details>
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
-pub struct ResourceReference {
+pub struct ResourceTemplateReference {
     #[serde(rename = "type")]
     pub type_: ::std::string::String,
     ///The URI or URI template of the resource.
     pub uri: ::std::string::String,
 }
-impl ::std::convert::From<&ResourceReference> for ResourceReference {
-    fn from(value: &ResourceReference) -> Self {
-        value.clone()
-    }
-}
-///A template description for resources available on the server.
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "description": "A template description for resources available on the server.",
-///  "type": "object",
-///  "required": [
-///    "name",
-///    "uriTemplate"
-///  ],
-///  "properties": {
-///    "annotations": {
-///      "description": "Optional annotations for the client.",
-///      "$ref": "#/definitions/Annotations"
-///    },
-///    "description": {
-///      "description": "A description of what this template is for.\n\nThis can be used by clients to improve the LLM's understanding of available resources. It can be thought of like a \"hint\" to the model.",
-///      "type": "string"
-///    },
-///    "mimeType": {
-///      "description": "The MIME type for all resources that match this template. This should only be included if all resources matching this template have the same type.",
-///      "type": "string"
-///    },
-///    "name": {
-///      "description": "A human-readable name for the type of resource this template refers to.\n\nThis can be used by clients to populate UI elements.",
-///      "type": "string"
-///    },
-///    "uriTemplate": {
-///      "description": "A URI template (according to RFC 6570) that can be used to construct resource URIs.",
-///      "type": "string",
-///      "format": "uri-template"
-///    }
-///  }
-///}
-/// ```
-/// </details>
-#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
-pub struct ResourceTemplate {
-    ///Optional annotations for the client.
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub annotations: ::std::option::Option<Annotations>,
-    ///A description of what this template is for.
-    ///
-    ///This can be used by clients to improve the LLM's understanding of available resources. It can be thought of like a "hint" to the model.
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub description: ::std::option::Option<::std::string::String>,
-    ///The MIME type for all resources that match this template. This should only be included if all resources matching this template have the same type.
-    #[serde(
-        rename = "mimeType",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub mime_type: ::std::option::Option<::std::string::String>,
-    ///A human-readable name for the type of resource this template refers to.
-    ///
-    ///This can be used by clients to populate UI elements.
-    pub name: ::std::string::String,
-    ///A URI template (according to RFC 6570) that can be used to construct resource URIs.
-    #[serde(rename = "uriTemplate")]
-    pub uri_template: ::std::string::String,
-}
-impl ::std::convert::From<&ResourceTemplate> for ResourceTemplate {
-    fn from(value: &ResourceTemplate) -> Self {
+impl ::std::convert::From<&ResourceTemplateReference> for ResourceTemplateReference {
+    fn from(value: &ResourceTemplateReference) -> Self {
         value.clone()
     }
 }
@@ -5353,7 +6166,7 @@ impl ::std::convert::From<&ResourceUpdatedNotificationParams>
 ///  "type": "object",
 ///  "properties": {
 ///    "_meta": {
-///      "description": "This result property is reserved by the protocol to allow clients and servers to attach additional metadata to their responses.",
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///      "type": "object",
 ///      "additionalProperties": {}
 ///    }
@@ -5364,7 +6177,7 @@ impl ::std::convert::From<&ResourceUpdatedNotificationParams>
 /// </details>
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
 pub struct Result {
-    ///This result property is reserved by the protocol to allow clients and servers to attach additional metadata to their responses.
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
     #[serde(
         rename = "_meta",
         default,
@@ -5474,6 +6287,11 @@ impl ::std::convert::TryFrom<::std::string::String> for Role {
 ///    "uri"
 ///  ],
 ///  "properties": {
+///    "_meta": {
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+///      "type": "object",
+///      "additionalProperties": {}
+///    },
 ///    "name": {
 ///      "description": "An optional name for the root. This can be used to provide a human-readable\nidentifier for the root, which may be useful for display purposes or for\nreferencing the root in other parts of the application.",
 ///      "type": "string"
@@ -5489,6 +6307,13 @@ impl ::std::convert::TryFrom<::std::string::String> for Role {
 /// </details>
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
 pub struct Root {
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
+    #[serde(
+        rename = "_meta",
+        default,
+        skip_serializing_if = "::serde_json::Map::is_empty"
+    )]
+    pub meta: ::serde_json::Map<::std::string::String, ::serde_json::Value>,
     ///An optional name for the root. This can be used to provide a human-readable
     ///identifier for the root, which may be useful for display purposes or for
     ///referencing the root in other parts of the application.
@@ -5526,7 +6351,7 @@ impl ::std::convert::From<&Root> for Root {
 ///      "type": "object",
 ///      "properties": {
 ///        "_meta": {
-///          "description": "This parameter name is reserved by MCP to allow clients and servers to attach additional metadata to their notifications.",
+///          "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///          "type": "object",
 ///          "additionalProperties": {}
 ///        }
@@ -5557,7 +6382,7 @@ impl ::std::convert::From<&RootsListChangedNotification> for RootsListChangedNot
 ///  "type": "object",
 ///  "properties": {
 ///    "_meta": {
-///      "description": "This parameter name is reserved by MCP to allow clients and servers to attach additional metadata to their notifications.",
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///      "type": "object",
 ///      "additionalProperties": {}
 ///    }
@@ -5568,7 +6393,7 @@ impl ::std::convert::From<&RootsListChangedNotification> for RootsListChangedNot
 /// </details>
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
 pub struct RootsListChangedNotificationParams {
-    ///This parameter name is reserved by MCP to allow clients and servers to attach additional metadata to their notifications.
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
     #[serde(
         rename = "_meta",
         default,
@@ -6011,6 +6836,9 @@ impl ::std::convert::From<LoggingMessageNotification> for ServerNotification {
 ///    },
 ///    {
 ///      "$ref": "#/definitions/ListRootsRequest"
+///    },
+///    {
+///      "$ref": "#/definitions/ElicitRequest"
 ///    }
 ///  ]
 ///}
@@ -6022,6 +6850,7 @@ pub enum ServerRequest {
     PingRequest(PingRequest),
     CreateMessageRequest(CreateMessageRequest),
     ListRootsRequest(ListRootsRequest),
+    ElicitRequest(ElicitRequest),
 }
 impl ::std::convert::From<&Self> for ServerRequest {
     fn from(value: &ServerRequest) -> Self {
@@ -6043,6 +6872,11 @@ impl ::std::convert::From<ListRootsRequest> for ServerRequest {
         Self::ListRootsRequest(value)
     }
 }
+impl ::std::convert::From<ElicitRequest> for ServerRequest {
+    fn from(value: ElicitRequest) -> Self {
+        Self::ElicitRequest(value)
+    }
+}
 ///ServerResult
 ///
 /// <details><summary>JSON schema</summary>
@@ -6058,6 +6892,9 @@ impl ::std::convert::From<ListRootsRequest> for ServerRequest {
 ///    },
 ///    {
 ///      "$ref": "#/definitions/ListResourcesResult"
+///    },
+///    {
+///      "$ref": "#/definitions/ListResourceTemplatesResult"
 ///    },
 ///    {
 ///      "$ref": "#/definitions/ReadResourceResult"
@@ -6087,6 +6924,7 @@ pub enum ServerResult {
     Result(Result),
     InitializeResult(InitializeResult),
     ListResourcesResult(ListResourcesResult),
+    ListResourceTemplatesResult(ListResourceTemplatesResult),
     ReadResourceResult(ReadResourceResult),
     ListPromptsResult(ListPromptsResult),
     GetPromptResult(GetPromptResult),
@@ -6112,6 +6950,11 @@ impl ::std::convert::From<InitializeResult> for ServerResult {
 impl ::std::convert::From<ListResourcesResult> for ServerResult {
     fn from(value: ListResourcesResult) -> Self {
         Self::ListResourcesResult(value)
+    }
+}
+impl ::std::convert::From<ListResourceTemplatesResult> for ServerResult {
+    fn from(value: ListResourceTemplatesResult) -> Self {
+        Self::ListResourceTemplatesResult(value)
     }
 }
 impl ::std::convert::From<ReadResourceResult> for ServerResult {
@@ -6216,6 +7059,161 @@ impl ::std::convert::From<&SetLevelRequestParams> for SetLevelRequestParams {
         value.clone()
     }
 }
+///StringSchema
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "type"
+///  ],
+///  "properties": {
+///    "description": {
+///      "type": "string"
+///    },
+///    "format": {
+///      "type": "string",
+///      "enum": [
+///        "date",
+///        "date-time",
+///        "email",
+///        "uri"
+///      ]
+///    },
+///    "maxLength": {
+///      "type": "integer"
+///    },
+///    "minLength": {
+///      "type": "integer"
+///    },
+///    "title": {
+///      "type": "string"
+///    },
+///    "type": {
+///      "type": "string",
+///      "const": "string"
+///    }
+///  }
+///}
+/// ```
+/// </details>
+#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
+pub struct StringSchema {
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub description: ::std::option::Option<::std::string::String>,
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub format: ::std::option::Option<StringSchemaFormat>,
+    #[serde(
+        rename = "maxLength",
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub max_length: ::std::option::Option<i64>,
+    #[serde(
+        rename = "minLength",
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub min_length: ::std::option::Option<i64>,
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub title: ::std::option::Option<::std::string::String>,
+    #[serde(rename = "type")]
+    pub type_: ::std::string::String,
+}
+impl ::std::convert::From<&StringSchema> for StringSchema {
+    fn from(value: &StringSchema) -> Self {
+        value.clone()
+    }
+}
+///StringSchemaFormat
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "string",
+///  "enum": [
+///    "date",
+///    "date-time",
+///    "email",
+///    "uri"
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(
+    :: serde :: Deserialize,
+    :: serde :: Serialize,
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd,
+)]
+pub enum StringSchemaFormat {
+    #[serde(rename = "date")]
+    Date,
+    #[serde(rename = "date-time")]
+    DateTime,
+    #[serde(rename = "email")]
+    Email,
+    #[serde(rename = "uri")]
+    Uri,
+}
+impl ::std::convert::From<&Self> for StringSchemaFormat {
+    fn from(value: &StringSchemaFormat) -> Self {
+        value.clone()
+    }
+}
+impl ::std::fmt::Display for StringSchemaFormat {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match *self {
+            Self::Date => write!(f, "date"),
+            Self::DateTime => write!(f, "date-time"),
+            Self::Email => write!(f, "email"),
+            Self::Uri => write!(f, "uri"),
+        }
+    }
+}
+impl ::std::str::FromStr for StringSchemaFormat {
+    type Err = self::error::ConversionError;
+    fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+        match value {
+            "date" => Ok(Self::Date),
+            "date-time" => Ok(Self::DateTime),
+            "email" => Ok(Self::Email),
+            "uri" => Ok(Self::Uri),
+            _ => Err("invalid value".into()),
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for StringSchemaFormat {
+    type Error = self::error::ConversionError;
+    fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for StringSchemaFormat {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for StringSchemaFormat {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
 ///Sent from the client to request resources/updated notifications from the server whenever a particular resource changes.
 ///
 /// <details><summary>JSON schema</summary>
@@ -6303,6 +7301,11 @@ impl ::std::convert::From<&SubscribeRequestParams> for SubscribeRequestParams {
 ///    "type"
 ///  ],
 ///  "properties": {
+///    "_meta": {
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+///      "type": "object",
+///      "additionalProperties": {}
+///    },
 ///    "annotations": {
 ///      "description": "Optional annotations for the client.",
 ///      "$ref": "#/definitions/Annotations"
@@ -6324,6 +7327,13 @@ pub struct TextContent {
     ///Optional annotations for the client.
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub annotations: ::std::option::Option<Annotations>,
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
+    #[serde(
+        rename = "_meta",
+        default,
+        skip_serializing_if = "::serde_json::Map::is_empty"
+    )]
+    pub meta: ::serde_json::Map<::std::string::String, ::serde_json::Value>,
     ///The text content of the message.
     pub text: ::std::string::String,
     #[serde(rename = "type")]
@@ -6346,6 +7356,11 @@ impl ::std::convert::From<&TextContent> for TextContent {
 ///    "uri"
 ///  ],
 ///  "properties": {
+///    "_meta": {
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+///      "type": "object",
+///      "additionalProperties": {}
+///    },
 ///    "mimeType": {
 ///      "description": "The MIME type of this resource, if known.",
 ///      "type": "string"
@@ -6365,6 +7380,13 @@ impl ::std::convert::From<&TextContent> for TextContent {
 /// </details>
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq, Default)]
 pub struct TextResourceContents {
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
+    #[serde(
+        rename = "_meta",
+        default,
+        skip_serializing_if = "::serde_json::Map::is_empty"
+    )]
+    pub meta: ::serde_json::Map<::std::string::String, ::serde_json::Value>,
     ///The MIME type of this resource, if known.
     #[serde(
         rename = "mimeType",
@@ -6395,8 +7417,13 @@ impl ::std::convert::From<&TextResourceContents> for TextResourceContents {
 ///    "name"
 ///  ],
 ///  "properties": {
+///    "_meta": {
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
+///      "type": "object",
+///      "additionalProperties": {}
+///    },
 ///    "annotations": {
-///      "description": "Optional additional tool information.",
+///      "description": "Optional additional tool information.\n\nDisplay name precedence order is: title, annotations.title, then name.",
 ///      "$ref": "#/definitions/ToolAnnotations"
 ///    },
 ///    "description": {
@@ -6430,7 +7457,37 @@ impl ::std::convert::From<&TextResourceContents> for TextResourceContents {
 ///      }
 ///    },
 ///    "name": {
-///      "description": "The name of the tool.",
+///      "description": "Intended for programmatic or logical use, but used as a display name in past specs or fallback (if title isn't present).",
+///      "type": "string"
+///    },
+///    "outputSchema": {
+///      "description": "An optional JSON Schema object defining the structure of the tool's output returned in\nthe structuredContent field of a CallToolResult.",
+///      "type": "object",
+///      "required": [
+///        "type"
+///      ],
+///      "properties": {
+///        "properties": {
+///          "type": "object",
+///          "additionalProperties": {
+///            "type": "object",
+///            "additionalProperties": true
+///          }
+///        },
+///        "required": {
+///          "type": "array",
+///          "items": {
+///            "type": "string"
+///          }
+///        },
+///        "type": {
+///          "type": "string",
+///          "const": "object"
+///        }
+///      }
+///    },
+///    "title": {
+///      "description": "Intended for UI and end-user contexts — optimized to be human-readable and easily understood,\neven by those unfamiliar with domain-specific terminology.\n\nIf not provided, the name should be used for display (except for Tool,\nwhere `annotations.title` should be given precedence over using `name`,\nif present).",
 ///      "type": "string"
 ///    }
 ///  }
@@ -6440,6 +7497,8 @@ impl ::std::convert::From<&TextResourceContents> for TextResourceContents {
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
 pub struct Tool {
     ///Optional additional tool information.
+    ///
+    ///Display name precedence order is: title, annotations.title, then name.
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub annotations: ::std::option::Option<ToolAnnotations>,
     ///A human-readable description of the tool.
@@ -6449,8 +7508,29 @@ pub struct Tool {
     pub description: ::std::option::Option<::std::string::String>,
     #[serde(rename = "inputSchema")]
     pub input_schema: ToolInputSchema,
-    ///The name of the tool.
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
+    #[serde(
+        rename = "_meta",
+        default,
+        skip_serializing_if = "::serde_json::Map::is_empty"
+    )]
+    pub meta: ::serde_json::Map<::std::string::String, ::serde_json::Value>,
+    ///Intended for programmatic or logical use, but used as a display name in past specs or fallback (if title isn't present).
     pub name: ::std::string::String,
+    #[serde(
+        rename = "outputSchema",
+        default,
+        skip_serializing_if = "::std::option::Option::is_none"
+    )]
+    pub output_schema: ::std::option::Option<ToolOutputSchema>,
+    ///Intended for UI and end-user contexts — optimized to be human-readable and easily understood,
+    ///even by those unfamiliar with domain-specific terminology.
+    ///
+    ///If not provided, the name should be used for display (except for Tool,
+    ///where `annotations.title` should be given precedence over using `name`,
+    ///if present).
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub title: ::std::option::Option<::std::string::String>,
 }
 impl ::std::convert::From<&Tool> for Tool {
     fn from(value: &Tool) -> Self {
@@ -6470,7 +7550,7 @@ impl ::std::convert::From<&Tool> for Tool {
 ///
 /// ```json
 ///{
-///  "description": "Additional properties describing a Tool to clients.\n\nNOTE: all properties in ToolAnnotations are **hints**. \nThey are not guaranteed to provide a faithful description of \ntool behavior (including descriptive properties like `title`).\n\nClients should never make tool use decisions based on ToolAnnotations\nreceived from untrusted servers.",
+///  "description": "Additional properties describing a Tool to clients.\n\nNOTE: all properties in ToolAnnotations are **hints**.\nThey are not guaranteed to provide a faithful description of\ntool behavior (including descriptive properties like `title`).\n\nClients should never make tool use decisions based on ToolAnnotations\nreceived from untrusted servers.",
 ///  "type": "object",
 ///  "properties": {
 ///    "destructiveHint": {
@@ -6478,7 +7558,7 @@ impl ::std::convert::From<&Tool> for Tool {
 ///      "type": "boolean"
 ///    },
 ///    "idempotentHint": {
-///      "description": "If true, calling the tool repeatedly with the same arguments \nwill have no additional effect on the its environment.\n\n(This property is meaningful only when `readOnlyHint == false`)\n\nDefault: false",
+///      "description": "If true, calling the tool repeatedly with the same arguments\nwill have no additional effect on the its environment.\n\n(This property is meaningful only when `readOnlyHint == false`)\n\nDefault: false",
 ///      "type": "boolean"
 ///    },
 ///    "openWorldHint": {
@@ -6637,7 +7717,7 @@ impl ::std::convert::From<&ToolInputSchema> for ToolInputSchema {
 ///      "type": "object",
 ///      "properties": {
 ///        "_meta": {
-///          "description": "This parameter name is reserved by MCP to allow clients and servers to attach additional metadata to their notifications.",
+///          "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///          "type": "object",
 ///          "additionalProperties": {}
 ///        }
@@ -6668,7 +7748,7 @@ impl ::std::convert::From<&ToolListChangedNotification> for ToolListChangedNotif
 ///  "type": "object",
 ///  "properties": {
 ///    "_meta": {
-///      "description": "This parameter name is reserved by MCP to allow clients and servers to attach additional metadata to their notifications.",
+///      "description": "See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.",
 ///      "type": "object",
 ///      "additionalProperties": {}
 ///    }
@@ -6679,7 +7759,7 @@ impl ::std::convert::From<&ToolListChangedNotification> for ToolListChangedNotif
 /// </details>
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
 pub struct ToolListChangedNotificationParams {
-    ///This parameter name is reserved by MCP to allow clients and servers to attach additional metadata to their notifications.
+    ///See [specification/2025-06-18/basic/index#general-fields] for notes on _meta usage.
     #[serde(
         rename = "_meta",
         default,
@@ -6699,6 +7779,60 @@ impl ::std::default::Default for ToolListChangedNotificationParams {
         Self {
             meta: Default::default(),
         }
+    }
+}
+///An optional JSON Schema object defining the structure of the tool's output returned in
+///the structuredContent field of a CallToolResult.
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "An optional JSON Schema object defining the structure of the tool's output returned in\nthe structuredContent field of a CallToolResult.",
+///  "type": "object",
+///  "required": [
+///    "type"
+///  ],
+///  "properties": {
+///    "properties": {
+///      "type": "object",
+///      "additionalProperties": {
+///        "type": "object",
+///        "additionalProperties": true
+///      }
+///    },
+///    "required": {
+///      "type": "array",
+///      "items": {
+///        "type": "string"
+///      }
+///    },
+///    "type": {
+///      "type": "string",
+///      "const": "object"
+///    }
+///  }
+///}
+/// ```
+/// </details>
+#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
+pub struct ToolOutputSchema {
+    #[serde(
+        default,
+        skip_serializing_if = ":: std :: collections :: BTreeMap::is_empty"
+    )]
+    pub properties: ::std::collections::BTreeMap<
+        ::std::string::String,
+        ::serde_json::Map<::std::string::String, ::serde_json::Value>,
+    >,
+    #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
+    pub required: ::std::vec::Vec<::std::string::String>,
+    #[serde(rename = "type")]
+    pub type_: ::std::string::String,
+}
+impl ::std::convert::From<&ToolOutputSchema> for ToolOutputSchema {
+    fn from(value: &ToolOutputSchema) -> Self {
+        value.clone()
     }
 }
 ///Sent from the client to request cancellation of resources/updated notifications from the server. This should follow a previous resources/subscribe request.

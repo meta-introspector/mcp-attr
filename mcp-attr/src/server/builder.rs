@@ -319,6 +319,8 @@ impl ResourceDefinition {
             uri: uri.to_string(),
             size: None,
             annotations: None,
+            meta: Default::default(),
+            title: None,
         })
     }
     fn to_resource_template(&self) -> Option<ResourceTemplate> {
@@ -332,6 +334,8 @@ impl ResourceDefinition {
             description: self.description.clone(),
             mime_type: self.mime_type.clone(),
             annotations: None,
+            meta: Default::default(),
+            title: None,
         })
     }
     fn captures<'a>(&'a self, input: &'a str) -> Option<Captures<'a>> {

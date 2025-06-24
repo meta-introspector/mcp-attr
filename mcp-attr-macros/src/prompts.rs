@@ -119,6 +119,8 @@ impl PromptEntry {
                 arguments: vec![#(#args,)*],
                 name: #name.into(),
                 description: #description,
+                meta: Default::default(),
+                title: None,
             }
         })
     }
@@ -254,6 +256,7 @@ impl PromptArg {
                 name: #name.into(),
                 description: #description.into(),
                 required: Some(#required),
+                title: None,
             }
         })
     }
