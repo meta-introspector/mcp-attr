@@ -402,7 +402,7 @@
 //!
 //! - "name" (optional) : ツール名。省略した場合は関数名が使用される。
 //! - "description" (optional) : AI向けの関数説明。ドキュメントコメントより優先される。
-//! - "destructive" (optional) : ツールが破壊的な更新を実行する可能性がある場合は `true` (デフォルト: `true`)
+//! - "destructive" (optional) : ツールが破壊的な更新を実行する可能性がある場合は `true`、追加的な更新のみを実行する場合は `false` (デフォルト: `true`)
 //! - "idempotent" (optional) : 同じ引数でツールを繰り返し呼び出しても追加の効果がない場合は `true` (デフォルト: `false`)
 //! - "read_only" (optional) : ツールが環境を変更しない場合は `true` (デフォルト: `false`)
 //! - "open_world" (optional) : ツールが外部エンティティの「オープンワールド」とやり取りする可能性がある場合は `true` (デフォルト: `true`)
@@ -988,7 +988,7 @@
 //!
 //! - "name" (optional): Tool name. If omitted, the function name is used.
 //! - "description" (optional): Function description for AI. Takes precedence over documentation comments.
-//! - "destructive" (optional): `true` if the tool may perform destructive updates (default: `true`)
+//! - "destructive" (optional): `true` if the tool may perform destructive updates, `false` if it only performs additive updates (default: `true`)
 //! - "idempotent" (optional): `true` if calling the tool repeatedly with the same arguments has no additional effect (default: `false`)
 //! - "read_only" (optional): `true` if the tool does not modify its environment (default: `false`)
 //! - "open_world" (optional): `true` if the tool may interact with an "open world" of external entities (default: `true`)

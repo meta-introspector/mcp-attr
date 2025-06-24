@@ -186,7 +186,7 @@
 ///
 /// - "name" (optional): Tool name. If omitted, the function name is used.
 /// - "description" (optional): Function description for AI. Takes precedence over documentation comments.
-/// - "destructive" (optional): `true` if the tool may perform destructive updates (default: `true`)
+/// - "destructive" (optional): `true` if the tool may perform destructive updates, `false` if it only performs additive updates (default: `true`)
 /// - "idempotent" (optional): `true` if calling the tool repeatedly with the same arguments has no additional effect (default: `false`)
 /// - "read_only" (optional): `true` if the tool does not modify its environment (default: `false`)
 /// - "open_world" (optional): `true` if the tool may interact with an "open world" of external entities (default: `true`)
