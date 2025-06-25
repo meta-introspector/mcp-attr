@@ -502,7 +502,7 @@ impl McpServer for ExampleServer {
 
 `#[complete(function)]` 属性を使用してプロンプトやリソースの引数に補完機能を追加できます。
 
-補完関数は `async fn(value: &str, cx: &RequestContext) -> Result<impl Into<CompleteResult>>` のシグネチャを持つ必要があります。グローバル関数（`#[complete(function_name)]`）またはインスタンスメソッド（`#[complete(.method_name)]`）を指定できます。
+補完関数は `async fn(value: &str, cx: &RequestContext) -> Result<impl Into<CompleteResult>>` のシグネチャを持ち、[`CompleteResult`] に変換可能な型を返す必要があります。グローバル関数（`#[complete(function_name)]`）またはインスタンスメソッド（`#[complete(.method_name)]`）を指定できます。
 
 `#[complete]` 属性が使用されている場合、`completion_complete` メソッドが自動生成されます。手動実装がある場合は自動生成をスキップします。
 
@@ -620,6 +620,7 @@ Unless you explicitly state otherwise, any contribution intentionally submitted 
 [`GetPromptResult`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.GetPromptResult.html
 [`ReadResourceResult`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.ReadResourceResult.html
 [`CallToolResult`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.CallToolResult.html
+[`CompleteResult`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.CompleteResult.html
 [`mcp_attr::Error`]: https://docs.rs/mcp-attr/latest/mcp_attr/struct.Error.html
 [`mcp_attr::Result`]: https://docs.rs/mcp-attr/latest/mcp_attr/type.Result.html
 [`anyhow::Error`]: https://docs.rs/anyhow/latest/anyhow/struct.Error.html
