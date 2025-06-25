@@ -1,0 +1,13 @@
+error: Method syntax (.method_name) can only be used within impl blocks, not in global functions
+ --> tests/compile_fail/completion_usage_method_syntax_standalone.rs:5:34
+  |
+5 | async fn test_prompt(#[complete(.method_name)] msg: String) -> Result<String> {
+  |                                  ^^^^^^^^^^^
+
+warning: unused import: `server::RequestContext`
+ --> tests/compile_fail/completion_usage_method_syntax_standalone.rs:1:24
+  |
+1 | use mcp_attr::{Result, server::RequestContext};
+  |                        ^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default

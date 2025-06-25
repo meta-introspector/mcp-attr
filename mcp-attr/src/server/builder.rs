@@ -7,16 +7,45 @@ use uri_template_ex::{Captures, UriTemplate};
 use crate::{
     Result,
     schema::{
-        CallToolRequestParams, CallToolResult, GetPromptRequestParams, GetPromptResult,
-        Implementation, ListPromptsRequestParams, ListPromptsResult,
-        ListResourceTemplatesRequestParams, ListResourcesRequestParams, ListResourcesResult,
-        ListToolsRequestParams, ListToolsResult, Prompt, ReadResourceRequestParams,
-        ReadResourceResult, Resource, ResourceTemplate, Tool,
+        CallToolRequestParams, CallToolResult, CompleteRequestParams, CompleteResult,
+        GetPromptRequestParams, GetPromptResult, Implementation, ListPromptsRequestParams,
+        ListPromptsResult, ListResourceTemplatesRequestParams, ListResourcesRequestParams,
+        ListResourcesResult, ListToolsRequestParams, ListToolsResult, Prompt,
+        ReadResourceRequestParams, ReadResourceResult, Resource, ResourceTemplate, Tool,
     },
     server::errors::{prompt_not_found, resource_not_found, tool_not_found},
 };
 
 use super::{McpServer, RequestContext};
+
+/// Completion function information for prompts and resources
+#[derive(Debug, Clone)]
+pub struct CompletionInfo {
+    /// Name of the prompt or resource URI
+    pub name: String,
+    /// Argument name for completion
+    pub argument: String,
+    /// Completion function
+    pub complete_fn: CompleteFn,
+}
+
+/// Completion function type
+#[derive(Clone)]
+pub struct CompleteFn {
+    /// Function that handles completion
+    #[allow(clippy::type_complexity)]
+    pub f: std::sync::Arc<
+        dyn for<'a> Fn(&'a CompleteRequestParams, &'a RequestContext) -> CompleteFuture<'a> + Send + Sync,
+    >,
+}
+
+impl std::fmt::Debug for CompleteFn {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CompleteFn").finish_non_exhaustive()
+    }
+}
+
+type CompleteFuture<'a> = Pin<Box<dyn Future<Output = Result<crate::schema::CompleteResult>> + Send + Sync + 'a>>;
 
 struct CustomServer {
     route: Route,
@@ -133,6 +162,43 @@ impl McpServer for CustomServer {
         }
         Err(tool_not_found(&p.name))
     }
+
+    async fn completion_complete(
+        &self,
+        p: CompleteRequestParams,
+        cx: &mut RequestContext,
+    ) -> Result<CompleteResult> {
+        use crate::schema::{CompleteRequestParamsRef, CompleteResultCompletion};
+
+        match &p.ref_ {
+            CompleteRequestParamsRef::PromptReference(prompt_ref) => {
+                // Find matching completion for prompt
+                for completion in &self.route.completions {
+                    if completion.name == prompt_ref.name && completion.argument == p.argument.name {
+                        return (completion.complete_fn.f)(&p, cx).await;
+                    }
+                }
+                // Return empty completion if no match found
+                Ok(CompleteResult {
+                    completion: CompleteResultCompletion::default(),
+                    meta: Default::default(),
+                })
+            }
+            CompleteRequestParamsRef::ResourceTemplateReference(resource_ref) => {
+                // Find matching completion for resource
+                for completion in &self.route.completions {
+                    if completion.name == resource_ref.uri && completion.argument == p.argument.name {
+                        return (completion.complete_fn.f)(&p, cx).await;
+                    }
+                }
+                // Return empty completion if no match found
+                Ok(CompleteResult {
+                    completion: CompleteResultCompletion::default(),
+                    meta: Default::default(),
+                })
+            }
+        }
+    }
 }
 
 #[derive(Ex)]
@@ -177,6 +243,7 @@ pub struct Route {
     tools: Vec<ToolDefinition>,
     prompts: Vec<PromptDefinition>,
     resources: Vec<ResourceDefinition>,
+    completions: Vec<CompletionInfo>,
 }
 impl Route {
     pub fn new() -> Self {
@@ -187,6 +254,7 @@ impl Route {
         self.tools.extend(route.tools);
         self.prompts.extend(route.prompts);
         self.resources.extend(route.resources);
+        self.completions.extend(route.completions);
     }
 }
 impl<T> FromIterator<T> for Route
@@ -200,6 +268,7 @@ where
             route.tools.extend(r.tools);
             route.prompts.extend(r.prompts);
             route.resources.extend(r.resources);
+            route.completions.extend(r.completions);
         }
         route
     }
@@ -234,6 +303,7 @@ pub struct PromptDefinition {
             + Send
             + Sync,
     >,
+    completions: Vec<CompletionInfo>,
 }
 impl PromptDefinition {
     pub fn new(
@@ -244,13 +314,20 @@ impl PromptDefinition {
         + 'static,
     ) -> Self {
         let f = Box::new(f);
-        Self { prompt, f }
+        Self { prompt, f, completions: Vec::new() }
+    }
+    
+    pub fn with_completions(mut self, completions: Vec<CompletionInfo>) -> Self {
+        self.completions = completions;
+        self
     }
 }
 impl From<PromptDefinition> for Route {
     fn from(value: PromptDefinition) -> Self {
+        let completions = value.completions.clone();
         Route {
             prompts: vec![value],
+            completions,
             ..Default::default()
         }
     }
@@ -277,6 +354,7 @@ pub struct ResourceDefinition {
     description: Option<String>,
     mime_type: Option<String>,
     title: Option<String>,
+    completions: Vec<CompletionInfo>,
 }
 impl ResourceDefinition {
     pub fn new(
@@ -299,6 +377,7 @@ impl ResourceDefinition {
             description: None,
             mime_type: None,
             title: None,
+            completions: Vec::new(),
         })
     }
     pub fn with_description(mut self, description: &str) -> Self {
@@ -311,6 +390,10 @@ impl ResourceDefinition {
     }
     pub fn with_title(mut self, title: &str) -> Self {
         self.title = Some(title.to_string());
+        self
+    }
+    pub fn with_completions(mut self, completions: Vec<CompletionInfo>) -> Self {
+        self.completions = completions;
         self
     }
     fn to_resource(&self) -> Option<Resource> {
@@ -354,8 +437,10 @@ impl ResourceDefinition {
 }
 impl From<ResourceDefinition> for Route {
     fn from(value: ResourceDefinition) -> Self {
+        let completions = value.completions.clone();
         Route {
             resources: vec![value],
+            completions,
             ..Default::default()
         }
     }

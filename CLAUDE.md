@@ -48,8 +48,8 @@ async fn complete_with_args(&self, value: &str, category: &str, count: Option<u3
 - 型互換性チェックはコンパイル時に行われる
 
 #### テスト
-- 統合テスト: `tests/test_completion_complete.rs`
-- コンパイル失敗テスト: `tests/compile_fail/complete_fn_*.rs`
+- 統合テスト: `tests/completion_*.rs` のマトリックス構造テスト
+- コンパイル失敗テスト: `tests/compile_fail/completion_*.rs`
 
 ## Development Commands
 
@@ -123,6 +123,39 @@ cargo run --example tool_info
 2. テスト実行でマクロ展開後コードを確認
 3. 展開後コードを直接編集してデバッグ
 4. 修正内容をマクロ実装に反映
+
+## Completion Tests Structure
+
+### Test File Organization
+
+Completion functionality tests are organized in a matrix structure based on:
+- **Usage context**: prompt vs resource
+- **Definition location**: global (global functions) vs impl (methods in #[mcp_server] impl)
+
+#### Success Case Tests
+```
+tests/
+├── completion_prompt_global.rs    # Prompt + Global completion functions
+├── completion_prompt_impl.rs      # Prompt + Impl completion methods  
+├── completion_resource_global.rs  # Resource + Global completion functions
+├── completion_resource_impl.rs    # Resource + Impl completion methods
+└── completion_edge_cases.rs      # Special cases not covered by the matrix
+```
+
+#### Compile Failure Tests
+Located in `tests/compile_fail/` with naming pattern: `completion_[category]_[error].rs`
+
+### Adding New Completion Tests
+
+#### For Common Functionality
+When adding a new test for functionality that applies to all completion contexts:
+1. **MUST add the test to all 4 matrix files** (completion_prompt_global, completion_prompt_impl, completion_resource_global, completion_resource_impl)
+2. Use consistent test naming across all files
+3. Only exclude from specific files if functionality is genuinely incompatible
+4. Document any exclusions with clear comments
+
+#### For Special Cases
+Use `tests/completion_edge_cases.rs` for cross-context integration tests, manual overrides, and cases that don't fit the matrix structure.
 
 ## Code Style
 

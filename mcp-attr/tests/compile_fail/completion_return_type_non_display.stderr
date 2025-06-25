@@ -1,5 +1,5 @@
 error[E0277]: `NonDisplayType` doesn't implement `std::fmt::Display`
-  --> tests/compile_fail/complete_non_display_type.rs:11:10
+  --> tests/compile_fail/completion_return_type_non_display.rs:11:10
    |
 11 | async fn complete_non_display(_value: &str, _cx: &RequestContext) -> Result<Vec<NonDisplayType>> {
    |          ^^^^^^^^^^^^^^^^^^^^ `NonDisplayType` cannot be formatted with the default formatter

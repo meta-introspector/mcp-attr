@@ -1,5 +1,5 @@
 error[E0599]: no method named `non_existent_method` found for reference `&TestServer` in the current scope
- --> tests/compile_fail/complete_instance_method_not_found.rs:8:45
+ --> tests/compile_fail/completion_instance_method_not_found.rs:8:45
   |
 8 |     async fn test_prompt(&self, #[complete(.non_existent_method)] msg: String) -> Result<String> {
   |                                             ^^^^^^^^^^^^^^^^^^^ method not found in `&TestServer`

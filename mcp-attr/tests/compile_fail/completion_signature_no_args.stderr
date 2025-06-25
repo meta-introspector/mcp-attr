@@ -1,11 +1,11 @@
 error: completion function `complete_no_args` must have a `value: &str` parameter
- --> tests/compile_fail/complete_no_args.rs:6:10
+ --> tests/compile_fail/completion_signature_no_args.rs:6:10
   |
 6 | async fn complete_no_args() -> Result<Vec<String>> {
   |          ^^^^^^^^^^^^^^^^
 
 error[E0425]: cannot find function `complete_no_args` in this scope
-  --> tests/compile_fail/complete_no_args.rs:13:44
+  --> tests/compile_fail/completion_signature_no_args.rs:13:44
    |
 13 |     async fn test_prompt(&self, #[complete(complete_no_args)] msg: String) -> Result<String> {
    |                                            ^^^^^^^^^^^^^^^^ not found in this scope

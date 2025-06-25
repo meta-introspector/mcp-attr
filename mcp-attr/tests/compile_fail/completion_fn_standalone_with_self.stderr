@@ -1,0 +1,5 @@
+error: completion functions using #[complete_fn] attribute cannot have `self` parameter. Use the function inside #[mcp_server] impl block instead.
+ --> tests/compile_fail/completion_fn_standalone_with_self.rs:9:34
+  |
+9 |     async fn complete_with_self(&self, value: &str) -> Result<Vec<String>, Box<dyn std::error::Error + Send + Sync>> {
+  |                                  ^^^^

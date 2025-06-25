@@ -1,11 +1,11 @@
 error: completion function value parameter must be of type `&str`, found `value:i32.ty`
- --> tests/compile_fail/complete_wrong_first_arg.rs:6:42
+ --> tests/compile_fail/completion_signature_wrong_first_arg.rs:6:42
   |
 6 | async fn complete_wrong_first_arg(value: i32, _cx: &RequestContext) -> Result<Vec<String>> {
   |                                          ^^^
 
 warning: unused import: `RequestContext`
- --> tests/compile_fail/complete_wrong_first_arg.rs:1:48
+ --> tests/compile_fail/completion_signature_wrong_first_arg.rs:1:48
   |
 1 | use mcp_attr::{server::{mcp_server, McpServer, RequestContext, complete_fn}, Result};
   |                                                ^^^^^^^^^^^^^^
@@ -13,7 +13,7 @@ warning: unused import: `RequestContext`
   = note: `#[warn(unused_imports)]` on by default
 
 error[E0425]: cannot find function `complete_wrong_first_arg` in this scope
-  --> tests/compile_fail/complete_wrong_first_arg.rs:13:44
+  --> tests/compile_fail/completion_signature_wrong_first_arg.rs:13:44
    |
 13 |     async fn test_prompt(&self, #[complete(complete_wrong_first_arg)] msg: String) -> Result<String> {
    |                                            ^^^^^^^^^^^^^^^^^^^^^^^^ not found in this scope

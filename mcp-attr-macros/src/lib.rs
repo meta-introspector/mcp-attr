@@ -90,6 +90,7 @@ pub fn complete_fn(
     into_macro_output(build_complete_fn(attr.into(), item.into()))
 }
 
+
 fn build_mcp_server(
     attr: TokenStream,
     item: TokenStream,
@@ -482,8 +483,8 @@ fn apply_complete_fn_transformation(impl_fn: &mut ImplItemFn) -> Result<ImplItem
         defaultness: impl_fn.defaultness,
     };
 
-    // Transform the original function to wrapper with new signature
-    let new_sig = build_complete_fn_signature(&impl_fn.sig)?;
+    // Transform the original function to wrapper with new signature (self allowed in mcp_server context)
+    let new_sig = build_complete_fn_signature(&impl_fn.sig, true)?;
     let call_expr = build_complete_fn_body(&impl_fn.sig, &inner_ident)?;
 
     impl_fn.sig = new_sig;
@@ -564,14 +565,14 @@ fn build_complete_fn(attr: TokenStream, item: TokenStream) -> Result<TokenStream
     let original_ident = &original_fn.sig.ident;
     let inner_ident = format_ident!("{}_inner", original_ident);
 
-    // Validate the original function signature
-    validate_complete_fn_signature(&original_fn.sig)?;
+    // Validate the original function signature (self not allowed for global complete_fn)
+    validate_complete_fn_signature(&original_fn.sig, false)?;
 
     let mut inner_fn = original_fn.clone();
     inner_fn.sig.ident = inner_ident.clone();
 
     let vis = &original_fn.vis;
-    let new_sig = build_complete_fn_signature(&original_fn.sig)?;
+    let new_sig = build_complete_fn_signature(&original_fn.sig, false)?;
     let call_expr = build_complete_fn_body(&original_fn.sig, &inner_ident)?;
 
     Ok(quote! {
@@ -583,9 +584,9 @@ fn build_complete_fn(attr: TokenStream, item: TokenStream) -> Result<TokenStream
     })
 }
 
-fn build_complete_fn_signature(original_sig: &syn::Signature) -> Result<syn::Signature> {
+fn build_complete_fn_signature(original_sig: &syn::Signature, allow_self: bool) -> Result<syn::Signature> {
     // Validate the original signature first
-    validate_complete_fn_signature(original_sig)?;
+    validate_complete_fn_signature(original_sig, allow_self)?;
 
     let has_self = original_sig
         .inputs
@@ -616,7 +617,7 @@ fn build_complete_fn_signature(original_sig: &syn::Signature) -> Result<syn::Sig
     Ok(new_sig)
 }
 
-fn validate_complete_fn_signature(sig: &syn::Signature) -> Result<()> {
+fn validate_complete_fn_signature(sig: &syn::Signature, allow_self: bool) -> Result<()> {
     // Check if function is async
     if sig.asyncness.is_none() {
         bail!(sig.ident.span(), "completion function must be async");
@@ -628,7 +629,15 @@ fn validate_complete_fn_signature(sig: &syn::Signature) -> Result<()> {
 
     for input in &sig.inputs {
         match input {
-            FnArg::Receiver(_) => has_self = true,
+            FnArg::Receiver(receiver) => {
+                has_self = true;
+                if !allow_self {
+                    bail!(
+                        receiver.self_token.span(),
+                        "completion functions using #[complete_fn] attribute cannot have `self` parameter. Use the function inside #[mcp_server] impl block instead."
+                    );
+                }
+            }
             FnArg::Typed(pat_type) => {
                 if let syn::Pat::Ident(pat_ident) = &*pat_type.pat {
                     let arg_name = pat_ident.ident.to_string();

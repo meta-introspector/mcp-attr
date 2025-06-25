@@ -174,8 +174,52 @@ impl PromptEntry {
             .map(|a| a.build_get_expr())
             .collect::<Result<Vec<_>>>()?;
         let metadata = self.build_metadata()?;
+        
+        // Generate completion information
+        let mut completion_infos = Vec::new();
+        for arg in &self.args {
+            if let PromptFnArg::Property(prompt_arg) = arg {
+                if let Some(complete_expr) = &prompt_arg.complete_expr {
+                    // Check if it's a method syntax in standalone usage (error case)
+                    match complete_expr {
+                        crate::CompleteFuncExpr::InstanceMethod(method_name) => {
+                            return Err(syn::Error::new(
+                                method_name.span(),
+                                "Method syntax (.method_name) can only be used within impl blocks, not in global functions"
+                            ));
+                        }
+                        crate::CompleteFuncExpr::Expr(expr) => {
+                            completion_infos.push((
+                                self.name.clone(),
+                                prompt_arg.name.clone(),
+                                expr.clone()
+                            ));
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Generate completion function calls
+        let completions = completion_infos.iter().map(|(prompt_name, arg_name, complete_expr)| {
+            quote! {
+                ::mcp_attr::server::builder::CompletionInfo {
+                    name: #prompt_name.to_string(),
+                    argument: #arg_name.to_string(),
+                    complete_fn: ::mcp_attr::server::builder::CompleteFn {
+                        f: std::sync::Arc::new(|params: &::mcp_attr::schema::CompleteRequestParams, cx: &::mcp_attr::server::RequestContext| {
+                            Box::pin(async move {
+                                #complete_expr(params, cx).await
+                            })
+                        }),
+                    },
+                }
+            }
+        }).collect::<Vec<_>>();
+        
         Ok(quote! {
             #vis fn #route_ident() -> ::mcp_attr::Result<::mcp_attr::server::builder::PromptDefinition> {
+                let completions = vec![#(#completions),*];
                 Ok(::mcp_attr::server::builder::PromptDefinition::new(
                     #metadata,
                     |p: &::mcp_attr::schema::GetPromptRequestParams, cx: &::mcp_attr::server::RequestContext| {
@@ -185,7 +229,7 @@ impl PromptEntry {
                             ))
                         })
                     }
-                ))
+                ).with_completions(completions))
             }
         })
     }

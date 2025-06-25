@@ -1,11 +1,11 @@
 error: completion function `complete_wrong` must have a `value: &str` parameter
-  --> tests/compile_fail/complete_fn_wrong_signature.rs:13:14
+  --> tests/compile_fail/completion_fn_signature_wrong.rs:13:14
    |
 13 |     async fn complete_wrong(&self) -> Result<Vec<String>> {
    |              ^^^^^^^^^^^^^^
 
 error[E0061]: this method takes 0 arguments but 2 arguments were supplied
-  --> tests/compile_fail/complete_fn_wrong_signature.rs:8:45
+  --> tests/compile_fail/completion_fn_signature_wrong.rs:8:45
    |
 8  |     async fn test_prompt(&self, #[complete(.complete_wrong)] msg: String) -> Result<String> {
    |                                             ^^^^^^^^^^^^^^
@@ -14,7 +14,7 @@ error[E0061]: this method takes 0 arguments but 2 arguments were supplied
    |                                             unexpected argument #2 of type `&mut mcp_attr::server::RequestContext`
    |
 note: method defined here
-  --> tests/compile_fail/complete_fn_wrong_signature.rs:13:14
+  --> tests/compile_fail/completion_fn_signature_wrong.rs:13:14
    |
 13 |     async fn complete_wrong(&self) -> Result<Vec<String>> {
    |              ^^^^^^^^^^^^^^
@@ -25,7 +25,7 @@ help: remove the extra arguments
    |
 
 error[E0308]: mismatched types
- --> tests/compile_fail/complete_fn_wrong_signature.rs:8:45
+ --> tests/compile_fail/completion_fn_signature_wrong.rs:8:45
   |
 8 |     async fn test_prompt(&self, #[complete(.complete_wrong)] msg: String) -> Result<String> {
   |                                             ^^^^^^^^^^^^^^ expected `Result<CompleteResult, Error>`, found `Result<Vec<String>, Error>`

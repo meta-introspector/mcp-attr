@@ -1,5 +1,5 @@
 error[E0277]: the trait bound `mcp_attr::server::RequestContext: FromStr` is not satisfied
- --> tests/compile_fail/complete_wrong_second_arg.rs:5:1
+ --> tests/compile_fail/completion_signature_wrong_second_arg.rs:5:1
   |
 5 | #[complete_fn]
   | ^^^^^^^^^^^^^^ the trait `FromStr` is not implemented for `mcp_attr::server::RequestContext`
@@ -17,7 +17,7 @@ error[E0277]: the trait bound `mcp_attr::server::RequestContext: FromStr` is not
   = note: this error originates in the attribute macro `complete_fn` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 warning: unused variable: `cx`
- --> tests/compile_fail/complete_wrong_second_arg.rs:6:50
+ --> tests/compile_fail/completion_signature_wrong_second_arg.rs:6:50
   |
 6 | async fn complete_wrong_second_arg(_value: &str, cx: RequestContext) -> Result<Vec<String>> {
   |                                                  ^^ help: if this is intentional, prefix it with an underscore: `_cx`
