@@ -43,7 +43,7 @@ cargo test -p mcp-attr
 cargo test --doc
 
 # コンパイル失敗テスト（trybuild）
-cargo test compile_fail
+cargo test --test compile_fail -- --ignored
 ```
 
 ### Code Quality

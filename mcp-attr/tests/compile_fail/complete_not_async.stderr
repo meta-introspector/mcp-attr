@@ -1,0 +1,16 @@
+error[E0277]: `std::result::Result<Vec<std::string::String>, mcp_attr::Error>` is not a future
+  --> tests/compile_fail/complete_not_async.rs:12:44
+   |
+12 |     async fn test_prompt(&self, #[complete(complete_not_async)] msg: String) -> Result<String> {
+   |                                            ^^^^^^^^^^^^^^^^^^
+   |                                            |
+   |                                            `std::result::Result<Vec<std::string::String>, mcp_attr::Error>` is not a future
+   |                                            this call returns `std::result::Result<Vec<std::string::String>, mcp_attr::Error>`
+   |
+   = help: the trait `Future` is not implemented for `std::result::Result<Vec<std::string::String>, mcp_attr::Error>`
+   = note: std::result::Result<Vec<std::string::String>, mcp_attr::Error> must be a future or must implement `IntoFuture` to be awaited
+   = note: required for `std::result::Result<Vec<std::string::String>, mcp_attr::Error>` to implement `IntoFuture`
+help: alternatively, consider making `fn complete_not_async` asynchronous
+   |
+5  | async fn complete_not_async(_value: &str, _cx: &RequestContext) -> Result<Vec<String>> {
+   | +++++

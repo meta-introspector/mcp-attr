@@ -5,12 +5,12 @@ error[E0277]: the trait bound `mcp_attr::schema::CallToolResult: From<X>` is not
    |                          ^^^^^^ the trait `From<X>` is not implemented for `mcp_attr::schema::CallToolResult`
    |
    = help: the following other types implement trait `From<T>`:
-             `mcp_attr::schema::CallToolResult` implements `From<&CallToolResultContentItem>`
+             `mcp_attr::schema::CallToolResult` implements `From<&ContentBlock>`
+             `mcp_attr::schema::CallToolResult` implements `From<&mcp_attr::schema::AudioContent>`
              `mcp_attr::schema::CallToolResult` implements `From<&mcp_attr::schema::CallToolResult>`
              `mcp_attr::schema::CallToolResult` implements `From<&mcp_attr::schema::EmbeddedResource>`
              `mcp_attr::schema::CallToolResult` implements `From<&mcp_attr::schema::ImageContent>`
+             `mcp_attr::schema::CallToolResult` implements `From<&mcp_attr::schema::ResourceLink>`
              `mcp_attr::schema::CallToolResult` implements `From<&mcp_attr::schema::TextContent>`
              `mcp_attr::schema::CallToolResult` implements `From<&str>`
-             `mcp_attr::schema::CallToolResult` implements `From<()>`
-             `mcp_attr::schema::CallToolResult` implements `From<CallToolResultContentItem>`
            and $N others

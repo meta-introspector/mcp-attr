@@ -113,8 +113,8 @@ fn collect_converts(file: &syn::File, registry: &mut Registry) -> Result<()> {
                             if let Some(GenericArgument::Type(from_type)) = args.args.first() {
                                 let to_type = &*item_impl.self_ty;
 
-                                // ジェネリック型の場合はスキップ
-                                if has_generic_params(to_type) {
+                                // ジェネリックなimpl（impl<T> From<T> for Y のような）の場合はスキップ
+                                if !item_impl.generics.params.is_empty() {
                                     continue;
                                 }
 
@@ -141,16 +141,6 @@ fn collect_converts(file: &syn::File, registry: &mut Registry) -> Result<()> {
     Ok(())
 }
 
-fn has_generic_params(ty: &Type) -> bool {
-    match ty {
-        Type::Path(type_path) => type_path
-            .path
-            .segments
-            .iter()
-            .any(|segment| matches!(segment.arguments, PathArguments::AngleBracketed(_))),
-        _ => false,
-    }
-}
 
 fn normalize_type(ty: &Type, self_type: &Type) -> Result<Type> {
     match ty {

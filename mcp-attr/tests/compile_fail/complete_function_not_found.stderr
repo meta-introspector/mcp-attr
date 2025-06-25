@@ -1,0 +1,5 @@
+error[E0425]: cannot find function `non_existent_function` in this scope
+ --> tests/compile_fail/complete_function_not_found.rs:8:44
+  |
+8 |     async fn test_prompt(&self, #[complete(non_existent_function)] msg: String) -> Result<String> {
+  |                                            ^^^^^^^^^^^^^^^^^^^^^ not found in this scope

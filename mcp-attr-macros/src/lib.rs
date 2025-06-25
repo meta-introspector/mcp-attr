@@ -6,7 +6,7 @@ use std::{
 };
 
 use proc_macro2::{Span, TokenStream};
-use quote::{ToTokens, format_ident, quote};
+use quote::{ToTokens, format_ident, quote, quote_spanned};
 use structmeta::{NameArgs, NameValue, StructMeta};
 use syn::{
     Attribute, Error, FnArg, Ident, ImplItem, ImplItemFn, ItemFn, ItemImpl, LitStr, Pat, Path,
@@ -179,12 +179,16 @@ impl McpBuilder {
         let prompts = build_if(!self.prompts.is_empty(), || self.build_prompts())?;
         let resources = build_if(!self.resources.is_empty(), || self.build_resources(items))?;
         let tools = build_if(!self.tools.is_empty(), || self.build_tools())?;
+        let completion_complete = build_if(!is_defined(items, "completion_complete"), || {
+            self.build_completion_complete()
+        })?;
         Ok(quote! {
             #capabilities
             #instructions
             #prompts
             #resources
             #tools
+            #completion_complete
         })
     }
     fn build_capabilities(&self, items: &[ImplItem]) -> Result<TokenStream> {
@@ -286,11 +290,138 @@ impl McpBuilder {
             })
         }
     }
+
+    fn build_completion_complete(&self) -> Result<TokenStream> {
+        let mut prompt_completions = Vec::new();
+        let mut resource_completions = Vec::new();
+
+        // Collect completion info from prompts
+        for prompt in &self.prompts {
+            for (prompt_name, arg_name, complete_expr) in prompt.get_completion_info() {
+                prompt_completions.push((prompt_name, arg_name, complete_expr));
+            }
+        }
+
+        // Collect completion info from resources
+        for resource in &self.resources {
+            for (uri, arg_name, complete_expr) in resource.get_completion_info() {
+                resource_completions.push((uri, arg_name, complete_expr));
+            }
+        }
+
+        // If no completions are defined, return empty method
+        if prompt_completions.is_empty() && resource_completions.is_empty() {
+            return Ok(quote! {});
+        }
+
+        // Generate prompt completion arms
+        let prompt_arms: Vec<TokenStream> = prompt_completions
+            .iter()
+            .map(|(prompt_name, arg_name, complete_expr)| {
+                let call_expr = self.generate_completion_call(complete_expr);
+                let span = match complete_expr {
+                    CompleteFuncExpr::Expr(expr) => expr.span(),
+                    CompleteFuncExpr::InstanceMethod(ident) => ident.span(),
+                };
+                quote_spanned! {span=>
+                    (#prompt_name, #arg_name) => {
+                        let result = #call_expr;
+                        Ok(result?.into())
+                    },
+                }
+            })
+            .collect();
+
+        // Generate resource completion arms
+        let resource_arms: Vec<TokenStream> = resource_completions
+            .iter()
+            .map(|(uri, arg_name, complete_expr)| {
+                let call_expr = self.generate_completion_call(complete_expr);
+                let span = match complete_expr {
+                    CompleteFuncExpr::Expr(expr) => expr.span(),
+                    CompleteFuncExpr::InstanceMethod(ident) => ident.span(),
+                };
+                quote_spanned! {span=>
+                    (#uri, #arg_name) => {
+                        let result = #call_expr;
+                        Ok(result?.into())
+                    },
+                }
+            })
+            .collect();
+
+        Ok(quote! {
+            async fn completion_complete(
+                &self,
+                p: ::mcp_attr::schema::CompleteRequestParams,
+                cx: &mut ::mcp_attr::server::RequestContext,
+            ) -> ::mcp_attr::Result<::mcp_attr::schema::CompleteResult> {
+                match &p.ref_ {
+                    ::mcp_attr::schema::CompleteRequestParamsRef::PromptReference(prompt_ref) => {
+                        match (prompt_ref.name.as_str(), p.argument.name.as_str()) {
+                            #(#prompt_arms)*
+                            _ => Ok(::mcp_attr::schema::CompleteResult::default()),
+                        }
+                    },
+                    ::mcp_attr::schema::CompleteRequestParamsRef::ResourceTemplateReference(resource_ref) => {
+                        match (resource_ref.uri.as_str(), p.argument.name.as_str()) {
+                            #(#resource_arms)*
+                            _ => Ok(::mcp_attr::schema::CompleteResult::default()),
+                        }
+                    }
+                }
+            }
+        })
+    }
+
+    fn generate_completion_call(&self, complete_func_expr: &CompleteFuncExpr) -> TokenStream {
+        match complete_func_expr {
+            CompleteFuncExpr::Expr(expr) => {
+                // Call as a standalone function (no special handling for Self::)
+                let span = expr.span();
+                quote_spanned! {span=>
+                    #expr(&p.argument.value, cx).await
+                }
+            }
+            CompleteFuncExpr::InstanceMethod(method_name) => {
+                // Call as instance method
+                let span = method_name.span();
+                quote_spanned! {span=>
+                    self.#method_name(&p.argument.value, cx).await
+                }
+            }
+        }
+    }
 }
 
 #[derive(StructMeta, Default)]
 struct McpAttr {
     dump: bool,
+}
+
+#[derive(Debug, Clone)]
+enum CompleteFuncExpr {
+    Expr(syn::Expr),
+    InstanceMethod(syn::Ident),
+}
+
+impl Parse for CompleteFuncExpr {
+    fn parse(input: ParseStream) -> Result<Self> {
+        if input.peek(Token![.]) {
+            input.parse::<Token![.]>()?;
+            let method_name = input.parse::<syn::Ident>()?;
+            Ok(CompleteFuncExpr::InstanceMethod(method_name))
+        } else {
+            let expr = input.parse::<syn::Expr>()?;
+            Ok(CompleteFuncExpr::Expr(expr))
+        }
+    }
+}
+
+#[derive(StructMeta)]
+struct CompleteAttr {
+    #[struct_meta(unnamed)]
+    func: CompleteFuncExpr,
 }
 
 enum ItemAttr {

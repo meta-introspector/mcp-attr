@@ -12,5 +12,5 @@ error[E0277]: the trait bound `mcp_attr::schema::ReadResourceResult: From<X>` is
              `mcp_attr::schema::ReadResourceResult` implements `From<&str>`
              `mcp_attr::schema::ReadResourceResult` implements `From<Base64Bytes>`
              `mcp_attr::schema::ReadResourceResult` implements `From<ReadResourceResultContentsItem>`
-             `mcp_attr::schema::ReadResourceResult` implements `From<String>`
+             `mcp_attr::schema::ReadResourceResult` implements `From<Vec<ReadResourceResultContentsItem>>`
            and $N others

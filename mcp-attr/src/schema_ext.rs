@@ -10,14 +10,14 @@ use crate::{
     Result,
     schema::{
         Annotations, BlobResourceContents, CallToolRequestParams, CallToolResult,
-        ContentBlock, CompleteRequestParams, CompleteRequestParamsArgument,
-        CompleteRequestParamsRef, CompleteResult, CompleteResultCompletion, EmbeddedResource,
+        CompleteRequestParams, CompleteRequestParamsArgument, CompleteRequestParamsRef,
+        CompleteResult, CompleteResultCompletion, ContentBlock, EmbeddedResource,
         EmbeddedResourceResource, GetPromptRequestParams, GetPromptResult, ImageContent,
         Implementation, ListPromptsResult, ListResourceTemplatesResult, ListResourcesResult,
-        ListRootsResult, ListToolsResult, Prompt, PromptArgument, PromptMessage,
-        PromptReference, ReadResourceRequestParams, ReadResourceResult,
-        ReadResourceResultContentsItem, Resource, ResourceTemplateReference, ResourceTemplate, Role, Root,
-        TextContent, TextResourceContents, Tool, ToolAnnotations, ToolInputSchema,
+        ListRootsResult, ListToolsResult, Prompt, PromptArgument, PromptMessage, PromptReference,
+        ReadResourceRequestParams, ReadResourceResult, ReadResourceResultContentsItem, Resource,
+        ResourceTemplate, ResourceTemplateReference, Role, Root, TextContent, TextResourceContents,
+        Tool, ToolAnnotations, ToolInputSchema,
     },
     utils::Base64Bytes,
 };
@@ -472,9 +472,12 @@ impl From<CompleteResultCompletion> for CompleteResult {
 impl CompleteResultCompletion {
     pub const MAX_VALUES: usize = 100;
 }
-
-impl From<Vec<String>> for CompleteResultCompletion {
-    fn from(mut values: Vec<String>) -> Self {
+impl<T: Display> FromIterator<T> for CompleteResultCompletion {
+    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
+        let mut values = iter
+            .into_iter()
+            .map(|s| s.to_string())
+            .collect::<Vec<String>>();
         let total = Some(values.len() as i64);
         let has_more = if values.len() > Self::MAX_VALUES {
             values.truncate(Self::MAX_VALUES);
@@ -483,27 +486,48 @@ impl From<Vec<String>> for CompleteResultCompletion {
             None
         };
         Self {
-            has_more,
-            total,
             values,
+            total,
+            has_more,
         }
     }
 }
-impl From<&[&str]> for CompleteResultCompletion {
-    fn from(values: &[&str]) -> Self {
-        values
-            .iter()
-            .map(|s| s.to_string())
-            .collect::<Vec<String>>()
-            .into()
+
+impl<T: Display> From<Vec<T>> for CompleteResultCompletion {
+    fn from(values: Vec<T>) -> Self {
+        Self::from_iter(values)
+    }
+}
+impl<T: Display> From<&[T]> for CompleteResultCompletion {
+    fn from(values: &[T]) -> Self {
+        Self::from_iter(values)
+    }
+}
+impl<T: Display> From<Vec<T>> for CompleteResult {
+    fn from(values: Vec<T>) -> Self {
+        Self {
+            completion: values.into(),
+            meta: Default::default(),
+        }
+    }
+}
+impl<T: Display> From<&[T]> for CompleteResult {
+    fn from(values: &[T]) -> Self {
+        Self {
+            completion: values.into(),
+            meta: Default::default(),
+        }
     }
 }
 
 impl CompleteRequestParams {
-    pub fn new(r: CompleteRequestParamsRef, argument: CompleteRequestParamsArgument) -> Self {
-        Self { 
-            argument, 
-            ref_: r,
+    pub fn new(
+        r: impl Into<CompleteRequestParamsRef>,
+        argument: CompleteRequestParamsArgument,
+    ) -> Self {
+        Self {
+            argument,
+            ref_: r.into(),
             context: Default::default(),
         }
     }

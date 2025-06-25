@@ -189,6 +189,22 @@ impl PromptEntry {
             }
         })
     }
+
+    pub fn get_completion_info(&self) -> Vec<(String, String, crate::CompleteFuncExpr)> {
+        let mut completions = Vec::new();
+        for arg in &self.args {
+            if let PromptFnArg::Property(prompt_arg) = arg {
+                if let Some(complete_expr) = &prompt_arg.complete_expr {
+                    completions.push((
+                        self.name.clone(),
+                        prompt_arg.name.clone(),
+                        complete_expr.clone(),
+                    ));
+                }
+            }
+        }
+        completions
+    }
 }
 
 #[derive(Debug)]
@@ -209,6 +225,7 @@ impl PromptFnArg {
         let arg_attr = take_only_attr::<PromptArgAttr>(&mut typed_arg.attrs, "arg")?;
         let has_arg_attr = arg_attr.is_some();
         let arg_attr = arg_attr.unwrap_or_default();
+        let complete_attr = take_only_attr::<crate::CompleteAttr>(&mut typed_arg.attrs, "complete")?;
         let description = take_doc(&mut typed_arg.attrs);
         if is_context(&typed_arg.ty) && !has_arg_attr {
             return Ok(Self::Context(span));
@@ -225,6 +242,7 @@ impl PromptFnArg {
             description,
             required,
             span,
+            complete_expr: complete_attr.map(|attr| attr.func),
         }))
     }
     fn build_list_expr(&self) -> Result<Option<TokenStream>> {
@@ -249,6 +267,7 @@ struct PromptArg {
     description: String,
     required: bool,
     span: Span,
+    complete_expr: Option<crate::CompleteFuncExpr>,
 }
 impl PromptArg {
     fn build_list(&self) -> Result<TokenStream> {

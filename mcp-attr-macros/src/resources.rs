@@ -85,7 +85,7 @@ impl ResourceEntry {
         };
         let args = sig
             .inputs
-            .iter()
+            .iter_mut()
             .map(|f| ResourceFnArg::new(f, &uri))
             .collect::<Result<Vec<_>>>()?;
         let fn_ident = sig.ident.clone();
@@ -311,8 +311,28 @@ impl ResourceEntry {
             }))
         }
     }
+
+    pub fn get_completion_info(&self) -> Vec<(String, String, crate::CompleteFuncExpr)> {
+        let mut completions = Vec::new();
+        if let Some(uri) = &self.uri {
+            let uri_str = uri.to_string();
+            for arg in &self.args {
+                if let ResourceFnArg::Var(uri_var) = arg {
+                    if let Some(complete_expr) = &uri_var.complete_expr {
+                        completions.push((
+                            uri_str.clone(),
+                            uri_var.name.clone(),
+                            complete_expr.clone(),
+                        ));
+                    }
+                }
+            }
+        }
+        completions
+    }
 }
 
+#[allow(clippy::large_enum_variant)]
 enum ResourceFnArg {
     Receiver(Span),
     Context(Span),
@@ -321,7 +341,7 @@ enum ResourceFnArg {
 }
 
 impl ResourceFnArg {
-    fn new(f: &FnArg, uri: &Option<UriTemplate>) -> Result<Self> {
+    fn new(f: &mut FnArg, uri: &Option<UriTemplate>) -> Result<Self> {
         let span = f.span();
         let typed_arg = match f {
             FnArg::Typed(pat_type) => pat_type,
@@ -331,6 +351,10 @@ impl ResourceFnArg {
             return Ok(Self::Context(span));
         }
         if let Some(uri) = uri {
+            let complete_attr = crate::utils::take_only_attr::<crate::CompleteAttr>(
+                &mut typed_arg.attrs,
+                "complete",
+            )?;
             let name = arg_name_of(typed_arg)?;
             if let Some(index) = uri.find_var_name(&name) {
                 let (ty, required) = expand_option_ty(&typed_arg.ty);
@@ -340,6 +364,7 @@ impl ResourceFnArg {
                     ty,
                     required,
                     span,
+                    complete_expr: complete_attr.map(|attr| attr.func),
                 }))
             } else {
                 bail!(span, "URL Template does not contain variable `{name}`")
@@ -366,6 +391,7 @@ struct UriVar {
     ty: Type,
     required: bool,
     span: Span,
+    complete_expr: Option<crate::CompleteFuncExpr>,
 }
 impl UriVar {
     fn build_read(&self) -> Result<TokenStream> {

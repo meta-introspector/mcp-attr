@@ -82,6 +82,9 @@
 /// Arguments can be given names using the `#[arg("name")]` attribute.
 /// If not specified, the name used is the function argument name with leading `_` removed.
 ///
+/// Arguments can have completion functionality using the `#[complete(function)]` attribute.
+/// See [Completion Support](#completion-support-complete) for details.
+///
 /// Return value: [`Result<impl Into<GetPromptResult>>`]
 ///
 /// ```rust
@@ -133,6 +136,9 @@
 /// Function arguments become URI Template variables. Arguments must implement the following trait:
 ///
 /// - [`FromStr`]: Trait for restoring values from strings
+///
+/// Arguments can have completion functionality using the `#[complete(function)]` attribute.
+/// See [Completion Support](#completion-support-complete) for details.
 ///
 /// URI Templates are specified in [RFC 6570] Level2. The following variables can be used in URI Templates:
 ///
@@ -255,6 +261,46 @@
 ///
 /// If the [`instructions`] method is manually implemented, the manual implementation is used and automatic instructions generation from documentation comments is not performed.
 ///
+/// ### Completion Support (`#[complete]`)
+///
+/// You can add completion functionality to prompt and resource arguments using the `#[complete(function)]` attribute.
+///
+/// Completion functions must have the signature `async fn(value: &str, cx: &RequestContext) -> Result<impl Into<CompleteResult>>`. You can specify either global functions (`#[complete(function_name)]`) or instance methods (`#[complete(.method_name)]`).
+///
+/// When `#[complete]` attributes are used, the `completion_complete` method is automatically generated. Manual implementation overrides auto-generation.
+///
+/// ```rust
+/// use mcp_attr::server::{mcp_server, McpServer, RequestContext};
+/// use mcp_attr::Result;
+///
+/// struct ExampleServer;
+///
+/// #[mcp_server]
+/// impl McpServer for ExampleServer {
+///     #[prompt]
+///     async fn greet(&self, #[complete(complete_names)] name: String) -> Result<String> {
+///         Ok(format!("Hello, {name}!"))
+///     }
+///
+///     #[resource("files://{path}")]
+///     async fn get_file(&self, #[complete(.complete_paths)] path: String) -> Result<String> {
+///         Ok(format!("File: {path}"))
+///     }
+/// }
+///
+/// async fn complete_names(_value: &str, _cx: &RequestContext) -> Result<Vec<&'static str>> {
+///     Ok(vec!["Alice", "Bob"])
+/// }
+///
+/// impl ExampleServer {
+///     async fn complete_paths(&self, _value: &str, _cx: &RequestContext) -> Result<Vec<String>> {
+///         Ok(vec!["home".to_string(), "usr".to_string()])
+///     }
+/// }
+/// ```
+///
+/// Completion is only available for `#[prompt]` and `#[resource]` arguments, not for `#[tool]` arguments.
+///
 /// ### Manual Implementation
 ///
 /// You can also directly implement `McpServer` methods without using attributes.
@@ -262,10 +308,10 @@
 /// The following methods do not support implementation through attributes and must be implemented manually:
 ///
 /// - [`server_info`]
-/// - [`completion_complete`]
 ///
 /// The following methods can be overridden with manual implementation over the attribute-based implementation:
 ///
+/// - [`completion_complete`] (auto-generated when `#[complete]` attributes are used)
 /// - [`resources_list`]
 /// - [`instructions`]
 // #[include_doc("../../../README.md",end("## Testing"))]
