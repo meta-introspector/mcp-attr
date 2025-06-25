@@ -503,7 +503,7 @@
 //!
 //! `#[complete(function)]` 属性を使用してプロンプトやリソースの引数に補完機能を追加できます。
 //!
-//! 補完関数は `async fn(value: &str, cx: &RequestContext) -> Result<impl Into<CompleteResult>>` のシグネチャを持つ必要があります。グローバル関数（`#[complete(function_name)]`）またはインスタンスメソッド（`#[complete(.method_name)]`）を指定できます。
+//! 補完関数は `async fn(value: &str, cx: &RequestContext) -> Result<impl Into<CompleteResult>>` のシグネチャを持ち、[`CompleteResult`] に変換可能な型を返す必要があります。グローバル関数（`#[complete(function_name)]`）またはインスタンスメソッド（`#[complete(.method_name)]`）を指定できます。
 //!
 //! `#[complete]` 属性が使用されている場合、`completion_complete` メソッドが自動生成されます。手動実装がある場合は自動生成をスキップします。
 //!
@@ -621,6 +621,7 @@
 //! [`GetPromptResult`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.GetPromptResult.html
 //! [`ReadResourceResult`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.ReadResourceResult.html
 //! [`CallToolResult`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.CallToolResult.html
+//! [`CompleteResult`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.CompleteResult.html
 //! [`mcp_attr::Error`]: https://docs.rs/mcp-attr/latest/mcp_attr/struct.Error.html
 //! [`mcp_attr::Result`]: https://docs.rs/mcp-attr/latest/mcp_attr/type.Result.html
 //! [`anyhow::Error`]: https://docs.rs/anyhow/latest/anyhow/struct.Error.html
@@ -932,6 +933,69 @@
 //! }
 //! ```
 //!
+//! ### Instructions from Documentation Comments
+//!
+//! The [`instructions`] method is automatically generated from documentation comments on the `impl McpServer` block. If you write documentation comments describing your server, they will be sent to the MCP client as instructions.
+//!
+//! ```rust
+//! use mcp_attr::server::{mcp_server, McpServer};
+//! use mcp_attr::Result;
+//!
+//! struct ExampleServer;
+//!
+//! /// This server provides file operations and utilities.
+//! /// It can handle various file formats and perform data transformations.
+//! #[mcp_server]
+//! impl McpServer for ExampleServer {
+//!     #[tool]
+//!     async fn hello(&self) -> Result<String> {
+//!         Ok("Hello, world!".to_string())
+//!     }
+//! }
+//! ```
+//!
+//! If the [`instructions`] method is manually implemented, the manual implementation is used and automatic instructions generation from documentation comments is not performed.
+//!
+//! ### Completion Support (`#[complete]`)
+//!
+//! You can add completion functionality to prompt and resource arguments using the `#[complete(function)]` attribute.
+//!
+//! Completion functions must have the signature `async fn(value: &str, cx: &RequestContext) -> Result<impl Into<CompleteResult>>` and return types that can be converted to [`CompleteResult`]. You can specify either global functions (`#[complete(function_name)]`) or instance methods (`#[complete(.method_name)]`).
+//!
+//! When `#[complete]` attributes are used, the `completion_complete` method is automatically generated. Manual implementation overrides auto-generation.
+//!
+//! ```rust
+//! use mcp_attr::server::{mcp_server, McpServer, RequestContext};
+//! use mcp_attr::Result;
+//!
+//! struct ExampleServer;
+//!
+//! #[mcp_server]
+//! impl McpServer for ExampleServer {
+//!     #[prompt]
+//!     async fn greet(&self, #[complete(complete_names)] name: String) -> Result<String> {
+//!         Ok(format!("Hello, {name}!"))
+//!     }
+//!
+//!     #[resource("files://{path}")]
+//!     async fn get_file(&self, #[complete(.complete_paths)] path: String) -> Result<String> {
+//!         Ok(format!("File: {path}"))
+//!     }
+//! }
+//!
+//! async fn complete_names(_value: &str, _cx: &RequestContext) -> Result<Vec<&'static str>> {
+//!     Ok(vec!["Alice", "Bob"])
+//! }
+//!
+//! impl ExampleServer {
+//!     async fn complete_paths(&self, _value: &str, _cx: &RequestContext) -> Result<Vec<String>> {
+//!         Ok(vec!["home".to_string(), "usr".to_string()])
+//!     }
+//! }
+//! ```
+//!
+//! Completion is only available for `#[prompt]` and `#[resource]` arguments, not for `#[tool]` arguments.
+//!
 //! ## Attribute Descriptions
 //!
 //! ### `#[prompt]`
@@ -1113,69 +1177,6 @@
 //! }
 //! ```
 //!
-//! ### Instructions from Documentation Comments
-//!
-//! The [`instructions`] method is automatically generated from documentation comments on the `impl McpServer` block. If you write documentation comments describing your server, they will be sent to the MCP client as instructions.
-//!
-//! ```rust
-//! use mcp_attr::server::{mcp_server, McpServer};
-//! use mcp_attr::Result;
-//!
-//! struct ExampleServer;
-//!
-//! /// This server provides file operations and utilities.
-//! /// It can handle various file formats and perform data transformations.
-//! #[mcp_server]
-//! impl McpServer for ExampleServer {
-//!     #[tool]
-//!     async fn hello(&self) -> Result<String> {
-//!         Ok("Hello, world!".to_string())
-//!     }
-//! }
-//! ```
-//!
-//! If the [`instructions`] method is manually implemented, the manual implementation is used and automatic instructions generation from documentation comments is not performed.
-//!
-//! ### Completion Support (`#[complete]`)
-//!
-//! You can add completion functionality to prompt and resource arguments using the `#[complete(function)]` attribute.
-//!
-//! Completion functions must have the signature `async fn(value: &str, cx: &RequestContext) -> Result<impl Into<CompleteResult>>`. You can specify either global functions (`#[complete(function_name)]`) or instance methods (`#[complete(.method_name)]`).
-//!
-//! When `#[complete]` attributes are used, the `completion_complete` method is automatically generated. Manual implementation overrides auto-generation.
-//!
-//! ```rust
-//! use mcp_attr::server::{mcp_server, McpServer, RequestContext};
-//! use mcp_attr::Result;
-//!
-//! struct ExampleServer;
-//!
-//! #[mcp_server]
-//! impl McpServer for ExampleServer {
-//!     #[prompt]
-//!     async fn greet(&self, #[complete(complete_names)] name: String) -> Result<String> {
-//!         Ok(format!("Hello, {name}!"))
-//!     }
-//!
-//!     #[resource("files://{path}")]
-//!     async fn get_file(&self, #[complete(.complete_paths)] path: String) -> Result<String> {
-//!         Ok(format!("File: {path}"))
-//!     }
-//! }
-//!
-//! async fn complete_names(_value: &str, _cx: &RequestContext) -> Result<Vec<&'static str>> {
-//!     Ok(vec!["Alice", "Bob"])
-//! }
-//!
-//! impl ExampleServer {
-//!     async fn complete_paths(&self, _value: &str, _cx: &RequestContext) -> Result<Vec<String>> {
-//!         Ok(vec!["home".to_string(), "usr".to_string()])
-//!     }
-//! }
-//! ```
-//!
-//! Completion is only available for `#[prompt]` and `#[resource]` arguments, not for `#[tool]` arguments.
-//!
 //! ### Manual Implementation
 //!
 //! You can also directly implement `McpServer` methods without using attributes.
@@ -1258,6 +1259,7 @@
 //! [`GetPromptResult`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.GetPromptResult.html
 //! [`ReadResourceResult`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.ReadResourceResult.html
 //! [`CallToolResult`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.CallToolResult.html
+//! [`CompleteResult`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.CompleteResult.html
 //! [`mcp_attr::Error`]: https://docs.rs/mcp-attr/latest/mcp_attr/struct.Error.html
 //! [`mcp_attr::Result`]: https://docs.rs/mcp-attr/latest/mcp_attr/type.Result.html
 //! [`anyhow::Error`]: https://docs.rs/anyhow/latest/anyhow/struct.Error.html
