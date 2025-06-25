@@ -24,7 +24,7 @@ use utils::{get_trait_path, is_defined};
 use crate::prompts::{PromptAttr, PromptEntry};
 use crate::resources::{ResourceAttr, ResourceEntry};
 use crate::tools::{ToolAttr, ToolEntry};
-use crate::utils::{build_if, drain_attr};
+use crate::utils::{build_if, drain_attr, get_doc};
 
 #[macro_use]
 mod syn_utils;
@@ -97,6 +97,7 @@ fn build_mcp_server(
         bail!(item_impl.span(), "Default is not allowed");
     }
     let is_defined_resources_list = is_defined(&item_impl.items, "resources_list");
+    let impl_doc = get_doc(&item_impl.attrs);
     let mut b = McpBuilder::new();
     let mut items_trait = Vec::new();
     let mut items_type = Vec::new();
@@ -110,7 +111,7 @@ fn build_mcp_server(
             }
         }
     }
-    let b = b.build(&items_trait)?;
+    let b = b.build(&items_trait, &impl_doc)?;
     let (impl_generics, ty_generics, where_clause) = item_impl.generics.split_for_impl();
 
     let self_ty = &item_impl.self_ty;
@@ -168,15 +169,19 @@ impl McpBuilder {
         Ok(false)
     }
 
-    fn build(&self, items: &[ImplItem]) -> Result<TokenStream> {
+    fn build(&self, items: &[ImplItem], impl_doc: &str) -> Result<TokenStream> {
         let capabilities = build_if(!is_defined(items, "capabilities"), || {
             self.build_capabilities(items)
+        })?;
+        let instructions = build_if(!is_defined(items, "instructions"), || {
+            self.build_instructions(impl_doc)
         })?;
         let prompts = build_if(!self.prompts.is_empty(), || self.build_prompts())?;
         let resources = build_if(!self.resources.is_empty(), || self.build_resources(items))?;
         let tools = build_if(!self.tools.is_empty(), || self.build_tools())?;
         Ok(quote! {
             #capabilities
+            #instructions
             #prompts
             #resources
             #tools
@@ -264,6 +269,22 @@ impl McpBuilder {
     }
     fn build_tools_call(&self) -> Result<TokenStream> {
         ToolEntry::build_call(&self.tools)
+    }
+
+    fn build_instructions(&self, impl_doc: &str) -> Result<TokenStream> {
+        if impl_doc.is_empty() {
+            Ok(quote! {
+                fn instructions(&self) -> Option<String> {
+                    None
+                }
+            })
+        } else {
+            Ok(quote! {
+                fn instructions(&self) -> Option<String> {
+                    Some(#impl_doc.into())
+                }
+            })
+        }
     }
 }
 

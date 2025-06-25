@@ -278,12 +278,13 @@
 //! ### `#[prompt]`
 //!
 //! ```rust,ignore
-//! #[prompt("name", description = "..")]
+//! #[prompt("name", description = "..", title = "..")]
 //! async fn func_name(&self) -> Result<GetPromptResult> { }
 //! ```
 //!
 //! - "name" (optional) : プロンプト名。省略した場合は関数名が使用される。
 //! - "description" (optional) : AI向けの関数説明。ドキュメントコメントより優先される。
+//! - "title" (optional) : 人間が読みやすいプロンプトタイトル。
 //!
 //! 下記のメソッドを実装する。
 //!
@@ -329,7 +330,7 @@
 //! ### `#[resource]`
 //!
 //! ```rust,ignore
-//! #[resource("url_template", name = "..", mime_type = "..", description = "..")]
+//! #[resource("url_template", name = "..", mime_type = "..", description = "..", title = "..")]
 //! async fn func_name(&self) -> Result<ReadResourceResult> { }
 //! ```
 //!
@@ -337,6 +338,7 @@
 //! - "name" (optional) : リソース名。省略した場合は関数名が使用される。
 //! - "mime_type" (optional) : リソースの MIME タイプ。
 //! - "description" (optional) : AI向けの関数説明。ドキュメントコメントより優先される。
+//! - "title" (optional) : 人間が読みやすいリソースタイトル。
 //!
 //! 下記のメソッドを実装する。
 //!
@@ -392,6 +394,7 @@
 //! #[tool(
 //!     "name",
 //!     description = "..",
+//!     title = "..",
 //!     destructive = ..,
 //!     idempotent,
 //!     read_only,
@@ -402,6 +405,7 @@
 //!
 //! - "name" (optional) : ツール名。省略した場合は関数名が使用される。
 //! - "description" (optional) : AI向けの関数説明。ドキュメントコメントより優先される。
+//! - "title" (optional) : 人間が読みやすいツールタイトル。
 //! - "destructive" (optional) : ツールが破壊的な更新を実行する可能性がある場合は `true`、追加的な更新のみを実行する場合は `false` (デフォルト: `true`)
 //! - "idempotent" (optional) : 同じ引数でツールを繰り返し呼び出しても追加の効果がない場合は `true` (デフォルト: `false`)
 //! - "read_only" (optional) : ツールが環境を変更しない場合は `true` (デフォルト: `false`)
@@ -466,19 +470,42 @@
 //! }
 //! ```
 //!
+//! ### ドキュメントコメントからのinstructions
+//!
+//! `impl McpServer` ブロックのドキュメントコメントから [`instructions`] メソッドが自動生成されます。サーバーについて説明するドキュメントコメントを書くと、それがMCPクライアントにinstructionsとして送信されます。
+//!
+//! ```rust
+//! use mcp_attr::server::{mcp_server, McpServer};
+//! use mcp_attr::Result;
+//!
+//! struct ExampleServer;
+//!
+//! /// このサーバーはファイル操作とユーティリティを提供します。
+//! /// 様々なファイル形式を扱い、データ変換を実行できます。
+//! #[mcp_server]
+//! impl McpServer for ExampleServer {
+//!     #[tool]
+//!     async fn hello(&self) -> Result<String> {
+//!         Ok("Hello, world!".to_string())
+//!     }
+//! }
+//! ```
+//!
+//! [`instructions`] メソッドが手動実装されている場合は手動実装が使用され、ドキュメントコメントからのinstructions生成は行われません。
+//!
 //! ### 手動実装
 //!
 //! 属性を使用せず `McpServer` のメソッドを直接実装することもできます。
 //!
-//! また、下記のメソッドは属性による実装に対応しておらず、手動での実装のみが可能です。
+//! 下記のメソッドは属性による実装に対応しておらず、手動での実装のみが可能です：
 //!
 //! - [`server_info`]
-//! - [`instructions`]
 //! - [`completion_complete`]
 //!
-//! 次のメソッドは、属性による実装を手動での実装で上書きすることができます。
+//! 次のメソッドは、属性による実装を手動での実装で上書きすることができます：
 //!
 //! - [`resources_list`]
+//! - [`instructions`]
 //!
 //! ## テスト方法
 //!
@@ -864,12 +891,13 @@
 //! ### `#[prompt]`
 //!
 //! ```rust,ignore
-//! #[prompt("name", description = "..")]
+//! #[prompt("name", description = "..", title = "..")]
 //! async fn func_name(&self) -> Result<GetPromptResult> { }
 //! ```
 //!
 //! - "name" (optional): Prompt name. If omitted, the function name is used.
 //! - "description" (optional): Function description for AI. Takes precedence over documentation comments.
+//! - "title" (optional): Human-readable prompt title.
 //!
 //! Implements the following methods:
 //!
@@ -915,7 +943,7 @@
 //! ### `#[resource]`
 //!
 //! ```rust,ignore
-//! #[resource("url_template", name = "..", mime_type = "..", description = "..")]
+//! #[resource("url_template", name = "..", mime_type = "..", description = "..", title = "..")]
 //! async fn func_name(&self) -> Result<ReadResourceResult> { }
 //! ```
 //!
@@ -923,6 +951,7 @@
 //! - "name" (optional): Resource name. If omitted, the function name is used.
 //! - "mime_type" (optional): MIME type of the resource.
 //! - "description" (optional): Function description for AI. Takes precedence over documentation comments.
+//! - "title" (optional): Human-readable resource title.
 //!
 //! Implements the following methods:
 //!
@@ -978,6 +1007,7 @@
 //! #[tool(
 //!     "name",
 //!     description = "..",
+//!     title = "..",
 //!     destructive = ..,
 //!     idempotent,
 //!     read_only,
@@ -988,6 +1018,7 @@
 //!
 //! - "name" (optional): Tool name. If omitted, the function name is used.
 //! - "description" (optional): Function description for AI. Takes precedence over documentation comments.
+//! - "title" (optional): Human-readable tool title.
 //! - "destructive" (optional): `true` if the tool may perform destructive updates, `false` if it only performs additive updates (default: `true`)
 //! - "idempotent" (optional): `true` if calling the tool repeatedly with the same arguments has no additional effect (default: `false`)
 //! - "read_only" (optional): `true` if the tool does not modify its environment (default: `false`)
@@ -1030,19 +1061,42 @@
 //! }
 //! ```
 //!
+//! ### Instructions from Documentation Comments
+//!
+//! The [`instructions`] method is automatically generated from documentation comments on the `impl McpServer` block. If you write documentation comments describing your server, they will be sent to the MCP client as instructions.
+//!
+//! ```rust
+//! use mcp_attr::server::{mcp_server, McpServer};
+//! use mcp_attr::Result;
+//!
+//! struct ExampleServer;
+//!
+//! /// This server provides file operations and utilities.
+//! /// It can handle various file formats and perform data transformations.
+//! #[mcp_server]
+//! impl McpServer for ExampleServer {
+//!     #[tool]
+//!     async fn hello(&self) -> Result<String> {
+//!         Ok("Hello, world!".to_string())
+//!     }
+//! }
+//! ```
+//!
+//! If the [`instructions`] method is manually implemented, the manual implementation is used and automatic instructions generation from documentation comments is not performed.
+//!
 //! ### Manual Implementation
 //!
 //! You can also directly implement `McpServer` methods without using attributes.
 //!
-//! Additionally, the following methods do not support implementation through attributes and must be implemented manually:
+//! The following methods do not support implementation through attributes and must be implemented manually:
 //!
 //! - [`server_info`]
-//! - [`instructions`]
 //! - [`completion_complete`]
 //!
-//! The following method can be overridden with manual implementation over the attribute-based implementation:
+//! The following methods can be overridden with manual implementation over the attribute-based implementation:
 //!
 //! - [`resources_list`]
+//! - [`instructions`]
 //!
 //! ## Testing
 //!

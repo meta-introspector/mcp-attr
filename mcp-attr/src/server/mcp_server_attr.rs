@@ -62,12 +62,13 @@
 /// ### `#[prompt]`
 ///
 /// ```rust,ignore
-/// #[prompt("name", description = "..")]
+/// #[prompt("name", description = "..", title = "..")]
 /// async fn func_name(&self) -> Result<GetPromptResult> { }
 /// ```
 ///
 /// - "name" (optional): Prompt name. If omitted, the function name is used.
 /// - "description" (optional): Function description for AI. Takes precedence over documentation comments.
+/// - "title" (optional): Human-readable prompt title.
 ///
 /// Implements the following methods:
 ///
@@ -113,7 +114,7 @@
 /// ### `#[resource]`
 ///
 /// ```rust,ignore
-/// #[resource("url_template", name = "..", mime_type = "..", description = "..")]
+/// #[resource("url_template", name = "..", mime_type = "..", description = "..", title = "..")]
 /// async fn func_name(&self) -> Result<ReadResourceResult> { }
 /// ```
 ///
@@ -121,6 +122,7 @@
 /// - "name" (optional): Resource name. If omitted, the function name is used.
 /// - "mime_type" (optional): MIME type of the resource.
 /// - "description" (optional): Function description for AI. Takes precedence over documentation comments.
+/// - "title" (optional): Human-readable resource title.
 ///
 /// Implements the following methods:
 ///
@@ -176,6 +178,7 @@
 /// #[tool(
 ///     "name",
 ///     description = "..",
+///     title = "..",
 ///     destructive = ..,
 ///     idempotent,
 ///     read_only,
@@ -186,6 +189,7 @@
 ///
 /// - "name" (optional): Tool name. If omitted, the function name is used.
 /// - "description" (optional): Function description for AI. Takes precedence over documentation comments.
+/// - "title" (optional): Human-readable tool title.
 /// - "destructive" (optional): `true` if the tool may perform destructive updates, `false` if it only performs additive updates (default: `true`)
 /// - "idempotent" (optional): `true` if calling the tool repeatedly with the same arguments has no additional effect (default: `false`)
 /// - "read_only" (optional): `true` if the tool does not modify its environment (default: `false`)
@@ -228,19 +232,42 @@
 /// }
 /// ```
 ///
+/// ### Instructions from Documentation Comments
+///
+/// The [`instructions`] method is automatically generated from documentation comments on the `impl McpServer` block. If you write documentation comments describing your server, they will be sent to the MCP client as instructions.
+///
+/// ```rust
+/// use mcp_attr::server::{mcp_server, McpServer};
+/// use mcp_attr::Result;
+///
+/// struct ExampleServer;
+///
+/// /// This server provides file operations and utilities.
+/// /// It can handle various file formats and perform data transformations.
+/// #[mcp_server]
+/// impl McpServer for ExampleServer {
+///     #[tool]
+///     async fn hello(&self) -> Result<String> {
+///         Ok("Hello, world!".to_string())
+///     }
+/// }
+/// ```
+///
+/// If the [`instructions`] method is manually implemented, the manual implementation is used and automatic instructions generation from documentation comments is not performed.
+///
 /// ### Manual Implementation
 ///
 /// You can also directly implement `McpServer` methods without using attributes.
 ///
-/// Additionally, the following methods do not support implementation through attributes and must be implemented manually:
+/// The following methods do not support implementation through attributes and must be implemented manually:
 ///
 /// - [`server_info`]
-/// - [`instructions`]
 /// - [`completion_complete`]
 ///
-/// The following method can be overridden with manual implementation over the attribute-based implementation:
+/// The following methods can be overridden with manual implementation over the attribute-based implementation:
 ///
 /// - [`resources_list`]
+/// - [`instructions`]
 // #[include_doc("../../../README.md",end("## Testing"))]
 ///
 /// [Model Context Protocol]: https://modelcontextprotocol.io/specification/2025-03-26/

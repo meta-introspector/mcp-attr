@@ -469,19 +469,42 @@ impl McpServer for ExampleServer {
 }
 ```
 
+### ドキュメントコメントからのinstructions
+
+`impl McpServer` ブロックのドキュメントコメントから [`instructions`] メソッドが自動生成されます。サーバーについて説明するドキュメントコメントを書くと、それがMCPクライアントにinstructionsとして送信されます。
+
+```rust
+use mcp_attr::server::{mcp_server, McpServer};
+use mcp_attr::Result;
+
+struct ExampleServer;
+
+/// このサーバーはファイル操作とユーティリティを提供します。
+/// 様々なファイル形式を扱い、データ変換を実行できます。
+#[mcp_server]
+impl McpServer for ExampleServer {
+    #[tool]
+    async fn hello(&self) -> Result<String> {
+        Ok("Hello, world!".to_string())
+    }
+}
+```
+
+[`instructions`] メソッドが手動実装されている場合は手動実装が使用され、ドキュメントコメントからのinstructions生成は行われません。
+
 ### 手動実装
 
 属性を使用せず `McpServer` のメソッドを直接実装することもできます。
 
-また、下記のメソッドは属性による実装に対応しておらず、手動での実装のみが可能です。
+下記のメソッドは属性による実装に対応しておらず、手動での実装のみが可能です：
 
 - [`server_info`]
-- [`instructions`]
 - [`completion_complete`]
 
-次のメソッドは、属性による実装を手動での実装で上書きすることができます。
+次のメソッドは、属性による実装を手動での実装で上書きすることができます：
 
 - [`resources_list`]
+- [`instructions`]
 
 ## テスト方法
 

@@ -467,19 +467,42 @@ impl McpServer for ExampleServer {
 }
 ```
 
+### Instructions from Documentation Comments
+
+The [`instructions`] method is automatically generated from documentation comments on the `impl McpServer` block. If you write documentation comments describing your server, they will be sent to the MCP client as instructions.
+
+```rust
+use mcp_attr::server::{mcp_server, McpServer};
+use mcp_attr::Result;
+
+struct ExampleServer;
+
+/// This server provides file operations and utilities.
+/// It can handle various file formats and perform data transformations.
+#[mcp_server]
+impl McpServer for ExampleServer {
+    #[tool]
+    async fn hello(&self) -> Result<String> {
+        Ok("Hello, world!".to_string())
+    }
+}
+```
+
+If the [`instructions`] method is manually implemented, the manual implementation is used and automatic instructions generation from documentation comments is not performed.
+
 ### Manual Implementation
 
 You can also directly implement `McpServer` methods without using attributes.
 
-Additionally, the following methods do not support implementation through attributes and must be implemented manually:
+The following methods do not support implementation through attributes and must be implemented manually:
 
 - [`server_info`]
-- [`instructions`]
 - [`completion_complete`]
 
-The following method can be overridden with manual implementation over the attribute-based implementation:
+The following methods can be overridden with manual implementation over the attribute-based implementation:
 
 - [`resources_list`]
+- [`instructions`]
 
 ## Testing
 
