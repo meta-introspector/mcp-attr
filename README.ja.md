@@ -277,12 +277,13 @@ impl McpServer for ExampleServer {
 ### `#[prompt]`
 
 ```rust,ignore
-#[prompt("name", description = "..")]
+#[prompt("name", description = "..", title = "..")]
 async fn func_name(&self) -> Result<GetPromptResult> { }
 ```
 
 - "name" (optional) : プロンプト名。省略した場合は関数名が使用される。
 - "description" (optional) : AI向けの関数説明。ドキュメントコメントより優先される。
+- "title" (optional) : 人間が読みやすいプロンプトタイトル。
 
 下記のメソッドを実装する。
 
@@ -328,7 +329,7 @@ impl McpServer for ExampleServer {
 ### `#[resource]`
 
 ```rust,ignore
-#[resource("url_template", name = "..", mime_type = "..", description = "..")]
+#[resource("url_template", name = "..", mime_type = "..", description = "..", title = "..")]
 async fn func_name(&self) -> Result<ReadResourceResult> { }
 ```
 
@@ -336,6 +337,7 @@ async fn func_name(&self) -> Result<ReadResourceResult> { }
 - "name" (optional) : リソース名。省略した場合は関数名が使用される。
 - "mime_type" (optional) : リソースの MIME タイプ。
 - "description" (optional) : AI向けの関数説明。ドキュメントコメントより優先される。
+- "title" (optional) : 人間が読みやすいリソースタイトル。
 
 下記のメソッドを実装する。
 
@@ -391,6 +393,7 @@ impl McpServer for ExampleServer {
 #[tool(
     "name", 
     description = "..", 
+    title = "..",
     destructive = ..,
     idempotent,
     read_only,
@@ -401,6 +404,7 @@ async fn func_name(&self) -> Result<CallToolResult> { }
 
 - "name" (optional) : ツール名。省略した場合は関数名が使用される。
 - "description" (optional) : AI向けの関数説明。ドキュメントコメントより優先される。
+- "title" (optional) : 人間が読みやすいツールタイトル。
 - "destructive" (optional) : ツールが破壊的な更新を実行する可能性がある場合は `true`、追加的な更新のみを実行する場合は `false` (デフォルト: `true`)
 - "idempotent" (optional) : 同じ引数でツールを繰り返し呼び出しても追加の効果がない場合は `true` (デフォルト: `false`)
 - "read_only" (optional) : ツールが環境を変更しない場合は `true` (デフォルト: `false`)

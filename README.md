@@ -297,12 +297,13 @@ impl McpServer for ExampleServer {
 ### `#[prompt]`
 
 ```rust,ignore
-#[prompt("name", description = "..")]
+#[prompt("name", description = "..", title = "..")]
 async fn func_name(&self) -> Result<GetPromptResult> { }
 ```
 
 - "name" (optional): Prompt name. If omitted, the function name is used.
 - "description" (optional): Function description for AI. Takes precedence over documentation comments.
+- "title" (optional): Human-readable prompt title.
 
 Implements the following methods:
 
@@ -348,7 +349,7 @@ impl McpServer for ExampleServer {
 ### `#[resource]`
 
 ```rust,ignore
-#[resource("url_template", name = "..", mime_type = "..", description = "..")]
+#[resource("url_template", name = "..", mime_type = "..", description = "..", title = "..")]
 async fn func_name(&self) -> Result<ReadResourceResult> { }
 ```
 
@@ -356,6 +357,7 @@ async fn func_name(&self) -> Result<ReadResourceResult> { }
 - "name" (optional): Resource name. If omitted, the function name is used.
 - "mime_type" (optional): MIME type of the resource.
 - "description" (optional): Function description for AI. Takes precedence over documentation comments.
+- "title" (optional): Human-readable resource title.
 
 Implements the following methods:
 
@@ -411,6 +413,7 @@ If `resources_list` is manually implemented, it is not automatically implemented
 #[tool(
     "name", 
     description = "..", 
+    title = "..",
     destructive = ..,
     idempotent,
     read_only,
@@ -421,6 +424,7 @@ async fn func_name(&self) -> Result<CallToolResult> { }
 
 - "name" (optional): Tool name. If omitted, the function name is used.
 - "description" (optional): Function description for AI. Takes precedence over documentation comments.
+- "title" (optional): Human-readable tool title.
 - "destructive" (optional): `true` if the tool may perform destructive updates, `false` if it only performs additive updates (default: `true`)
 - "idempotent" (optional): `true` if calling the tool repeatedly with the same arguments has no additional effect (default: `false`)
 - "read_only" (optional): `true` if the tool does not modify its environment (default: `false`)
