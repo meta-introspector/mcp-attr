@@ -140,6 +140,50 @@ async fn resource_expr_description() -> Result<&'static str> {
     Ok("expr_desc")
 }
 
+#[resource("http://localhost/with_title.txt", title = "Resource Title")]
+async fn resource_with_title() -> Result<&'static str> {
+    Ok("title_test")
+}
+
+fn get_resource_title() -> &'static str {
+    "Resource Title and Description"
+}
+
+#[resource(
+    "http://localhost/with_desc_and_title.txt",
+    description = "Resource with description",
+    title = get_resource_title()
+)]
+async fn resource_with_description_and_title() -> Result<&'static str> {
+    Ok("desc_title_test")
+}
+
+#[resource("http://localhost/template_with_title/{id}", title = "Resource Template Title")]
+async fn resource_template_with_title(id: String) -> Result<String> {
+    Ok(format!("template_title_test {id}"))
+}
+
+fn get_resource_expr_title() -> &'static str {
+    "Resource Expression Title"
+}
+
+#[resource("http://localhost/expr_title.txt", title = get_resource_expr_title())]
+async fn resource_with_expression_title() -> Result<&'static str> {
+    Ok("expr_title_test")
+}
+
+const RESOURCE_TITLE: &str = "Resource Constant Title";
+
+#[resource("http://localhost/const_title.txt", title = RESOURCE_TITLE)]
+async fn resource_with_constant_title() -> Result<&'static str> {
+    Ok("const_title_test")
+}
+
+#[resource("http://localhost/template_expr_title/{id}", title = get_resource_title())]
+async fn resource_template_with_expression_title(id: String) -> Result<String> {
+    Ok(format!("template_expr_title_test {id}"))
+}
+
 fn build_server() -> Result<impl McpServer> {
     Ok(McpServerBuilder::new()
         .route(route![
@@ -163,7 +207,13 @@ fn build_server() -> Result<impl McpServer> {
             resource_attr_description,
             resource_priority_test,
             resource_name_with_description,
-            resource_expr_description
+            resource_expr_description,
+            resource_with_title,
+            resource_with_description_and_title,
+            resource_template_with_title,
+            resource_with_expression_title,
+            resource_with_constant_title,
+            resource_template_with_expression_title
         ])
         .build())
 }
@@ -211,6 +261,18 @@ fn resources_expected() -> ListResourcesResult {
             "resource_expr_description",
         )
         .with_description("Resource with expr description"),
+        Resource::new("http://localhost/with_title.txt", "resource_with_title")
+            .with_title("Resource Title"),
+        Resource::new(
+            "http://localhost/with_desc_and_title.txt",
+            "resource_with_description_and_title",
+        )
+        .with_description("Resource with description")
+        .with_title("Resource Title and Description"),
+        Resource::new("http://localhost/expr_title.txt", "resource_with_expression_title")
+            .with_title("Resource Expression Title"),
+        Resource::new("http://localhost/const_title.txt", "resource_with_constant_title")
+            .with_title("Resource Constant Title"),
     ]
     .into()
 }
@@ -251,6 +313,10 @@ fn templates_list_expected() -> ListResourceTemplatesResult {
         ResourceTemplate::new("http://localhost/au2/{_arg}", "arg_name_underscore_2"),
         ResourceTemplate::new("http://localhost/rtd/{a}", "resource_template_description")
             .with_description("Resource Template Description"),
+        ResourceTemplate::new("http://localhost/template_with_title/{id}", "resource_template_with_title")
+            .with_title("Resource Template Title"),
+        ResourceTemplate::new("http://localhost/template_expr_title/{id}", "resource_template_with_expression_title")
+            .with_title("Resource Title and Description"),
     ]
     .into()
 }

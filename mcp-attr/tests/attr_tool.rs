@@ -91,6 +91,32 @@ async fn tool_name_with_description() -> Result<()> {
     Ok(())
 }
 
+#[tool(title = "Tool Title")]
+async fn tool_with_title() -> Result<()> {
+    Ok(())
+}
+
+#[tool(description = "Tool with description", title = "Tool Title and Description")]
+async fn tool_with_description_and_title() -> Result<()> {
+    Ok(())
+}
+
+fn get_tool_title() -> &'static str {
+    "Tool Expression Title"
+}
+
+#[tool(title = get_tool_title())]
+async fn tool_with_expression_title() -> Result<()> {
+    Ok(())
+}
+
+const TOOL_TITLE: &str = "Tool Constant Title";
+
+#[tool(title = TOOL_TITLE)]
+async fn tool_with_constant_title() -> Result<()> {
+    Ok(())
+}
+
 fn build_server() -> Result<impl McpServer> {
     Ok(McpServerBuilder::new()
         .route(route![
@@ -107,7 +133,11 @@ fn build_server() -> Result<impl McpServer> {
             arg_description,
             tool_attr_description,
             tool_priority_test,
-            tool_name_with_description
+            tool_name_with_description,
+            tool_with_title,
+            tool_with_description_and_title,
+            tool_with_expression_title,
+            tool_with_constant_title
         ])
         .build())
 }
@@ -179,6 +209,15 @@ fn tools_expected() -> Result<ListToolsResult> {
         Tool::new("tool_priority_test", ToolInputSchema::new()).with_description("Attribute wins"),
         Tool::new("custom_tool_name", ToolInputSchema::new())
             .with_description("Named tool with description"),
+        Tool::new("tool_with_title", ToolInputSchema::new())
+            .with_title("Tool Title"),
+        Tool::new("tool_with_description_and_title", ToolInputSchema::new())
+            .with_description("Tool with description")
+            .with_title("Tool Title and Description"),
+        Tool::new("tool_with_expression_title", ToolInputSchema::new())
+            .with_title("Tool Expression Title"),
+        Tool::new("tool_with_constant_title", ToolInputSchema::new())
+            .with_title("Tool Constant Title"),
     ]
     .into())
 }

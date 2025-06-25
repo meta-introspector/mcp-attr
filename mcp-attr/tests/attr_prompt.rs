@@ -89,6 +89,32 @@ async fn prompt_name_with_description() -> Result<String> {
     Ok("test".into())
 }
 
+#[prompt(title = "Prompt Title")]
+async fn prompt_with_title() -> Result<String> {
+    Ok("test".into())
+}
+
+#[prompt(description = "Prompt with description", title = "Prompt Title and Description")]
+async fn prompt_with_description_and_title() -> Result<String> {
+    Ok("test".into())
+}
+
+fn get_prompt_title() -> &'static str {
+    "Prompt Expression Title"
+}
+
+#[prompt(title = get_prompt_title())]
+async fn prompt_with_expression_title() -> Result<String> {
+    Ok("test".into())
+}
+
+const PROMPT_TITLE: &str = "Prompt Constant Title";
+
+#[prompt(title = PROMPT_TITLE)]
+async fn prompt_with_constant_title() -> Result<String> {
+    Ok("test".into())
+}
+
 fn build_server() -> Result<impl McpServer> {
     Ok(McpServerBuilder::new()
         .route(route![
@@ -105,7 +131,11 @@ fn build_server() -> Result<impl McpServer> {
             arg_description,
             prompt_attr_description,
             prompt_priority_test,
-            prompt_name_with_description
+            prompt_name_with_description,
+            prompt_with_title,
+            prompt_with_description_and_title,
+            prompt_with_expression_title,
+            prompt_with_constant_title
         ])
         .build())
 }
@@ -158,6 +188,14 @@ fn prompts_expected() -> ListPromptsResult {
             .with_description("Prompt with attribute description"),
         Prompt::new("prompt_priority_test").with_description("Attribute wins"),
         Prompt::new("custom_prompt_name").with_description("Named prompt with description"),
+        Prompt::new("prompt_with_title").with_title("Prompt Title"),
+        Prompt::new("prompt_with_description_and_title")
+            .with_description("Prompt with description")
+            .with_title("Prompt Title and Description"),
+        Prompt::new("prompt_with_expression_title")
+            .with_title("Prompt Expression Title"),
+        Prompt::new("prompt_with_constant_title")
+            .with_title("Prompt Constant Title"),
     ]
     .into()
 }

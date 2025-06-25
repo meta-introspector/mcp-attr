@@ -34,6 +34,7 @@ pub struct PromptAttr {
     #[struct_meta(unnamed)]
     name: Option<LitStr>,
     description: Option<Expr>,
+    title: Option<Expr>,
     pub dump: bool,
 }
 
@@ -43,6 +44,7 @@ pub struct PromptEntry {
     fn_ident: Ident,
     description: String,
     attr_description: Option<Expr>,
+    attr_title: Option<Expr>,
     args: Vec<PromptFnArg>,
     ret_span: Span,
 }
@@ -84,6 +86,7 @@ impl PromptEntry {
             fn_ident,
             description,
             attr_description: attr.description,
+            attr_title: attr.title,
             args,
             ret_span: ret_span(sig, f_span),
         })
@@ -109,6 +112,7 @@ impl PromptEntry {
         } else {
             description_expr(&self.description)
         };
+        let title = expr_to_option(&self.attr_title);
         let args = self
             .args
             .iter()
@@ -120,7 +124,7 @@ impl PromptEntry {
                 name: #name.into(),
                 description: #description,
                 meta: Default::default(),
-                title: None,
+                title: #title,
             }
         })
     }

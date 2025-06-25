@@ -1,4 +1,4 @@
-use std::pin::Pin;
+use std::{future::Future, pin::Pin};
 
 use derive_ex::Ex;
 pub use mcp_attr_macros::{prompt, resource, route, tool};
@@ -276,6 +276,7 @@ pub struct ResourceDefinition {
     name: String,
     description: Option<String>,
     mime_type: Option<String>,
+    title: Option<String>,
 }
 impl ResourceDefinition {
     pub fn new(
@@ -297,6 +298,7 @@ impl ResourceDefinition {
             name: name.to_string(),
             description: None,
             mime_type: None,
+            title: None,
         })
     }
     pub fn with_description(mut self, description: &str) -> Self {
@@ -305,6 +307,10 @@ impl ResourceDefinition {
     }
     pub fn with_mime_type(mut self, mime_type: &str) -> Self {
         self.mime_type = Some(mime_type.to_string());
+        self
+    }
+    pub fn with_title(mut self, title: &str) -> Self {
+        self.title = Some(title.to_string());
         self
     }
     fn to_resource(&self) -> Option<Resource> {
@@ -320,7 +326,7 @@ impl ResourceDefinition {
             size: None,
             annotations: None,
             meta: Default::default(),
-            title: None,
+            title: self.title.clone(),
         })
     }
     fn to_resource_template(&self) -> Option<ResourceTemplate> {
@@ -335,7 +341,7 @@ impl ResourceDefinition {
             mime_type: self.mime_type.clone(),
             annotations: None,
             meta: Default::default(),
-            title: None,
+            title: self.title.clone(),
         })
     }
     fn captures<'a>(&'a self, input: &'a str) -> Option<Captures<'a>> {

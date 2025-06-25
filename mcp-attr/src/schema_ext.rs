@@ -161,6 +161,10 @@ impl Prompt {
         self.arguments = arguments;
         self
     }
+    pub fn with_title(mut self, title: &str) -> Self {
+        self.title = Some(title.to_string());
+        self
+    }
 }
 impl PromptArgument {
     pub fn new(name: &str, required: bool) -> Self {
@@ -210,6 +214,10 @@ impl Resource {
         self.size = Some(size);
         self
     }
+    pub fn with_title(mut self, title: &str) -> Self {
+        self.title = Some(title.to_string());
+        self
+    }
 }
 impl ResourceTemplate {
     pub fn new(uri_template: &str, name: &str) -> Self {
@@ -233,6 +241,10 @@ impl ResourceTemplate {
     }
     pub fn with_annotations(mut self, annotations: impl Into<Annotations>) -> Self {
         self.annotations = Some(annotations.into());
+        self
+    }
+    pub fn with_title(mut self, title: &str) -> Self {
+        self.title = Some(title.to_string());
         self
     }
 }
@@ -262,6 +274,10 @@ impl Tool {
     }
     pub fn with_annotations(mut self, annotations: impl Into<ToolAnnotations>) -> Self {
         self.annotations = Some(annotations.into());
+        self
+    }
+    pub fn with_title(mut self, title: &str) -> Self {
+        self.title = Some(title.to_string());
         self
     }
 }

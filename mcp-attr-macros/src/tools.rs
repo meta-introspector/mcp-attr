@@ -37,6 +37,7 @@ pub struct ToolAttr {
     #[struct_meta(unnamed)]
     name: Option<LitStr>,
     description: Option<Expr>,
+    title: Option<Expr>,
     pub dump: bool,
     destructive: Option<NameValue<Option<LitBool>>>,
     idempotent: Option<NameValue<Option<LitBool>>>,
@@ -50,6 +51,7 @@ pub struct ToolEntry {
     fn_ident: Ident,
     description: String,
     attr_description: Option<Expr>,
+    attr_title: Option<Expr>,
     args: Vec<ToolFnArg>,
     ret_span: Span,
     tool_annotations: Option<ToolAnnotationsData>,
@@ -100,6 +102,7 @@ impl ToolEntry {
             fn_ident,
             description,
             attr_description: attr.description,
+            attr_title: attr.title,
             args,
             ret_span: ret_span(sig, f_span),
             tool_annotations,
@@ -126,6 +129,7 @@ impl ToolEntry {
         } else {
             description_expr(&self.description)
         };
+        let title = expr_to_option(&self.attr_title);
         let args = self
             .args
             .iter()
@@ -162,7 +166,7 @@ impl ToolEntry {
                     annotations: #annotations,
                     meta: Default::default(),
                     output_schema: None,
-                    title: None,
+                    title: #title,
                 }
             }
         })

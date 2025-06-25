@@ -29,6 +29,7 @@ pub struct ResourceAttr {
     uri: Option<LitStr>,
     name: Option<LitStr>,
     description: Option<Expr>,
+    title: Option<Expr>,
     mime_type: Option<LitStr>,
     pub dump: bool,
 }
@@ -40,6 +41,7 @@ pub struct ResourceEntry {
     mime_type: Option<String>,
     description: String,
     attr_description: Option<Expr>,
+    attr_title: Option<Expr>,
     args: Vec<ResourceFnArg>,
     fn_ident: Ident,
     ret_span: Span,
@@ -94,6 +96,7 @@ impl ResourceEntry {
             mime_type,
             description,
             attr_description: attr.description,
+            attr_title: attr.title,
             args,
             fn_ident,
             ret_span: ret_span(sig, f_span),
@@ -129,6 +132,7 @@ impl ResourceEntry {
         } else {
             description_expr(&self.description)
         };
+        let title = expr_to_option(&self.attr_title);
         Ok(Some(quote! {
             ::mcp_attr::schema::Resource {
                 name: #name.to_string(),
@@ -138,7 +142,7 @@ impl ResourceEntry {
                 size: None,
                 annotations: None,
                 meta: Default::default(),
-                title: None,
+                title: #title,
             }
         }))
     }
@@ -173,6 +177,7 @@ impl ResourceEntry {
         } else {
             description_expr(&self.description)
         };
+        let title = expr_to_option(&self.attr_title);
         Ok(Some(quote! {
             ::mcp_attr::schema::ResourceTemplate {
                 name: #name.to_string(),
@@ -181,7 +186,7 @@ impl ResourceEntry {
                 description: #description,
                 annotations: None,
                 meta: Default::default(),
-                title: None,
+                title: #title,
             }
         }))
     }
@@ -232,6 +237,13 @@ impl ResourceEntry {
         } else {
             quote!()
         };
+        let title = if let Some(attr_title) = &self.attr_title {
+            quote! {
+                .with_title(#attr_title)
+            }
+        } else {
+            quote!()
+        };
         let uri = opt_expr(&self.uri, |uri| {
             let uri = uri.to_string();
             quote!(#uri)
@@ -254,7 +266,8 @@ impl ResourceEntry {
                     }
                 )?
                 #description
-                #mime_type)
+                #mime_type
+                #title)
             }
         })
     }
