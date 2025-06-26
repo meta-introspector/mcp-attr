@@ -1,7 +1,8 @@
-use mcp_attr::{server::{mcp_server, McpServer, RequestContext}};
+use mcp_attr::{server::{mcp_server, McpServer, RequestContext, complete_fn}};
 
 struct TestServer;
 
+#[complete_fn]
 async fn complete_not_result(_value: &str, _cx: &RequestContext) -> Vec<String> {
     vec!["test".to_string()]
 }

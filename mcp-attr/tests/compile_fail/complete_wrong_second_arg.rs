@@ -1,7 +1,8 @@
-use mcp_attr::{server::{mcp_server, McpServer, RequestContext}, Result};
+use mcp_attr::{server::{mcp_server, McpServer, RequestContext, complete_fn}, Result};
 
 struct TestServer;
 
+#[complete_fn]
 async fn complete_wrong_second_arg(_value: &str, cx: RequestContext) -> Result<Vec<String>> {
     Ok(vec!["test".to_string()])
 }

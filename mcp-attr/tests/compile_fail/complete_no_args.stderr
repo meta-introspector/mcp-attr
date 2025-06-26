@@ -1,19 +1,16 @@
 error[E0061]: this function takes 0 arguments but 2 arguments were supplied
-  --> tests/compile_fail/complete_no_args.rs:12:44
-   |
-12 |     async fn test_prompt(&self, #[complete(complete_no_args)] msg: String) -> Result<String> {
-   |                                            ^^^^^^^^^^^^^^^^
-   |                                            |
-   |                                            unexpected argument #1 of type `&std::string::String`
-   |                                            unexpected argument #2 of type `&mut mcp_attr::server::RequestContext`
-   |
+ --> tests/compile_fail/complete_no_args.rs:6:10
+  |
+5 | #[complete_fn]
+  | --------------
+  | |
+  | unexpected argument #1 of type `&std::string::String`
+  | unexpected argument #2 of type `&mcp_attr::server::RequestContext`
+6 | async fn complete_no_args() -> Result<Vec<String>> {
+  |          ^^^^^^^^^^^^^^^^
+  |
 note: function defined here
-  --> tests/compile_fail/complete_no_args.rs:5:10
-   |
-5  | async fn complete_no_args() -> Result<Vec<String>> {
-   |          ^^^^^^^^^^^^^^^^
-help: remove the extra arguments
-   |
-12 -     async fn test_prompt(&self, #[complete(complete_no_args)] msg: String) -> Result<String> {
-12 +     async fn test_prompt(&self, #[complete(s)] msg: String) -> Result<String> {
-   |
+ --> tests/compile_fail/complete_no_args.rs:6:10
+  |
+6 | async fn complete_no_args() -> Result<Vec<String>> {
+  |          ^^^^^^^^^^^^^^^^

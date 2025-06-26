@@ -319,12 +319,16 @@ If the [`instructions`] method is manually implemented, the manual implementatio
 
 You can add completion functionality to prompt and resource arguments using the `#[complete(function)]` attribute.
 
-Completion functions must have the signature `async fn(value: &str, cx: &RequestContext) -> Result<impl Into<CompleteResult>>` and return types that can be converted to [`CompleteResult`]. You can specify either global functions (`#[complete(function_name)]`) or instance methods (`#[complete(.method_name)]`).
+Completion functions must have the signature:
+- Method form (`.method_name`): `async fn func_name(&self, p: &CompleteRequestParams, cx: &RequestContext) -> Result<CompleteResult>`
+- Global function form (`method_name`): `async fn func_name(p: &CompleteRequestParams, cx: &RequestContext) -> Result<CompleteResult>`
 
 When `#[complete]` attributes are used, the `completion_complete` method is automatically generated. Manual implementation overrides auto-generation.
 
+To make completion function development easier, you can use the `#[complete_fn]` attribute to automatically convert simple signatures to the required signature:
+
 ```rust
-use mcp_attr::server::{mcp_server, McpServer, RequestContext};
+use mcp_attr::server::{mcp_server, McpServer, RequestContext, complete_fn};
 use mcp_attr::Result;
 
 struct ExampleServer;
@@ -332,7 +336,7 @@ struct ExampleServer;
 #[mcp_server]
 impl McpServer for ExampleServer {
     #[prompt]
-    async fn greet(&self, #[complete(complete_names)] name: String) -> Result<String> {
+    async fn greet(&self, #[complete(.complete_names)] name: String) -> Result<String> {
         Ok(format!("Hello, {name}!"))
     }
 
@@ -340,18 +344,22 @@ impl McpServer for ExampleServer {
     async fn get_file(&self, #[complete(.complete_paths)] path: String) -> Result<String> {
         Ok(format!("File: {path}"))
     }
-}
 
-async fn complete_names(_value: &str, _cx: &RequestContext) -> Result<Vec<&'static str>> {
-    Ok(vec!["Alice", "Bob"])
-}
-
-impl ExampleServer {
-    async fn complete_paths(&self, _value: &str, _cx: &RequestContext) -> Result<Vec<String>> {
+    // #[complete_fn] can be written inside #[mcp_server] block
+    #[complete_fn]
+    async fn complete_paths(&self, _value: &str) -> Result<Vec<String>> {
         Ok(vec!["home".to_string(), "usr".to_string()])
+    }
+
+    // When RequestContext is needed
+    #[complete_fn]
+    async fn complete_names(&self, _value: &str, _cx: &RequestContext) -> Result<Vec<&'static str>> {
+        Ok(vec!["Alice", "Bob"])
     }
 }
 ```
+
+The `#[complete_fn]` attribute allows omitting the `cx: &RequestContext` parameter. When RequestContext is not needed, you can omit it for simpler completion functions.
 
 Completion is only available for `#[prompt]` and `#[resource]` arguments, not for `#[tool]` arguments.
 

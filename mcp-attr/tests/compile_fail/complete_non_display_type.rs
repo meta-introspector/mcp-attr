@@ -1,4 +1,4 @@
-use mcp_attr::{server::{mcp_server, McpServer, RequestContext}, Result};
+use mcp_attr::{server::{mcp_server, McpServer, RequestContext, complete_fn}, Result};
 
 struct TestServer;
 
@@ -7,6 +7,7 @@ struct NonDisplayType {
     value: i32,
 }
 
+#[complete_fn]
 async fn complete_non_display(_value: &str, _cx: &RequestContext) -> Result<Vec<NonDisplayType>> {
     Ok(vec![NonDisplayType { value: 42 }])
 }

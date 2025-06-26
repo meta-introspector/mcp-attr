@@ -42,6 +42,10 @@ pub(crate) fn drain_attr(attrs: &mut Vec<Attribute>) -> Result<Option<ItemAttr>>
             ret = Some((i, ItemAttr::Tool(parse_args_or_default(attr)?)));
             break;
         }
+        if p.is_ident("complete_fn") {
+            ret = Some((i, ItemAttr::CompleteFn));
+            break;
+        }
     }
     let Some((i, arg)) = ret else {
         return Ok(None);
@@ -49,10 +53,10 @@ pub(crate) fn drain_attr(attrs: &mut Vec<Attribute>) -> Result<Option<ItemAttr>>
     attrs.remove(i);
     for attr in &attrs[i..] {
         let p = attr.path();
-        if p.is_ident("prompt") || p.is_ident("resource") || p.is_ident("tool") {
+        if p.is_ident("prompt") || p.is_ident("resource") || p.is_ident("tool") || p.is_ident("complete_fn") {
             bail!(
                 attr.span(),
-                "Multiple `#[prompt]` or `#[resource]` or `#[tool]` attributes are not allowed"
+                "Multiple `#[prompt]`, `#[resource]`, `#[tool]`, or `#[complete_fn]` attributes are not allowed"
             );
         }
     }

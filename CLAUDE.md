@@ -126,9 +126,39 @@ cargo run --example tool_info
 - `trybuild`: コンパイル失敗テスト
 - `pretty_assertions`: テストアサーション
 
+## Documentation Generation
+
+### tests_readme.rs (Auto-generated File)
+
+**IMPORTANT**: `mcp-attr/src/tests_readme.rs` is an auto-generated file and should NOT be edited directly.
+
+- **Source**: Generated from `README.ja.md` (Japanese README)
+- **Generation Command**: `rustdoc-include --root /path/to/project`
+- **When to Regenerate**: 
+  - After modifying README.md or README.ja.md
+  - When doctest examples need updating
+  - When completion function examples change
+
+### Workflow for Updating Documentation Examples
+
+1. Edit the source README file (`README.md` for English, `README.ja.md` for Japanese)
+2. Run `rustdoc-include --root .` to regenerate tests_readme.rs
+3. Run `cargo test --doc` to verify all doctests pass
+4. Any direct edits to tests_readme.rs will be overwritten on next generation
+
+### rustdoc-include Usage
+
+```bash
+# Regenerate tests_readme.rs from README files
+rustdoc-include --root .
+```
+
+This command processes files with `#![include_doc("filename", start/end)]` markers and generates documentation tests.
+
 ## Important Notes
 
 - 依存関係のバージョンダウンは禁止
 - カレントディレクトリ変更は避け、コマンド引数で対応
 - エラー修正3回失敗時はスキップして他の箇所を修正
 - 依存関係の追加・変更は禁止とし、必要な場合はユーザーによる手動編集を促すこと
+- **tests_readme.rsは自動生成ファイルのため直接編集しない** - README.mdを編集してrustdoc-includeで再生成する

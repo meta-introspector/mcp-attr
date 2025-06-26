@@ -12,7 +12,7 @@ use syn::{
     Attribute, Error, FnArg, Ident, ImplItem, ImplItemFn, ItemFn, ItemImpl, LitStr, Pat, Path,
     Result, Token, Type,
     parse::{Parse, ParseStream},
-    parse2,
+    parse_quote, parse2,
     punctuated::Punctuated,
     spanned::Spanned,
 };
@@ -82,6 +82,14 @@ pub fn prompt(
     into_macro_output(build_prompt(attr.into(), item.into()))
 }
 
+#[proc_macro_attribute]
+pub fn complete_fn(
+    attr: proc_macro::TokenStream,
+    item: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    into_macro_output(build_complete_fn(attr.into(), item.into()))
+}
+
 fn build_mcp_server(
     attr: TokenStream,
     item: TokenStream,
@@ -103,15 +111,16 @@ fn build_mcp_server(
     let mut items_type = Vec::new();
     for mut item in item_impl.items {
         match b.push(&mut item) {
-            Ok(true) => items_type.push(item),
-            Ok(false) => items_trait.push(item),
+            Ok(ItemPlacement::Type) => items_type.push(item),
+            Ok(ItemPlacement::Trait) => items_trait.push(item),
+            Ok(ItemPlacement::Exclude) => {}
             Err(e) => {
                 items_type.push(item);
                 es.push(e);
             }
         }
     }
-    let b = b.build(&items_trait, &impl_doc)?;
+    let (b, complete_fns) = b.build(&items_trait, &impl_doc)?;
     let (impl_generics, ty_generics, where_clause) = item_impl.generics.split_for_impl();
 
     let self_ty = &item_impl.self_ty;
@@ -128,6 +137,7 @@ fn build_mcp_server(
         #(#attrs)*
         impl<#impl_generics> #self_ty #ty_generics #where_clause {
             #(#items_type)*
+            #(#complete_fns)*
         }
     };
     if attr.dump {
@@ -136,10 +146,22 @@ fn build_mcp_server(
     Ok(ts)
 }
 
+#[derive(Debug)]
+enum ItemPlacement {
+    /// Place item in the type impl block (items_type)
+    Type,
+    /// Place item in the trait impl block (items_trait)
+    Trait,
+    /// Exclude item completely
+    Exclude,
+}
+
 struct McpBuilder {
     prompts: Vec<PromptEntry>,
     resources: Vec<ResourceEntry>,
     tools: Vec<ToolEntry>,
+    complete_fns: Vec<ImplItemFn>,
+    pending_complete_fns: Vec<ImplItemFn>,
 }
 
 impl McpBuilder {
@@ -148,12 +170,14 @@ impl McpBuilder {
             prompts: Vec::new(),
             resources: Vec::new(),
             tools: Vec::new(),
+            complete_fns: Vec::new(),
+            pending_complete_fns: Vec::new(),
         }
     }
-    fn push(&mut self, item: &mut ImplItem) -> Result<bool> {
+    fn push(&mut self, item: &mut ImplItem) -> Result<ItemPlacement> {
         if let ImplItem::Fn(f) = item {
             let Some(attr) = drain_attr(&mut f.attrs)? else {
-                return Ok(false);
+                return Ok(ItemPlacement::Trait);
             };
             match attr {
                 ItemAttr::Prompt(attr) => {
@@ -163,13 +187,21 @@ impl McpBuilder {
                     .resources
                     .push(ResourceEntry::from_impl_item_fn(f, attr)?),
                 ItemAttr::Tool(attr) => self.tools.push(ToolEntry::from_impl_item_fn(f, attr)?),
+                ItemAttr::CompleteFn => {
+                    self.pending_complete_fns.push(f.clone());
+                    return Ok(ItemPlacement::Exclude);
+                }
             }
-            return Ok(true);
+            return Ok(ItemPlacement::Type);
         }
-        Ok(false)
+        Ok(ItemPlacement::Trait)
     }
 
-    fn build(&self, items: &[ImplItem], impl_doc: &str) -> Result<TokenStream> {
+    fn build(
+        &mut self,
+        items: &[ImplItem],
+        impl_doc: &str,
+    ) -> Result<(TokenStream, &Vec<ImplItemFn>)> {
         let capabilities = build_if(!is_defined(items, "capabilities"), || {
             self.build_capabilities(items)
         })?;
@@ -179,17 +211,25 @@ impl McpBuilder {
         let prompts = build_if(!self.prompts.is_empty(), || self.build_prompts())?;
         let resources = build_if(!self.resources.is_empty(), || self.build_resources(items))?;
         let tools = build_if(!self.tools.is_empty(), || self.build_tools())?;
+        for mut pending_fn in self.pending_complete_fns.clone() {
+            let complete_fn_results = apply_complete_fn_transformation(&mut pending_fn)?;
+            self.complete_fns.extend(complete_fn_results);
+        }
+
         let completion_complete = build_if(!is_defined(items, "completion_complete"), || {
             self.build_completion_complete()
         })?;
-        Ok(quote! {
-            #capabilities
-            #instructions
-            #prompts
-            #resources
-            #tools
-            #completion_complete
-        })
+        Ok((
+            quote! {
+                #capabilities
+                #instructions
+                #prompts
+                #resources
+                #tools
+                #completion_complete
+            },
+            &self.complete_fns,
+        ))
     }
     fn build_capabilities(&self, items: &[ImplItem]) -> Result<TokenStream> {
         let prompts = if !self.prompts.is_empty() || is_defined(items, "prompts_list") {
@@ -325,8 +365,7 @@ impl McpBuilder {
                 };
                 quote_spanned! {span=>
                     (#prompt_name, #arg_name) => {
-                        let result = #call_expr;
-                        Ok(result?.into())
+                        #call_expr
                     },
                 }
             })
@@ -343,8 +382,7 @@ impl McpBuilder {
                 };
                 quote_spanned! {span=>
                     (#uri, #arg_name) => {
-                        let result = #call_expr;
-                        Ok(result?.into())
+                        #call_expr
                     },
                 }
             })
@@ -380,14 +418,14 @@ impl McpBuilder {
                 // Call as a standalone function (no special handling for Self::)
                 let span = expr.span();
                 quote_spanned! {span=>
-                    #expr(&p.argument.value, cx).await
+                    #expr(&p, cx).await
                 }
             }
             CompleteFuncExpr::InstanceMethod(method_name) => {
                 // Call as instance method
                 let span = method_name.span();
                 quote_spanned! {span=>
-                    self.#method_name(&p.argument.value, cx).await
+                    self.#method_name(&p, cx).await
                 }
             }
         }
@@ -428,6 +466,30 @@ enum ItemAttr {
     Prompt(PromptAttr),
     Resource(ResourceAttr),
     Tool(ToolAttr),
+    CompleteFn,
+}
+
+fn apply_complete_fn_transformation(impl_fn: &mut ImplItemFn) -> Result<Vec<ImplItemFn>> {
+    let original_ident = &impl_fn.sig.ident;
+    let inner_ident = format_ident!("{}_inner", original_ident);
+
+    let mut inner_fn = impl_fn.clone();
+    inner_fn.sig.ident = inner_ident.clone();
+
+    let new_sig = build_complete_fn_signature(&impl_fn.sig)?;
+    let call_expr = build_complete_fn_body(&impl_fn.sig, &inner_ident)?;
+
+    let new_fn = ImplItemFn {
+        sig: new_sig,
+        block: parse_quote! {
+            {
+                #call_expr
+            }
+        },
+        ..impl_fn.clone()
+    };
+
+    Ok(vec![inner_fn, new_fn])
 }
 
 fn build_route(item: TokenStream) -> Result<TokenStream> {
@@ -483,6 +545,100 @@ fn build_prompt(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
     let e = PromptEntry::from_item_fn(&mut f, attr)?;
     let ret = e.build_route();
     Ok(make_extend(f, ret, dump))
+}
+
+fn build_complete_fn(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
+    if !attr.is_empty() {
+        bail!(
+            attr.span(),
+            "complete_fn attribute does not accept parameters"
+        );
+    }
+
+    let original_fn: ItemFn = parse2(item)?;
+    let original_ident = &original_fn.sig.ident;
+    let inner_ident = format_ident!("{}_inner", original_ident);
+
+    let mut inner_fn = original_fn.clone();
+    inner_fn.sig.ident = inner_ident.clone();
+
+    let vis = &original_fn.vis;
+    let new_sig = build_complete_fn_signature(&original_fn.sig)?;
+    let call_expr = build_complete_fn_body(&original_fn.sig, &inner_ident)?;
+
+    Ok(quote! {
+        #inner_fn
+
+        #vis #new_sig {
+            #call_expr
+        }
+    })
+}
+
+fn build_complete_fn_signature(original_sig: &syn::Signature) -> Result<syn::Signature> {
+    let has_self = original_sig
+        .inputs
+        .iter()
+        .any(|arg| matches!(arg, FnArg::Receiver(_)));
+
+    let mut new_sig = original_sig.clone();
+    new_sig.inputs.clear();
+
+    if has_self {
+        new_sig.inputs.push(parse_quote! { &self });
+    }
+
+    new_sig
+        .inputs
+        .push(parse_quote! { p: &::mcp_attr::schema::CompleteRequestParams });
+    new_sig
+        .inputs
+        .push(parse_quote! { cx: &::mcp_attr::server::RequestContext });
+    new_sig.output = parse_quote! { -> ::mcp_attr::Result<::mcp_attr::schema::CompleteResult> };
+
+    Ok(new_sig)
+}
+
+fn has_context_parameter(sig: &syn::Signature) -> bool {
+    sig.inputs.iter().any(|arg| {
+        if let syn::FnArg::Typed(pat_type) = arg {
+            if let syn::Type::Reference(type_ref) = &*pat_type.ty {
+                if let syn::Type::Path(type_path) = &*type_ref.elem {
+                    return type_path.path.segments.last()
+                        .map(|seg| seg.ident == "RequestContext")
+                        .unwrap_or(false);
+                }
+            }
+        }
+        false
+    })
+}
+
+fn build_complete_fn_body(
+    original_sig: &syn::Signature,
+    inner_ident: &syn::Ident,
+) -> Result<TokenStream> {
+    let has_self = original_sig
+        .inputs
+        .iter()
+        .any(|arg| matches!(arg, FnArg::Receiver(_)));
+    let has_context = has_context_parameter(original_sig);
+
+    let f = if has_self {
+        quote!(self.#inner_ident)
+    } else {
+        quote!(#inner_ident)
+    };
+
+    let call_expr = if has_context {
+        quote!(#f(&p.argument.value, cx).await?)
+    } else {
+        quote!(#f(&p.argument.value).await?)
+    };
+
+    Ok(quote! {
+        Ok(#call_expr.into())
+    })
 }
 
 fn make_extend(source: impl ToTokens, code: Result<TokenStream>, dump: bool) -> TokenStream {

@@ -1,7 +1,8 @@
-use mcp_attr::{server::{mcp_server, McpServer}, Result};
+use mcp_attr::{server::{mcp_server, McpServer, complete_fn}, Result};
 
 struct TestServer;
 
+#[complete_fn]
 async fn complete_no_args() -> Result<Vec<String>> {
     Ok(vec!["test".to_string()])
 }

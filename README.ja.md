@@ -502,12 +502,16 @@ impl McpServer for ExampleServer {
 
 `#[complete(function)]` 属性を使用してプロンプトやリソースの引数に補完機能を追加できます。
 
-補完関数は `async fn(value: &str, cx: &RequestContext) -> Result<impl Into<CompleteResult>>` のシグネチャを持ち、[`CompleteResult`] に変換可能な型を返す必要があります。グローバル関数（`#[complete(function_name)]`）またはインスタンスメソッド（`#[complete(.method_name)]`）を指定できます。
+補完関数は以下のシグネチャを持つ必要があります：
+- メソッド形式（`.method_name`）：`async fn func_name(&self, p: &CompleteRequestParams, cx: &RequestContext) -> Result<CompleteResult>`
+- グローバル関数形式（`method_name`）：`async fn func_name(p: &CompleteRequestParams, cx: &RequestContext) -> Result<CompleteResult>`
 
 `#[complete]` 属性が使用されている場合、`completion_complete` メソッドが自動生成されます。手動実装がある場合は自動生成をスキップします。
 
+補完関数の開発を容易にするため、`#[complete_fn]` 属性を使用して簡潔なシグネチャから必要なシグネチャへの自動変換ができます：
+
 ```rust
-use mcp_attr::server::{mcp_server, McpServer, RequestContext};
+use mcp_attr::server::{mcp_server, McpServer, RequestContext, complete_fn};
 use mcp_attr::Result;
 
 struct ExampleServer;
@@ -515,7 +519,7 @@ struct ExampleServer;
 #[mcp_server]
 impl McpServer for ExampleServer {
     #[prompt]
-    async fn greet(&self, #[complete(complete_names)] name: String) -> Result<String> {
+    async fn greet(&self, #[complete(.complete_names)] name: String) -> Result<String> {
         Ok(format!("Hello, {name}!"))
     }
 
@@ -523,18 +527,22 @@ impl McpServer for ExampleServer {
     async fn get_file(&self, #[complete(.complete_paths)] path: String) -> Result<String> {
         Ok(format!("File: {path}"))
     }
-}
 
-async fn complete_names(_value: &str, _cx: &RequestContext) -> Result<Vec<&'static str>> {
-    Ok(vec!["Alice", "Bob"])
-}
-
-impl ExampleServer {
-    async fn complete_paths(&self, _value: &str, _cx: &RequestContext) -> Result<Vec<String>> {
+    // #[complete_fn]を#[mcp_server]ブロック内に記述
+    #[complete_fn]
+    async fn complete_paths(&self, _value: &str) -> Result<Vec<String>> {
         Ok(vec!["home".to_string(), "usr".to_string()])
+    }
+
+    // RequestContextが必要な場合
+    #[complete_fn]
+    async fn complete_names(&self, _value: &str, _cx: &RequestContext) -> Result<Vec<&'static str>> {
+        Ok(vec!["Alice", "Bob"])
     }
 }
 ```
+
+`#[complete_fn]` 属性では `cx: &RequestContext` パラメータを省略できます。RequestContextが不要な場合は省略することで、よりシンプルな補完関数を記述できます。
 
 補完機能は `#[prompt]` と `#[resource]` の引数でのみ使用可能で、`#[tool]` の引数では使用できません。
 

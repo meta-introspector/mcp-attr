@@ -1,19 +1,13 @@
-error[E0061]: this method takes 1 argument but 2 arguments were supplied
-  --> tests/compile_fail/complete_instance_method_wrong_signature.rs:14:45
+error[E0407]: method `wrong_signature_method` is not a member of trait `McpServer`
+  --> tests/compile_fail/complete_instance_method_wrong_signature.rs:12:5
    |
-14 |     async fn test_prompt(&self, #[complete(.wrong_signature_method)] msg: String) -> Result<String> {
-   |                                             ^^^^^^^^^^^^^^^^^^^^^^
-   |                                             |
-   |                                             expected `i32`, found `&String`
-   |                                             unexpected argument #2 of type `&mut mcp_attr::server::RequestContext`
-   |
-note: method defined here
-  --> tests/compile_fail/complete_instance_method_wrong_signature.rs:6:14
-   |
-6  |     async fn wrong_signature_method(&self, wrong_param: i32) -> Result<Vec<String>> {
-   |              ^^^^^^^^^^^^^^^^^^^^^^        ----------------
-help: remove the extra argument
-   |
-14 -     async fn test_prompt(&self, #[complete(.wrong_signature_method)] msg: String) -> Result<String> {
-14 +     async fn test_prompt(&self, #[complete(./* i32 */)] msg: String) -> Result<String> {
-   |
+12 | /     async fn wrong_signature_method(&self, wrong_param: i32) -> Result<Vec<String>> {
+13 | |         Ok(vec![wrong_param.to_string()])
+14 | |     }
+   | |_____^ not a member of trait `McpServer`
+
+error[E0599]: no method named `wrong_signature_method` found for reference `&TestServer` in the current scope
+ --> tests/compile_fail/complete_instance_method_wrong_signature.rs:8:45
+  |
+8 |     async fn test_prompt(&self, #[complete(.wrong_signature_method)] msg: String) -> Result<String> {
+  |                                             ^^^^^^^^^^^^^^^^^^^^^^ method not found in `&TestServer`

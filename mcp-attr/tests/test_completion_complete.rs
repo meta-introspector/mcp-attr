@@ -5,7 +5,7 @@ use mcp_attr::{
         CompleteRequestParams, CompleteRequestParamsArgument, CompleteResult,
         CompleteResultCompletion, ResourceTemplateReference, PromptReference,
     },
-    server::{McpServer, RequestContext, mcp_server},
+    server::{McpServer, RequestContext, mcp_server, complete_fn},
 };
 
 struct TestServer;
@@ -13,20 +13,20 @@ struct TestServer;
 #[mcp_server]
 impl McpServer for TestServer {
     #[prompt]
-    async fn hello_prompt(&self, #[complete(complete_hello)] msg: String) -> Result<String> {
+    async fn hello_prompt(&self, #[complete(.complete_hello)] msg: String) -> Result<String> {
         Ok(format!("Hello, {msg}!"))
     }
 
     #[resource("test://{name}")]
-    async fn test_resource(&self, #[complete(complete_name)] name: String) -> Result<String> {
+    async fn test_resource(&self, #[complete(.complete_name)] name: String) -> Result<String> {
         Ok(format!("Resource: {name}"))
     }
 
     #[resource("files://{path}/{file}")]
     async fn multi_arg_resource(
         &self,
-        #[complete(complete_path)] path: String,
-        #[complete(complete_file)] file: String,
+        #[complete(.complete_path)] path: String,
+        #[complete(.complete_file)] file: String,
     ) -> Result<String> {
         Ok(format!("File: {path}/{file}"))
     }
@@ -42,21 +42,60 @@ impl McpServer for TestServer {
     }
 }
 
-async fn complete_hello(_value: &str, _cx: &RequestContext) -> Result<Vec<&'static str>> {
-    Ok(vec!["world"])
+impl TestServer {
+    #[complete_fn]
+    async fn complete_hello(&self, _value: &str, _cx: &RequestContext) -> Result<Vec<&'static str>> {
+        Ok(vec!["world"])
+    }
+
+    #[complete_fn]
+    async fn complete_name(&self, _value: &str, _cx: &RequestContext) -> Result<Vec<&'static str>> {
+        Ok(vec!["test1", "test2"])
+    }
+
+    #[complete_fn]
+    async fn complete_path(&self, _value: &str, _cx: &RequestContext) -> Result<Vec<&'static str>> {
+        Ok(vec!["home", "usr", "var"])
+    }
+
+    #[complete_fn]
+    async fn complete_file(&self, _value: &str, _cx: &RequestContext) -> Result<Vec<&'static str>> {
+        Ok(vec!["config.txt", "data.json"])
+    }
 }
 
-async fn complete_name(_value: &str, _cx: &RequestContext) -> Result<Vec<String>> {
-    Ok(vec!["test1".to_string(), "test2".to_string()])
+// Test server with #[complete_fn] inside #[mcp_server] impl block
+struct InlineCompleteServer;
+
+#[mcp_server]
+impl McpServer for InlineCompleteServer {
+    #[prompt]
+    async fn test_prompt(&self, #[complete(.complete_inline)] msg: String) -> Result<String> {
+        Ok(format!("Inline: {msg}"))
+    }
+
+    #[complete_fn]
+    async fn complete_inline(&self, _value: &str, _cx: &RequestContext) -> Result<Vec<&'static str>> {
+        Ok(vec!["inline1", "inline2", "inline3"])
+    }
 }
 
-async fn complete_path(_value: &str, _cx: &RequestContext) -> Result<Vec<&'static str>> {
-    Ok(vec!["home", "usr", "var"])
+// Test server with RequestContext omitted in complete_fn
+struct SimpleCompleteServer;
+
+#[mcp_server]
+impl McpServer for SimpleCompleteServer {
+    #[prompt]
+    async fn simple_prompt(&self, #[complete(.complete_simple)] msg: String) -> Result<String> {
+        Ok(format!("Simple: {msg}"))
+    }
+
+    #[complete_fn]
+    async fn complete_simple(&self, _value: &str) -> Result<Vec<&'static str>> {
+        Ok(vec!["simple1", "simple2"])
+    }
 }
 
-async fn complete_file(_value: &str, _cx: &RequestContext) -> Result<Vec<&'static str>> {
-    Ok(vec!["config.txt", "data.json"])
-}
 
 #[tokio::test]
 async fn test_resource_completion() -> Result<()> {
@@ -71,6 +110,7 @@ async fn test_resource_completion() -> Result<()> {
         ret.completion.values,
         vec!["test1".to_string(), "test2".to_string()]
     );
+    assert_eq!(ret.completion.total, Some(2));
     Ok(())
 }
 
@@ -106,6 +146,7 @@ async fn test_multi_arg_resource_completion() -> Result<()> {
         ret.completion.values,
         vec!["home".to_string(), "usr".to_string(), "var".to_string()]
     );
+    assert_eq!(ret.completion.total, Some(3));
     
     // Test file completion
     let ret = client
@@ -118,6 +159,7 @@ async fn test_multi_arg_resource_completion() -> Result<()> {
         ret.completion.values,
         vec!["config.txt".to_string(), "data.json".to_string()]
     );
+    assert_eq!(ret.completion.total, Some(2));
     
     Ok(())
 }
@@ -190,8 +232,9 @@ impl McpServer for SelfMethodServer {
 }
 
 impl SelfMethodServer {
-    async fn complete_greeting(&self, _value: &str, _cx: &RequestContext) -> Result<Vec<i32>> {
-        Ok(vec![1, 2, 3]) // Test with numbers that Display to "1", "2", "3"
+    #[complete_fn]
+    async fn complete_greeting(&self, _value: &str, _cx: &RequestContext) -> Result<Vec<u32>> {
+        Ok(vec![1, 2, 3])
     }
 }
 
@@ -224,6 +267,7 @@ impl McpServer for SelfResourceServer {
 }
 
 impl SelfResourceServer {
+    #[complete_fn]
     async fn complete_data_id(&self, _value: &str, _cx: &RequestContext) -> Result<Vec<u32>> {
         Ok(vec![123, 456, 789])
     }
@@ -252,14 +296,16 @@ struct IteratorCompletionServer;
 #[mcp_server]
 impl McpServer for IteratorCompletionServer {
     #[prompt]
-    async fn numbers_prompt(&self, #[complete(complete_from_iterator)] range: String) -> Result<String> {
+    async fn numbers_prompt(&self, #[complete(.complete_from_iterator)] range: String) -> Result<String> {
         Ok(format!("Range: {range}"))
     }
 }
 
-async fn complete_from_iterator(_value: &str, _cx: &RequestContext) -> Result<CompleteResultCompletion> {
-    // Test FromIterator implementation
-    Ok((1..=5).map(|i| i * 10).collect())
+impl IteratorCompletionServer {
+    #[complete_fn]
+    async fn complete_from_iterator(&self, _value: &str, _cx: &RequestContext) -> Result<Vec<u32>> {
+        Ok((1..=5).map(|i| i * 10).collect())
+    }
 }
 
 #[tokio::test]
@@ -331,15 +377,14 @@ struct StaticMethodServer;
 #[mcp_server]
 impl McpServer for StaticMethodServer {
     #[prompt]
-    async fn static_prompt(&self, #[complete(Self::complete_static)] value: String) -> Result<String> {
+    async fn static_prompt(&self, #[complete(complete_static)] value: String) -> Result<String> {
         Ok(format!("Static: {value}!"))
     }
 }
 
-impl StaticMethodServer {
-    async fn complete_static(_value: &str, _cx: &RequestContext) -> Result<Vec<&'static str>> {
-        Ok(vec!["static1", "static2", "static3"])
-    }
+#[complete_fn]
+async fn complete_static(_value: &str, _cx: &RequestContext) -> Result<Vec<&'static str>> {
+    Ok(vec!["static1", "static2", "static3"])
 }
 
 #[tokio::test]
@@ -356,5 +401,39 @@ async fn test_static_method_completion() -> Result<()> {
         vec!["static1".to_string(), "static2".to_string(), "static3".to_string()]
     );
     assert_eq!(ret.completion.total, Some(3));
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_inline_complete_fn() -> Result<()> {
+    let client = McpClient::with_server(InlineCompleteServer).await?;
+    let ret = client
+        .completion_complete(CompleteRequestParams::new(
+            PromptReference::new("test_prompt"),
+            CompleteRequestParamsArgument::new("msg", "i"),
+        ))
+        .await?;
+    assert_eq!(
+        ret.completion.values,
+        vec!["inline1".to_string(), "inline2".to_string(), "inline3".to_string()]
+    );
+    assert_eq!(ret.completion.total, Some(3));
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_simple_complete_fn() -> Result<()> {
+    let client = McpClient::with_server(SimpleCompleteServer).await?;
+    let ret = client
+        .completion_complete(CompleteRequestParams::new(
+            PromptReference::new("simple_prompt"),
+            CompleteRequestParamsArgument::new("msg", "s"),
+        ))
+        .await?;
+    assert_eq!(
+        ret.completion.values,
+        vec!["simple1".to_string(), "simple2".to_string()]
+    );
+    assert_eq!(ret.completion.total, Some(2));
     Ok(())
 }
