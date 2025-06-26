@@ -225,7 +225,8 @@ impl PromptFnArg {
         let arg_attr = take_only_attr::<PromptArgAttr>(&mut typed_arg.attrs, "arg")?;
         let has_arg_attr = arg_attr.is_some();
         let arg_attr = arg_attr.unwrap_or_default();
-        let complete_attr = take_only_attr::<crate::CompleteAttr>(&mut typed_arg.attrs, "complete")?;
+        let complete_attr =
+            take_only_attr::<crate::CompleteAttr>(&mut typed_arg.attrs, "complete")?;
         let description = take_doc(&mut typed_arg.attrs);
         if is_context(&typed_arg.ty) && !has_arg_attr {
             return Ok(Self::Context(span));

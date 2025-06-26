@@ -292,4 +292,4 @@
 /// [`Result<impl Into<ReadResourceResult>>`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.ReadResourceResult.html
 /// [`Result<impl Into<CallToolResult>>`]: https://docs.rs/mcp-attr/latest/mcp_attr/schema/struct.CallToolResult.html
 /// [`RequestContext`]: https://docs.rs/mcp-attr/latest/mcp_attr/server/struct.RequestContext.html
-pub use mcp_attr_macros::{mcp_server, complete_fn};
+pub use mcp_attr_macros::{complete_fn, mcp_server};

@@ -94,7 +94,10 @@ async fn prompt_with_title() -> Result<String> {
     Ok("test".into())
 }
 
-#[prompt(description = "Prompt with description", title = "Prompt Title and Description")]
+#[prompt(
+    description = "Prompt with description",
+    title = "Prompt Title and Description"
+)]
 async fn prompt_with_description_and_title() -> Result<String> {
     Ok("test".into())
 }
@@ -192,10 +195,8 @@ fn prompts_expected() -> ListPromptsResult {
         Prompt::new("prompt_with_description_and_title")
             .with_description("Prompt with description")
             .with_title("Prompt Title and Description"),
-        Prompt::new("prompt_with_expression_title")
-            .with_title("Prompt Expression Title"),
-        Prompt::new("prompt_with_constant_title")
-            .with_title("Prompt Constant Title"),
+        Prompt::new("prompt_with_expression_title").with_title("Prompt Expression Title"),
+        Prompt::new("prompt_with_constant_title").with_title("Prompt Constant Title"),
     ]
     .into()
 }

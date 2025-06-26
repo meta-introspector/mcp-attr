@@ -53,7 +53,11 @@ pub(crate) fn drain_attr(attrs: &mut Vec<Attribute>) -> Result<Option<ItemAttr>>
     attrs.remove(i);
     for attr in &attrs[i..] {
         let p = attr.path();
-        if p.is_ident("prompt") || p.is_ident("resource") || p.is_ident("tool") || p.is_ident("complete_fn") {
+        if p.is_ident("prompt")
+            || p.is_ident("resource")
+            || p.is_ident("tool")
+            || p.is_ident("complete_fn")
+        {
             bail!(
                 attr.span(),
                 "Multiple `#[prompt]`, `#[resource]`, `#[tool]`, or `#[complete_fn]` attributes are not allowed"

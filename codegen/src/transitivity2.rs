@@ -141,7 +141,6 @@ fn collect_converts(file: &syn::File, registry: &mut Registry) -> Result<()> {
     Ok(())
 }
 
-
 fn normalize_type(ty: &Type, self_type: &Type) -> Result<Type> {
     match ty {
         Type::Path(type_path) => {

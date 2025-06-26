@@ -158,7 +158,10 @@ async fn resource_with_description_and_title() -> Result<&'static str> {
     Ok("desc_title_test")
 }
 
-#[resource("http://localhost/template_with_title/{id}", title = "Resource Template Title")]
+#[resource(
+    "http://localhost/template_with_title/{id}",
+    title = "Resource Template Title"
+)]
 async fn resource_template_with_title(id: String) -> Result<String> {
     Ok(format!("template_title_test {id}"))
 }
@@ -269,10 +272,16 @@ fn resources_expected() -> ListResourcesResult {
         )
         .with_description("Resource with description")
         .with_title("Resource Title and Description"),
-        Resource::new("http://localhost/expr_title.txt", "resource_with_expression_title")
-            .with_title("Resource Expression Title"),
-        Resource::new("http://localhost/const_title.txt", "resource_with_constant_title")
-            .with_title("Resource Constant Title"),
+        Resource::new(
+            "http://localhost/expr_title.txt",
+            "resource_with_expression_title",
+        )
+        .with_title("Resource Expression Title"),
+        Resource::new(
+            "http://localhost/const_title.txt",
+            "resource_with_constant_title",
+        )
+        .with_title("Resource Constant Title"),
     ]
     .into()
 }
@@ -313,10 +322,16 @@ fn templates_list_expected() -> ListResourceTemplatesResult {
         ResourceTemplate::new("http://localhost/au2/{_arg}", "arg_name_underscore_2"),
         ResourceTemplate::new("http://localhost/rtd/{a}", "resource_template_description")
             .with_description("Resource Template Description"),
-        ResourceTemplate::new("http://localhost/template_with_title/{id}", "resource_template_with_title")
-            .with_title("Resource Template Title"),
-        ResourceTemplate::new("http://localhost/template_expr_title/{id}", "resource_template_with_expression_title")
-            .with_title("Resource Title and Description"),
+        ResourceTemplate::new(
+            "http://localhost/template_with_title/{id}",
+            "resource_template_with_title",
+        )
+        .with_title("Resource Template Title"),
+        ResourceTemplate::new(
+            "http://localhost/template_expr_title/{id}",
+            "resource_template_with_expression_title",
+        )
+        .with_title("Resource Title and Description"),
     ]
     .into()
 }

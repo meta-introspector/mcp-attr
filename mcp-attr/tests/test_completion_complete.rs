@@ -2,10 +2,10 @@ use mcp_attr::{
     Result,
     client::McpClient,
     schema::{
-        CompleteRequestParams, CompleteRequestParamsArgument, CompleteRequestParamsContext, CompleteResult,
-        CompleteResultCompletion, ResourceTemplateReference, PromptReference,
+        CompleteRequestParams, CompleteRequestParamsArgument, CompleteRequestParamsContext,
+        CompleteResult, CompleteResultCompletion, PromptReference, ResourceTemplateReference,
     },
-    server::{McpServer, RequestContext, mcp_server, complete_fn},
+    server::{McpServer, RequestContext, complete_fn, mcp_server},
 };
 use std::collections::BTreeMap;
 
@@ -45,7 +45,11 @@ impl McpServer for TestServer {
 
 impl TestServer {
     #[complete_fn]
-    async fn complete_hello(&self, _value: &str, _cx: &RequestContext) -> Result<Vec<&'static str>> {
+    async fn complete_hello(
+        &self,
+        _value: &str,
+        _cx: &RequestContext,
+    ) -> Result<Vec<&'static str>> {
         Ok(vec!["world"])
     }
 
@@ -76,7 +80,11 @@ impl McpServer for InlineCompleteServer {
     }
 
     #[complete_fn]
-    async fn complete_inline(&self, _value: &str, _cx: &RequestContext) -> Result<Vec<&'static str>> {
+    async fn complete_inline(
+        &self,
+        _value: &str,
+        _cx: &RequestContext,
+    ) -> Result<Vec<&'static str>> {
         Ok(vec!["inline1", "inline2", "inline3"])
     }
 }
@@ -103,7 +111,10 @@ struct SimpleArgsServer;
 #[mcp_server]
 impl McpServer for SimpleArgsServer {
     #[prompt]
-    async fn test_prompt(&self, #[complete(.complete_with_simple_arg)] msg: String) -> Result<String> {
+    async fn test_prompt(
+        &self,
+        #[complete(.complete_with_simple_arg)] msg: String,
+    ) -> Result<String> {
         Ok(format!("Message: {msg}"))
     }
 
@@ -112,7 +123,6 @@ impl McpServer for SimpleArgsServer {
         Ok(vec![format!("{}_option1", msg), format!("{}_option2", msg)])
     }
 }
-
 
 #[tokio::test]
 async fn test_resource_completion() -> Result<()> {
@@ -140,10 +150,7 @@ async fn test_prompt_completion() -> Result<()> {
             CompleteRequestParamsArgument::new("msg", "w"),
         ))
         .await?;
-    assert_eq!(
-        ret.completion.values,
-        vec!["world".to_string()]
-    );
+    assert_eq!(ret.completion.values, vec!["world".to_string()]);
     assert_eq!(ret.completion.total, Some(1));
     Ok(())
 }
@@ -151,7 +158,7 @@ async fn test_prompt_completion() -> Result<()> {
 #[tokio::test]
 async fn test_multi_arg_resource_completion() -> Result<()> {
     let client = McpClient::with_server(TestServer).await?;
-    
+
     // Test path completion
     let ret = client
         .completion_complete(CompleteRequestParams::new(
@@ -164,7 +171,7 @@ async fn test_multi_arg_resource_completion() -> Result<()> {
         vec!["home".to_string(), "usr".to_string(), "var".to_string()]
     );
     assert_eq!(ret.completion.total, Some(3));
-    
+
     // Test file completion
     let ret = client
         .completion_complete(CompleteRequestParams::new(
@@ -177,7 +184,7 @@ async fn test_multi_arg_resource_completion() -> Result<()> {
         vec!["config.txt".to_string(), "data.json".to_string()]
     );
     assert_eq!(ret.completion.total, Some(2));
-    
+
     Ok(())
 }
 
@@ -307,13 +314,16 @@ async fn test_self_method_resource_completion() -> Result<()> {
     Ok(())
 }
 
-// Test server with FromIterator completion functionality  
+// Test server with FromIterator completion functionality
 struct IteratorCompletionServer;
 
 #[mcp_server]
 impl McpServer for IteratorCompletionServer {
     #[prompt]
-    async fn numbers_prompt(&self, #[complete(.complete_from_iterator)] range: String) -> Result<String> {
+    async fn numbers_prompt(
+        &self,
+        #[complete(.complete_from_iterator)] range: String,
+    ) -> Result<String> {
         Ok(format!("Range: {range}"))
     }
 }
@@ -336,7 +346,13 @@ async fn test_from_iterator_completion() -> Result<()> {
         .await?;
     assert_eq!(
         ret.completion.values,
-        vec!["10".to_string(), "20".to_string(), "30".to_string(), "40".to_string(), "50".to_string()]
+        vec![
+            "10".to_string(),
+            "20".to_string(),
+            "30".to_string(),
+            "40".to_string(),
+            "50".to_string()
+        ]
     );
     assert_eq!(ret.completion.total, Some(5));
     Ok(())
@@ -415,7 +431,11 @@ async fn test_static_method_completion() -> Result<()> {
         .await?;
     assert_eq!(
         ret.completion.values,
-        vec!["static1".to_string(), "static2".to_string(), "static3".to_string()]
+        vec![
+            "static1".to_string(),
+            "static2".to_string(),
+            "static3".to_string()
+        ]
     );
     assert_eq!(ret.completion.total, Some(3));
     Ok(())
@@ -432,7 +452,11 @@ async fn test_inline_complete_fn() -> Result<()> {
         .await?;
     assert_eq!(
         ret.completion.values,
-        vec!["inline1".to_string(), "inline2".to_string(), "inline3".to_string()]
+        vec![
+            "inline1".to_string(),
+            "inline2".to_string(),
+            "inline3".to_string()
+        ]
     );
     assert_eq!(ret.completion.total, Some(3));
     Ok(())
@@ -458,20 +482,17 @@ async fn test_simple_complete_fn() -> Result<()> {
 #[tokio::test]
 async fn test_simple_args_completion() -> Result<()> {
     let client = McpClient::with_server(SimpleArgsServer).await?;
-    
+
     // Create context with arguments
     let mut arguments = BTreeMap::new();
     arguments.insert("msg".to_string(), "hello".to_string());
-    
+
     let mut params = CompleteRequestParams::new(
         PromptReference::new("test_prompt"),
         CompleteRequestParamsArgument::new("msg", "h"),
     );
-    params.context = Some(CompleteRequestParamsContext {
-        arguments,
-        ..Default::default()
-    });
-    
+    params.context = Some(CompleteRequestParamsContext { arguments });
+
     let ret = client.completion_complete(params).await?;
     assert_eq!(
         ret.completion.values,
@@ -487,37 +508,45 @@ struct ComplexArgsServer;
 #[mcp_server]
 impl McpServer for ComplexArgsServer {
     #[prompt]
-    async fn test_prompt(&self, #[complete(.complete_with_complex_args)] msg: String) -> Result<String> {
+    async fn test_prompt(
+        &self,
+        #[complete(.complete_with_complex_args)] msg: String,
+    ) -> Result<String> {
         Ok(format!("Message: {msg}"))
     }
 
     #[complete_fn]
-    async fn complete_with_complex_args(&self, _value: &str, category: &str, count: Option<u32>, prefix: Option<&str>) -> Result<Vec<String>> {
+    async fn complete_with_complex_args(
+        &self,
+        _value: &str,
+        category: &str,
+        count: Option<u32>,
+        prefix: Option<&str>,
+    ) -> Result<Vec<String>> {
         let base_count = count.unwrap_or(3);
         let prefix = prefix.unwrap_or("item");
-        Ok((1..=base_count).map(|i| format!("{}_{}_{}", category, prefix, i)).collect())
+        Ok((1..=base_count)
+            .map(|i| format!("{}_{}_{}", category, prefix, i))
+            .collect())
     }
 }
 
 #[tokio::test]
 async fn test_complex_args_completion() -> Result<()> {
     let client = McpClient::with_server(ComplexArgsServer).await?;
-    
+
     // Create context with arguments
     let mut arguments = BTreeMap::new();
     arguments.insert("category".to_string(), "test".to_string());
     arguments.insert("count".to_string(), "2".to_string());
     arguments.insert("prefix".to_string(), "opt".to_string());
-    
+
     let mut params = CompleteRequestParams::new(
         PromptReference::new("test_prompt"),
         CompleteRequestParamsArgument::new("msg", ""),
     );
-    params.context = Some(CompleteRequestParamsContext {
-        arguments,
-        ..Default::default()
-    });
-    
+    params.context = Some(CompleteRequestParamsContext { arguments });
+
     let ret = client.completion_complete(params).await?;
     assert_eq!(
         ret.completion.values,
@@ -530,25 +559,26 @@ async fn test_complex_args_completion() -> Result<()> {
 #[tokio::test]
 async fn test_missing_optional_args_completion() -> Result<()> {
     let client = McpClient::with_server(ComplexArgsServer).await?;
-    
+
     // Create context with only required arguments
     let mut arguments = BTreeMap::new();
     arguments.insert("category".to_string(), "prod".to_string());
     // count and prefix are optional, so not provided
-    
+
     let mut params = CompleteRequestParams::new(
         PromptReference::new("test_prompt"),
         CompleteRequestParamsArgument::new("msg", ""),
     );
-    params.context = Some(CompleteRequestParamsContext {
-        arguments,
-        ..Default::default()
-    });
-    
+    params.context = Some(CompleteRequestParamsContext { arguments });
+
     let ret = client.completion_complete(params).await?;
     assert_eq!(
         ret.completion.values,
-        vec!["prod_item_1".to_string(), "prod_item_2".to_string(), "prod_item_3".to_string()]
+        vec![
+            "prod_item_1".to_string(),
+            "prod_item_2".to_string(),
+            "prod_item_3".to_string()
+        ]
     );
     assert_eq!(ret.completion.total, Some(3));
     Ok(())
@@ -557,20 +587,17 @@ async fn test_missing_optional_args_completion() -> Result<()> {
 #[tokio::test]
 async fn test_missing_required_args_completion() -> Result<()> {
     let client = McpClient::with_server(ComplexArgsServer).await?;
-    
+
     // Create context without required argument
     let arguments = BTreeMap::new();
     // category is required but not provided
-    
+
     let mut params = CompleteRequestParams::new(
         PromptReference::new("test_prompt"),
         CompleteRequestParamsArgument::new("msg", ""),
     );
-    params.context = Some(CompleteRequestParamsContext {
-        arguments,
-        ..Default::default()
-    });
-    
+    params.context = Some(CompleteRequestParamsContext { arguments });
+
     let ret = client.completion_complete(params).await?;
     // Should return empty completion when required argument is missing
     assert_eq!(ret.completion.values, Vec::<String>::new());

@@ -96,7 +96,10 @@ async fn tool_with_title() -> Result<()> {
     Ok(())
 }
 
-#[tool(description = "Tool with description", title = "Tool Title and Description")]
+#[tool(
+    description = "Tool with description",
+    title = "Tool Title and Description"
+)]
 async fn tool_with_description_and_title() -> Result<()> {
     Ok(())
 }
@@ -209,8 +212,7 @@ fn tools_expected() -> Result<ListToolsResult> {
         Tool::new("tool_priority_test", ToolInputSchema::new()).with_description("Attribute wins"),
         Tool::new("custom_tool_name", ToolInputSchema::new())
             .with_description("Named tool with description"),
-        Tool::new("tool_with_title", ToolInputSchema::new())
-            .with_title("Tool Title"),
+        Tool::new("tool_with_title", ToolInputSchema::new()).with_title("Tool Title"),
         Tool::new("tool_with_description_and_title", ToolInputSchema::new())
             .with_description("Tool with description")
             .with_title("Tool Title and Description"),
