@@ -12,7 +12,7 @@ use syn::{
     Attribute, Error, FnArg, Ident, ImplItem, ImplItemFn, ItemFn, ItemImpl, LitStr, Pat, Path,
     Result, Token, Type,
     parse::{Parse, ParseStream},
-    parse_quote, parse2,
+    parse_quote, parse_quote_spanned, parse2,
     punctuated::Punctuated,
     spanned::Spanned,
 };
@@ -161,7 +161,6 @@ struct McpBuilder {
     resources: Vec<ResourceEntry>,
     tools: Vec<ToolEntry>,
     complete_fns: Vec<ImplItemFn>,
-    pending_complete_fns: Vec<ImplItemFn>,
 }
 
 impl McpBuilder {
@@ -171,7 +170,6 @@ impl McpBuilder {
             resources: Vec::new(),
             tools: Vec::new(),
             complete_fns: Vec::new(),
-            pending_complete_fns: Vec::new(),
         }
     }
     fn push(&mut self, item: &mut ImplItem) -> Result<ItemPlacement> {
@@ -188,8 +186,11 @@ impl McpBuilder {
                     .push(ResourceEntry::from_impl_item_fn(f, attr)?),
                 ItemAttr::Tool(attr) => self.tools.push(ToolEntry::from_impl_item_fn(f, attr)?),
                 ItemAttr::CompleteFn => {
-                    self.pending_complete_fns.push(f.clone());
-                    return Ok(ItemPlacement::Exclude);
+                    // Transform the complete_fn in-place and get inner function
+                    let inner_fn = apply_complete_fn_transformation(f)?;
+                    self.complete_fns.push(inner_fn);
+                    // The original function (f) is now transformed to wrapper
+                    return Ok(ItemPlacement::Type);
                 }
             }
             return Ok(ItemPlacement::Type);
@@ -211,10 +212,6 @@ impl McpBuilder {
         let prompts = build_if(!self.prompts.is_empty(), || self.build_prompts())?;
         let resources = build_if(!self.resources.is_empty(), || self.build_resources(items))?;
         let tools = build_if(!self.tools.is_empty(), || self.build_tools())?;
-        for mut pending_fn in self.pending_complete_fns.clone() {
-            let complete_fn_results = apply_complete_fn_transformation(&mut pending_fn)?;
-            self.complete_fns.extend(complete_fn_results);
-        }
 
         let completion_complete = build_if(!is_defined(items, "completion_complete"), || {
             self.build_completion_complete()
@@ -422,7 +419,7 @@ impl McpBuilder {
                 }
             }
             CompleteFuncExpr::InstanceMethod(method_name) => {
-                // Call as instance method
+                // Call as instance method with correct parameters for wrapper function
                 let span = method_name.span();
                 quote_spanned! {span=>
                     self.#method_name(&p, cx).await
@@ -469,27 +466,35 @@ enum ItemAttr {
     CompleteFn,
 }
 
-fn apply_complete_fn_transformation(impl_fn: &mut ImplItemFn) -> Result<Vec<ImplItemFn>> {
+fn apply_complete_fn_transformation(impl_fn: &mut ImplItemFn) -> Result<ImplItemFn> {
     let original_ident = &impl_fn.sig.ident;
     let inner_ident = format_ident!("{}_inner", original_ident);
 
-    let mut inner_fn = impl_fn.clone();
-    inner_fn.sig.ident = inner_ident.clone();
+    // Create the inner function with original implementation
+    let inner_fn = ImplItemFn {
+        sig: syn::Signature {
+            ident: inner_ident.clone(),
+            ..impl_fn.sig.clone()
+        },
+        block: impl_fn.block.clone(),
+        attrs: impl_fn.attrs.clone(),
+        vis: impl_fn.vis.clone(),
+        defaultness: impl_fn.defaultness,
+    };
 
+    // Transform the original function to wrapper with new signature
     let new_sig = build_complete_fn_signature(&impl_fn.sig)?;
     let call_expr = build_complete_fn_body(&impl_fn.sig, &inner_ident)?;
 
-    let new_fn = ImplItemFn {
-        sig: new_sig,
-        block: parse_quote! {
-            {
-                #call_expr
-            }
-        },
-        ..impl_fn.clone()
+    impl_fn.sig = new_sig;
+    impl_fn.block = parse_quote! {
+        {
+            #call_expr
+        }
     };
 
-    Ok(vec![inner_fn, new_fn])
+    // Return inner function to be added to complete_fns
+    Ok(inner_fn)
 }
 
 fn build_route(item: TokenStream) -> Result<TokenStream> {
@@ -559,6 +564,9 @@ fn build_complete_fn(attr: TokenStream, item: TokenStream) -> Result<TokenStream
     let original_ident = &original_fn.sig.ident;
     let inner_ident = format_ident!("{}_inner", original_ident);
 
+    // Validate the original function signature
+    validate_complete_fn_signature(&original_fn.sig)?;
+
     let mut inner_fn = original_fn.clone();
     inner_fn.sig.ident = inner_ident.clone();
 
@@ -576,28 +584,84 @@ fn build_complete_fn(attr: TokenStream, item: TokenStream) -> Result<TokenStream
 }
 
 fn build_complete_fn_signature(original_sig: &syn::Signature) -> Result<syn::Signature> {
+    // Validate the original signature first
+    validate_complete_fn_signature(original_sig)?;
+
     let has_self = original_sig
         .inputs
         .iter()
         .any(|arg| matches!(arg, FnArg::Receiver(_)));
 
     let mut new_sig = original_sig.clone();
+    let sig_span = original_sig.ident.span();
     new_sig.inputs.clear();
 
     if has_self {
-        new_sig.inputs.push(parse_quote! { &self });
+        new_sig.inputs.push(parse_quote_spanned! { sig_span=> &self });
     }
 
     new_sig
         .inputs
-        .push(parse_quote! { p: &::mcp_attr::schema::CompleteRequestParams });
+        .push(parse_quote_spanned! { sig_span=> p: &::mcp_attr::schema::CompleteRequestParams });
+    
+    // Always use _cx to avoid unused variable warnings
     new_sig
         .inputs
-        .push(parse_quote! { cx: &::mcp_attr::server::RequestContext });
-    new_sig.output = parse_quote! { -> ::mcp_attr::Result<::mcp_attr::schema::CompleteResult> };
+        .push(parse_quote_spanned! { sig_span=> _cx: &::mcp_attr::server::RequestContext });
+    
+    new_sig.output = parse_quote_spanned! { sig_span=> -> ::mcp_attr::Result<::mcp_attr::schema::CompleteResult> };
 
     Ok(new_sig)
 }
+
+fn validate_complete_fn_signature(sig: &syn::Signature) -> Result<()> {
+    // Check if function is async
+    if sig.asyncness.is_none() {
+        bail!(
+            sig.ident.span(),
+            "completion function must be async"
+        );
+    }
+
+    // Check if function has required value parameter
+    let mut has_value_param = false;
+    let mut has_self = false;
+    
+    for input in &sig.inputs {
+        match input {
+            FnArg::Receiver(_) => has_self = true,
+            FnArg::Typed(pat_type) => {
+                if let syn::Pat::Ident(pat_ident) = &*pat_type.pat {
+                    let arg_name = pat_ident.ident.to_string();
+                    if arg_name == "value" || arg_name == "_value" {
+                        // Validate value parameter type
+                        if !is_str_reference(&pat_type.ty) {
+                            let type_name = quote::quote!(#pat_type.ty).to_string().replace(" ", "");
+                            bail!(
+                                pat_type.ty.span(),
+                                "completion function value parameter must be of type `&str`, found `{}`",
+                                type_name
+                            );
+                        }
+                        has_value_param = true;
+                    }
+                }
+            }
+        }
+    }
+
+    if !has_value_param {
+        let function_name = &sig.ident;
+        bail!(
+            sig.ident.span(),
+            "completion function `{}` must have a `value: &str` parameter",
+            function_name
+        );
+    }
+
+    Ok(())
+}
+
 
 fn has_context_parameter(sig: &syn::Signature) -> bool {
     sig.inputs.iter().any(|arg| {
@@ -614,6 +678,151 @@ fn has_context_parameter(sig: &syn::Signature) -> bool {
     })
 }
 
+#[derive(Debug)]
+struct CompleteFnArg {
+    name: String,
+    ty: syn::Type,
+    is_option: bool,
+    is_str_ref: bool,
+}
+
+fn analyze_complete_fn_args(sig: &syn::Signature) -> Result<Vec<CompleteFnArg>> {
+    let mut args = Vec::new();
+    let mut found_value = false;
+    let has_context = has_context_parameter(sig);
+    
+    for input in &sig.inputs {
+        if let syn::FnArg::Typed(pat_type) = input {
+            if let syn::Pat::Ident(pat_ident) = &*pat_type.pat {
+                let arg_name = pat_ident.ident.to_string();
+                
+                // Skip &self
+                if arg_name == "self" {
+                    continue;
+                }
+                
+                // Check for value parameter (including _value)
+                if arg_name == "value" || arg_name == "_value" {
+                    found_value = true;
+                    continue;
+                }
+                
+                // Skip RequestContext parameter  
+                if is_request_context_type(&pat_type.ty) {
+                    continue;
+                }
+                
+                // Only collect args after value parameter and before RequestContext
+                if found_value {
+                    let (base_ty, is_option) = extract_option_inner_type(&pat_type.ty);
+                    let is_str_ref = is_str_reference(&base_ty);
+                    
+                    // Validate that the argument type is supported for completion functions
+                    validate_completion_arg_type(&base_ty, is_str_ref, &pat_type.ty)?;
+                    
+                    args.push(CompleteFnArg {
+                        name: arg_name,
+                        ty: base_ty.clone(),
+                        is_option,
+                        is_str_ref,
+                    });
+                }
+            }
+        }
+    }
+    
+    Ok(args)
+}
+
+fn is_request_context_type(ty: &syn::Type) -> bool {
+    if let syn::Type::Reference(type_ref) = ty {
+        if let syn::Type::Path(type_path) = &*type_ref.elem {
+            return type_path.path.segments.last()
+                .map(|seg| seg.ident == "RequestContext")
+                .unwrap_or(false);
+        }
+    }
+    false
+}
+
+fn extract_option_inner_type(ty: &syn::Type) -> (syn::Type, bool) {
+    if let syn::Type::Path(type_path) = ty {
+        if let Some(last_segment) = type_path.path.segments.last() {
+            if last_segment.ident == "Option" {
+                if let syn::PathArguments::AngleBracketed(args) = &last_segment.arguments {
+                    if let Some(syn::GenericArgument::Type(inner_ty)) = args.args.first() {
+                        return (inner_ty.clone(), true);
+                    }
+                }
+            }
+        }
+    }
+    (ty.clone(), false)
+}
+
+fn is_str_reference(ty: &syn::Type) -> bool {
+    if let syn::Type::Reference(type_ref) = ty {
+        if let syn::Type::Path(type_path) = &*type_ref.elem {
+            return type_path.path.segments.last()
+                .map(|seg| seg.ident == "str")
+                .unwrap_or(false);
+        }
+    }
+    false
+}
+
+fn validate_completion_arg_type(base_ty: &syn::Type, is_str_ref: bool, original_ty: &syn::Type) -> Result<()> {
+    // &str is always allowed
+    if is_str_ref {
+        return Ok(());
+    }
+    
+    // Check if it's a commonly supported FromStr type
+    if is_supported_fromstr_type(base_ty) {
+        return Ok(());
+    }
+    
+    // For other types, we'll generate a more specific error message
+    let type_name = quote::quote!(#base_ty).to_string().replace(" ", "");
+    bail!(
+        original_ty.span(),
+        "unsupported argument type for completion function: `{}`. Supported types are `&str`, `Option<&str>`, and types that implement `FromStr` like `i32`, `u32`, `f64`, `bool`, `String`, etc.",
+        type_name
+    );
+}
+
+fn is_supported_fromstr_type(ty: &syn::Type) -> bool {
+    if let syn::Type::Path(type_path) = ty {
+        if let Some(last_segment) = type_path.path.segments.last() {
+            let type_name = last_segment.ident.to_string();
+            match type_name.as_str() {
+                // Common primitive types that implement FromStr
+                "i8" | "i16" | "i32" | "i64" | "i128" | "isize" |
+                "u8" | "u16" | "u32" | "u64" | "u128" | "usize" |
+                "f32" | "f64" | "bool" | "String" | "char" => true,
+                _ => {
+                    // For other types, we'll still allow them but they must implement FromStr
+                    // This is a heuristic check - we can't fully validate FromStr at macro time
+                    // but we can catch obviously wrong types like Vec, HashMap, etc.
+                    !is_obviously_non_fromstr_type(&type_name)
+                }
+            }
+        } else {
+            false
+        }
+    } else {
+        false
+    }
+}
+
+fn is_obviously_non_fromstr_type(type_name: &str) -> bool {
+    matches!(type_name,
+        "Vec" | "HashMap" | "BTreeMap" | "HashSet" | "BTreeSet" |
+        "VecDeque" | "LinkedList" | "Option" | "Result" |
+        "Box" | "Rc" | "Arc" | "Cell" | "RefCell" | "Mutex" | "RwLock"
+    )
+}
+
 fn build_complete_fn_body(
     original_sig: &syn::Signature,
     inner_ident: &syn::Ident,
@@ -623,6 +832,7 @@ fn build_complete_fn_body(
         .iter()
         .any(|arg| matches!(arg, FnArg::Receiver(_)));
     let has_context = has_context_parameter(original_sig);
+    let additional_args = analyze_complete_fn_args(original_sig)?;
 
     let f = if has_self {
         quote!(self.#inner_ident)
@@ -630,14 +840,92 @@ fn build_complete_fn_body(
         quote!(#inner_ident)
     };
 
-    let call_expr = if has_context {
-        quote!(#f(&p.argument.value, cx).await?)
-    } else {
-        quote!(#f(&p.argument.value).await?)
-    };
+    // Generate argument extraction code
+    let arg_extractions = generate_arg_extractions(&additional_args)?;
+    
+    // Build the function call arguments
+    let mut call_args = vec![quote!(&p.argument.value)];
+    
+    // Add additional arguments
+    for arg in &additional_args {
+        let arg_name = syn::Ident::new(&arg.name, proc_macro2::Span::call_site());
+        call_args.push(quote!(#arg_name));
+    }
+    
+    // Add context if needed
+    if has_context {
+        call_args.push(quote!(_cx));
+    }
+
+    let sig_span = original_sig.ident.span();
+    let call_expr = quote_spanned! { sig_span=> #f(#(#call_args),*).await? };
+
+    Ok(quote_spanned! { sig_span=>
+        #arg_extractions
+        Ok(#call_expr.into())
+    })
+}
+
+fn generate_arg_extractions(args: &[CompleteFnArg]) -> Result<TokenStream> {
+    if args.is_empty() {
+        return Ok(quote!());
+    }
+
+    let mut extractions = Vec::new();
+    
+    // Get context once if needed
+    extractions.push(quote! {
+        let default_context = ::mcp_attr::schema::CompleteRequestParamsContext::default();
+        let context = p.context.as_ref().unwrap_or(&default_context);
+    });
+
+    for arg in args {
+        let arg_name = syn::Ident::new(&arg.name, proc_macro2::Span::call_site());
+        let arg_key = &arg.name;
+        
+        let extraction = if arg.is_option {
+            if arg.is_str_ref {
+                // Option<&str>
+                quote! {
+                    let #arg_name = context.arguments.get(#arg_key).map(|s| s.as_str());
+                }
+            } else {
+                // Option<T> where T: FromStr
+                let ty = &arg.ty;
+                quote! {
+                    let #arg_name = context.arguments.get(#arg_key)
+                        .map(|s| s.parse::<#ty>())
+                        .transpose()
+                        .map_err(|_| ::mcp_attr::Error::from(::mcp_attr::ErrorCode::INVALID_PARAMS))?;
+                }
+            }
+        } else {
+            if arg.is_str_ref {
+                // &str
+                quote! {
+                    let #arg_name = match context.arguments.get(#arg_key) {
+                        Some(s) => s.as_str(),
+                        None => return Ok(::mcp_attr::schema::CompleteResult::default()),
+                    };
+                }
+            } else {
+                // T where T: FromStr
+                let ty = &arg.ty;
+                quote! {
+                    let #arg_name = match context.arguments.get(#arg_key) {
+                        Some(s) => s.parse::<#ty>()
+                            .map_err(|_| ::mcp_attr::Error::from(::mcp_attr::ErrorCode::INVALID_PARAMS))?,
+                        None => return Ok(::mcp_attr::schema::CompleteResult::default()),
+                    };
+                }
+            }
+        };
+        
+        extractions.push(extraction);
+    }
 
     Ok(quote! {
-        Ok(#call_expr.into())
+        #(#extractions)*
     })
 }
 

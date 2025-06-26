@@ -1,7 +1,7 @@
 error[E0277]: the `?` operator can only be applied to values that implement `Try`
- --> tests/compile_fail/complete_not_result.rs:5:1
+ --> tests/compile_fail/complete_not_result.rs:6:10
   |
-5 | #[complete_fn]
-  | ^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `Vec<std::string::String>`
+6 | async fn complete_not_result(_value: &str, _cx: &RequestContext) -> Vec<String> {
+  |          ^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `Vec<std::string::String>`
   |
   = help: the trait `Try` is not implemented for `Vec<std::string::String>`

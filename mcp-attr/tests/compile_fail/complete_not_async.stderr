@@ -1,27 +1,19 @@
-error[E0728]: `await` is only allowed inside `async` functions and blocks
- --> tests/compile_fail/complete_not_async.rs:5:1
+error: completion function must be async
+ --> tests/compile_fail/complete_not_async.rs:6:4
   |
-5 | #[complete_fn]
-  | ^^^^^^^^^^^^^^
-  | |
-  | only allowed inside `async` functions and blocks
-  | this is not `async`
-  |
-  = note: this error originates in the attribute macro `complete_fn` (in Nightly builds, run with -Z macro-backtrace for more info)
+6 | fn complete_not_async(_value: &str, _cx: &RequestContext) -> Result<Vec<String>> {
+  |    ^^^^^^^^^^^^^^^^^^
 
-error[E0277]: `std::result::Result<mcp_attr::schema::CompleteResult, mcp_attr::Error>` is not a future
+warning: unused import: `RequestContext`
+ --> tests/compile_fail/complete_not_async.rs:1:48
+  |
+1 | use mcp_attr::{server::{mcp_server, McpServer, RequestContext, complete_fn}, Result};
+  |                                                ^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+error[E0425]: cannot find function `complete_not_async` in this scope
   --> tests/compile_fail/complete_not_async.rs:13:44
    |
 13 |     async fn test_prompt(&self, #[complete(complete_not_async)] msg: String) -> Result<String> {
-   |                                            ^^^^^^^^^^^^^^^^^^
-   |                                            |
-   |                                            `std::result::Result<mcp_attr::schema::CompleteResult, mcp_attr::Error>` is not a future
-   |                                            this call returns `std::result::Result<mcp_attr::schema::CompleteResult, mcp_attr::Error>`
-   |
-   = help: the trait `Future` is not implemented for `std::result::Result<mcp_attr::schema::CompleteResult, mcp_attr::Error>`
-   = note: std::result::Result<mcp_attr::schema::CompleteResult, mcp_attr::Error> must be a future or must implement `IntoFuture` to be awaited
-   = note: required for `std::result::Result<mcp_attr::schema::CompleteResult, mcp_attr::Error>` to implement `IntoFuture`
-help: alternatively, consider making `fn complete_not_async` asynchronous
-   |
-5  | async #[complete_fn]
-   | +++++
+   |                                            ^^^^^^^^^^^^^^^^^^ not found in this scope

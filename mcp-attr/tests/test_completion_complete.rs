@@ -2,11 +2,12 @@ use mcp_attr::{
     Result,
     client::McpClient,
     schema::{
-        CompleteRequestParams, CompleteRequestParamsArgument, CompleteResult,
+        CompleteRequestParams, CompleteRequestParamsArgument, CompleteRequestParamsContext, CompleteResult,
         CompleteResultCompletion, ResourceTemplateReference, PromptReference,
     },
     server::{McpServer, RequestContext, mcp_server, complete_fn},
 };
+use std::collections::BTreeMap;
 
 struct TestServer;
 
@@ -93,6 +94,22 @@ impl McpServer for SimpleCompleteServer {
     #[complete_fn]
     async fn complete_simple(&self, _value: &str) -> Result<Vec<&'static str>> {
         Ok(vec!["simple1", "simple2"])
+    }
+}
+
+// Test server with simple additional arguments
+struct SimpleArgsServer;
+
+#[mcp_server]
+impl McpServer for SimpleArgsServer {
+    #[prompt]
+    async fn test_prompt(&self, #[complete(.complete_with_simple_arg)] msg: String) -> Result<String> {
+        Ok(format!("Message: {msg}"))
+    }
+
+    #[complete_fn]
+    async fn complete_with_simple_arg(&self, _value: &str, msg: &str) -> Result<Vec<String>> {
+        Ok(vec![format!("{}_option1", msg), format!("{}_option2", msg)])
     }
 }
 
@@ -435,5 +452,127 @@ async fn test_simple_complete_fn() -> Result<()> {
         vec!["simple1".to_string(), "simple2".to_string()]
     );
     assert_eq!(ret.completion.total, Some(2));
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_simple_args_completion() -> Result<()> {
+    let client = McpClient::with_server(SimpleArgsServer).await?;
+    
+    // Create context with arguments
+    let mut arguments = BTreeMap::new();
+    arguments.insert("msg".to_string(), "hello".to_string());
+    
+    let mut params = CompleteRequestParams::new(
+        PromptReference::new("test_prompt"),
+        CompleteRequestParamsArgument::new("msg", "h"),
+    );
+    params.context = Some(CompleteRequestParamsContext {
+        arguments,
+        ..Default::default()
+    });
+    
+    let ret = client.completion_complete(params).await?;
+    assert_eq!(
+        ret.completion.values,
+        vec!["hello_option1".to_string(), "hello_option2".to_string()]
+    );
+    assert_eq!(ret.completion.total, Some(2));
+    Ok(())
+}
+
+// Test server with complex additional arguments
+struct ComplexArgsServer;
+
+#[mcp_server]
+impl McpServer for ComplexArgsServer {
+    #[prompt]
+    async fn test_prompt(&self, #[complete(.complete_with_complex_args)] msg: String) -> Result<String> {
+        Ok(format!("Message: {msg}"))
+    }
+
+    #[complete_fn]
+    async fn complete_with_complex_args(&self, _value: &str, category: &str, count: Option<u32>, prefix: Option<&str>) -> Result<Vec<String>> {
+        let base_count = count.unwrap_or(3);
+        let prefix = prefix.unwrap_or("item");
+        Ok((1..=base_count).map(|i| format!("{}_{}_{}", category, prefix, i)).collect())
+    }
+}
+
+#[tokio::test]
+async fn test_complex_args_completion() -> Result<()> {
+    let client = McpClient::with_server(ComplexArgsServer).await?;
+    
+    // Create context with arguments
+    let mut arguments = BTreeMap::new();
+    arguments.insert("category".to_string(), "test".to_string());
+    arguments.insert("count".to_string(), "2".to_string());
+    arguments.insert("prefix".to_string(), "opt".to_string());
+    
+    let mut params = CompleteRequestParams::new(
+        PromptReference::new("test_prompt"),
+        CompleteRequestParamsArgument::new("msg", ""),
+    );
+    params.context = Some(CompleteRequestParamsContext {
+        arguments,
+        ..Default::default()
+    });
+    
+    let ret = client.completion_complete(params).await?;
+    assert_eq!(
+        ret.completion.values,
+        vec!["test_opt_1".to_string(), "test_opt_2".to_string()]
+    );
+    assert_eq!(ret.completion.total, Some(2));
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_missing_optional_args_completion() -> Result<()> {
+    let client = McpClient::with_server(ComplexArgsServer).await?;
+    
+    // Create context with only required arguments
+    let mut arguments = BTreeMap::new();
+    arguments.insert("category".to_string(), "prod".to_string());
+    // count and prefix are optional, so not provided
+    
+    let mut params = CompleteRequestParams::new(
+        PromptReference::new("test_prompt"),
+        CompleteRequestParamsArgument::new("msg", ""),
+    );
+    params.context = Some(CompleteRequestParamsContext {
+        arguments,
+        ..Default::default()
+    });
+    
+    let ret = client.completion_complete(params).await?;
+    assert_eq!(
+        ret.completion.values,
+        vec!["prod_item_1".to_string(), "prod_item_2".to_string(), "prod_item_3".to_string()]
+    );
+    assert_eq!(ret.completion.total, Some(3));
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_missing_required_args_completion() -> Result<()> {
+    let client = McpClient::with_server(ComplexArgsServer).await?;
+    
+    // Create context without required argument
+    let arguments = BTreeMap::new();
+    // category is required but not provided
+    
+    let mut params = CompleteRequestParams::new(
+        PromptReference::new("test_prompt"),
+        CompleteRequestParamsArgument::new("msg", ""),
+    );
+    params.context = Some(CompleteRequestParamsContext {
+        arguments,
+        ..Default::default()
+    });
+    
+    let ret = client.completion_complete(params).await?;
+    // Should return empty completion when required argument is missing
+    assert_eq!(ret.completion.values, Vec::<String>::new());
     Ok(())
 }

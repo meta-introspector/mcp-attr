@@ -1,0 +1,26 @@
+error: completion function `complete_missing` must have a `value: &str` parameter
+  --> tests/compile_fail/complete_fn_missing_value.rs:13:14
+   |
+13 |     async fn complete_missing(&self, _ctx: &RequestContext) -> Result<Vec<String>> {
+   |              ^^^^^^^^^^^^^^^^
+
+error[E0061]: this method takes 1 argument but 2 arguments were supplied
+  --> tests/compile_fail/complete_fn_missing_value.rs:8:45
+   |
+8  |     async fn test_prompt(&self, #[complete(.complete_missing)] msg: String) -> Result<String> {
+   |                                             ^^^^^^^^^^^^^^^^ unexpected argument #1 of type `&CompleteRequestParams`
+   |
+note: method defined here
+  --> tests/compile_fail/complete_fn_missing_value.rs:13:14
+   |
+13 |     async fn complete_missing(&self, _ctx: &RequestContext) -> Result<Vec<String>> {
+   |              ^^^^^^^^^^^^^^^^
+
+error[E0308]: mismatched types
+ --> tests/compile_fail/complete_fn_missing_value.rs:8:45
+  |
+8 |     async fn test_prompt(&self, #[complete(.complete_missing)] msg: String) -> Result<String> {
+  |                                             ^^^^^^^^^^^^^^^^ expected `Result<CompleteResult, Error>`, found `Result<Vec<String>, Error>`
+  |
+  = note: expected enum `std::result::Result<mcp_attr::schema::CompleteResult, mcp_attr::Error>`
+             found enum `std::result::Result<Vec<std::string::String>, mcp_attr::Error>`

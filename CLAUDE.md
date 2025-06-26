@@ -18,8 +18,38 @@ mcp-attrは、Model Context Protocol (MCP) サーバーを宣言的に構築す�
 
 - `#[mcp_server]` 属性によるMCPサーバーの宣言的記述
 - `#[tool]`, `#[resource]`, `#[prompt]` 属性による機能の実装
+- `#[complete_fn]` 属性による補完機能の実装（追加引数対応）
 - MCPクライアント（テスト用）
 - 型システムを活用したスキーマ生成
+
+### Completion Function Enhancement (`#[complete_fn]`)
+
+`#[complete_fn]` 属性に追加引数機能を実装しました：
+
+#### 基本的な使用方法
+```rust
+#[complete_fn]
+async fn complete_with_args(&self, value: &str, category: &str, count: Option<u32>) -> Result<Vec<String>> {
+    // 実装
+}
+```
+
+#### 対応している引数型
+- `&str`: 必須文字列引数
+- `Option<&str>`: オプショナル文字列引数
+- `T: FromStr`: 必須の型変換可能な引数
+- `Option<T: FromStr>`: オプショナルの型変換可能な引数
+
+#### 引数の動作
+- 引数は `CompleteRequestParams::context::arguments` (BTreeMap) から取得
+- オプショナル引数がない場合は `None` を返す
+- 必須引数がない場合は空の補完結果を返す
+- 型変換に失敗した場合はエラーを返す
+- 型互換性チェックはコンパイル時に行われる
+
+#### テスト
+- 統合テスト: `tests/test_completion_complete.rs`
+- コンパイル失敗テスト: `tests/compile_fail/complete_fn_*.rs`
 
 ## Development Commands
 

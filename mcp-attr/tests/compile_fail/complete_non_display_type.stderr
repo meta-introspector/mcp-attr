@@ -1,11 +1,10 @@
 error[E0277]: `NonDisplayType` doesn't implement `std::fmt::Display`
-  --> tests/compile_fail/complete_non_display_type.rs:10:1
+  --> tests/compile_fail/complete_non_display_type.rs:11:10
    |
-10 | #[complete_fn]
-   | ^^^^^^^^^^^^^^ `NonDisplayType` cannot be formatted with the default formatter
+11 | async fn complete_non_display(_value: &str, _cx: &RequestContext) -> Result<Vec<NonDisplayType>> {
+   |          ^^^^^^^^^^^^^^^^^^^^ `NonDisplayType` cannot be formatted with the default formatter
    |
    = help: the trait `std::fmt::Display` is not implemented for `NonDisplayType`
    = note: in format strings you may be able to use `{:?}` (or {:#?} for pretty-print) instead
    = note: required for `mcp_attr::schema::CompleteResult` to implement `From<Vec<NonDisplayType>>`
    = note: required for `Vec<NonDisplayType>` to implement `Into<mcp_attr::schema::CompleteResult>`
-   = note: this error originates in the attribute macro `complete_fn` (in Nightly builds, run with -Z macro-backtrace for more info)
