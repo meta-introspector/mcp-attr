@@ -1,4 +1,3 @@
-use std::collections::BTreeMap;
 use mcp_attr::{
     Result,
     client::McpClient,
@@ -8,6 +7,7 @@ use mcp_attr::{
     },
     server::{McpServer, RequestContext, mcp_server},
 };
+use std::collections::BTreeMap;
 
 struct TestServer;
 
@@ -15,67 +15,102 @@ struct TestServer;
 impl McpServer for TestServer {
     #[prompt]
     async fn prompt_simple(&self, #[complete(.complete_simple)] msg: String) -> Result<String> {
-        Ok(format!("Simple: {}", msg))
+        Ok(format!("Simple: {msg}"))
     }
 
     #[prompt]
-    async fn prompt_with_context(&self, #[complete(.complete_with_context)] msg: String) -> Result<String> {
-        Ok(format!("With context: {}", msg))
+    async fn prompt_with_context(
+        &self,
+        #[complete(.complete_with_context)] msg: String,
+    ) -> Result<String> {
+        Ok(format!("With context: {msg}"))
     }
 
     #[prompt]
-    async fn prompt_with_args_str(&self, #[complete(.complete_with_args_str)] msg: String) -> Result<String> {
-        Ok(format!("Str args: {}", msg))
+    async fn prompt_with_args_str(
+        &self,
+        #[complete(.complete_with_args_str)] msg: String,
+    ) -> Result<String> {
+        Ok(format!("Str args: {msg}"))
     }
 
     #[prompt]
-    async fn prompt_with_args_optional_str(&self, #[complete(.complete_with_args_optional_str)] msg: String) -> Result<String> {
-        Ok(format!("Optional str: {}", msg))
+    async fn prompt_with_args_optional_str(
+        &self,
+        #[complete(.complete_with_args_optional_str)] msg: String,
+    ) -> Result<String> {
+        Ok(format!("Optional str: {msg}"))
     }
 
     #[prompt]
-    async fn prompt_with_args_fromstr(&self, #[complete(.complete_with_args_fromstr)] msg: String) -> Result<String> {
-        Ok(format!("FromStr: {}", msg))
+    async fn prompt_with_args_fromstr(
+        &self,
+        #[complete(.complete_with_args_fromstr)] msg: String,
+    ) -> Result<String> {
+        Ok(format!("FromStr: {msg}"))
     }
 
     #[prompt]
-    async fn prompt_with_args_optional_fromstr(&self, #[complete(.complete_with_args_optional_fromstr)] msg: String) -> Result<String> {
-        Ok(format!("Optional FromStr: {}", msg))
+    async fn prompt_with_args_optional_fromstr(
+        &self,
+        #[complete(.complete_with_args_optional_fromstr)] msg: String,
+    ) -> Result<String> {
+        Ok(format!("Optional FromStr: {msg}"))
     }
 
     #[prompt]
-    async fn prompt_with_args_mixed(&self, #[complete(.complete_with_args_mixed)] msg: String) -> Result<String> {
-        Ok(format!("Mixed args: {}", msg))
+    async fn prompt_with_args_mixed(
+        &self,
+        #[complete(.complete_with_args_mixed)] msg: String,
+    ) -> Result<String> {
+        Ok(format!("Mixed args: {msg}"))
     }
 
     #[prompt]
-    async fn prompt_multi_arg(&self, #[complete(.complete_multi_arg)] msg: String) -> Result<String> {
-        Ok(format!("Multi arg: {}", msg))
+    async fn prompt_multi_arg(
+        &self,
+        #[complete(.complete_multi_arg)] msg: String,
+    ) -> Result<String> {
+        Ok(format!("Multi arg: {msg}"))
     }
 
     #[prompt]
-    async fn prompt_return_static_str(&self, #[complete(.complete_return_static_str)] msg: String) -> Result<String> {
-        Ok(format!("Static str: {}", msg))
+    async fn prompt_return_static_str(
+        &self,
+        #[complete(.complete_return_static_str)] msg: String,
+    ) -> Result<String> {
+        Ok(format!("Static str: {msg}"))
     }
 
     #[prompt]
-    async fn prompt_return_string(&self, #[complete(.complete_return_string)] msg: String) -> Result<String> {
-        Ok(format!("String: {}", msg))
+    async fn prompt_return_string(
+        &self,
+        #[complete(.complete_return_string)] msg: String,
+    ) -> Result<String> {
+        Ok(format!("String: {msg}"))
     }
 
     #[prompt]
-    async fn prompt_return_display(&self, #[complete(.complete_return_display)] msg: String) -> Result<String> {
-        Ok(format!("Display: {}", msg))
+    async fn prompt_return_display(
+        &self,
+        #[complete(.complete_return_display)] msg: String,
+    ) -> Result<String> {
+        Ok(format!("Display: {msg}"))
     }
 
     #[prompt]
     async fn prompt_no_completion_defined(&self, msg: String) -> Result<String> {
-        Ok(format!("No completion: {}", msg))
+        Ok(format!("No completion: {msg}"))
     }
 
     #[prompt]
-    async fn prompt_with_arg_for_completion_func(&self, #[complete(.complete_with_custom_arg_source)] #[arg("source_type")] msg: String) -> Result<String> {
-        Ok(format!("Prompt with arg for completion func: {}", msg))
+    async fn prompt_with_arg_for_completion_func(
+        &self,
+        #[complete(.complete_with_custom_arg_source)]
+        #[arg("source_type")]
+        msg: String,
+    ) -> Result<String> {
+        Ok(format!("Prompt with arg for completion func: {msg}"))
     }
 
     // Complete functions
@@ -85,17 +120,28 @@ impl McpServer for TestServer {
     }
 
     #[complete_fn]
-    async fn complete_with_context(&self, _value: &str, _cx: &RequestContext) -> Result<Vec<&'static str>> {
+    async fn complete_with_context(
+        &self,
+        _value: &str,
+        _cx: &RequestContext,
+    ) -> Result<Vec<&'static str>> {
         Ok(vec!["context1", "context2"])
     }
 
     #[complete_fn]
     async fn complete_with_args_str(&self, _value: &str, category: &str) -> Result<Vec<String>> {
-        Ok(vec![format!("{}_item_1", category), format!("{}_item_2", category)])
+        Ok(vec![
+            format!("{}_item_1", category),
+            format!("{}_item_2", category),
+        ])
     }
 
     #[complete_fn]
-    async fn complete_with_args_optional_str(&self, _value: &str, prefix: Option<&str>) -> Result<Vec<String>> {
+    async fn complete_with_args_optional_str(
+        &self,
+        _value: &str,
+        prefix: Option<&str>,
+    ) -> Result<Vec<String>> {
         let prefix = prefix.unwrap_or("default");
         Ok(vec![
             format!("{}_option_1", prefix),
@@ -105,17 +151,17 @@ impl McpServer for TestServer {
 
     #[complete_fn]
     async fn complete_with_args_fromstr(&self, _value: &str, count: u32) -> Result<Vec<String>> {
-        Ok((1..=count)
-            .map(|i| format!("item_{}", i))
-            .collect())
+        Ok((1..=count).map(|i| format!("item_{i}")).collect())
     }
 
     #[complete_fn]
-    async fn complete_with_args_optional_fromstr(&self, _value: &str, count: Option<u32>) -> Result<Vec<String>> {
+    async fn complete_with_args_optional_fromstr(
+        &self,
+        _value: &str,
+        count: Option<u32>,
+    ) -> Result<Vec<String>> {
         let count = count.unwrap_or(3);
-        Ok((1..=count)
-            .map(|i| format!("item_{}", i))
-            .collect())
+        Ok((1..=count).map(|i| format!("item_{i}")).collect())
     }
 
     #[complete_fn]
@@ -145,27 +191,43 @@ impl McpServer for TestServer {
         let base_count = count.unwrap_or(3);
         let prefix = prefix.unwrap_or("item");
         Ok((1..=base_count)
-            .map(|i| format!("{}_{}_{}", category, prefix, i))
+            .map(|i| format!("{category}_{prefix}_{i}"))
             .collect())
     }
 
     #[complete_fn]
-    async fn complete_return_static_str(&self, _value: &str, _cx: &RequestContext) -> Result<Vec<&'static str>> {
+    async fn complete_return_static_str(
+        &self,
+        _value: &str,
+        _cx: &RequestContext,
+    ) -> Result<Vec<&'static str>> {
         Ok(vec!["static1", "static2"])
     }
 
     #[complete_fn]
-    async fn complete_return_string(&self, _value: &str, _cx: &RequestContext) -> Result<Vec<String>> {
+    async fn complete_return_string(
+        &self,
+        _value: &str,
+        _cx: &RequestContext,
+    ) -> Result<Vec<String>> {
         Ok(vec!["string1".to_string(), "string2".to_string()])
     }
 
     #[complete_fn]
-    async fn complete_return_display(&self, _value: &str, _cx: &RequestContext) -> Result<Vec<u32>> {
+    async fn complete_return_display(
+        &self,
+        _value: &str,
+        _cx: &RequestContext,
+    ) -> Result<Vec<u32>> {
         Ok(vec![100, 200, 300])
     }
 
     #[complete_fn]
-    async fn complete_with_custom_arg_source(&self, _value: &str, source_type: &str) -> Result<Vec<String>> {
+    async fn complete_with_custom_arg_source(
+        &self,
+        _value: &str,
+        source_type: &str,
+    ) -> Result<Vec<String>> {
         Ok(vec![
             format!("{}_option_1", source_type),
             format!("{}_option_2", source_type),

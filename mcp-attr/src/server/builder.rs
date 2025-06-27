@@ -35,7 +35,9 @@ pub struct CompleteFn {
     /// Function that handles completion
     #[allow(clippy::type_complexity)]
     pub f: std::sync::Arc<
-        dyn for<'a> Fn(&'a CompleteRequestParams, &'a RequestContext) -> CompleteFuture<'a> + Send + Sync,
+        dyn for<'a> Fn(&'a CompleteRequestParams, &'a RequestContext) -> CompleteFuture<'a>
+            + Send
+            + Sync,
     >,
 }
 
@@ -45,7 +47,8 @@ impl std::fmt::Debug for CompleteFn {
     }
 }
 
-type CompleteFuture<'a> = Pin<Box<dyn Future<Output = Result<crate::schema::CompleteResult>> + Send + Sync + 'a>>;
+type CompleteFuture<'a> =
+    Pin<Box<dyn Future<Output = Result<crate::schema::CompleteResult>> + Send + Sync + 'a>>;
 
 struct CustomServer {
     route: Route,
@@ -174,7 +177,8 @@ impl McpServer for CustomServer {
             CompleteRequestParamsRef::PromptReference(prompt_ref) => {
                 // Find matching completion for prompt
                 for completion in &self.route.completions {
-                    if completion.name == prompt_ref.name && completion.argument == p.argument.name {
+                    if completion.name == prompt_ref.name && completion.argument == p.argument.name
+                    {
                         return (completion.complete_fn.f)(&p, cx).await;
                     }
                 }
@@ -187,7 +191,8 @@ impl McpServer for CustomServer {
             CompleteRequestParamsRef::ResourceTemplateReference(resource_ref) => {
                 // Find matching completion for resource
                 for completion in &self.route.completions {
-                    if completion.name == resource_ref.uri && completion.argument == p.argument.name {
+                    if completion.name == resource_ref.uri && completion.argument == p.argument.name
+                    {
                         return (completion.complete_fn.f)(&p, cx).await;
                     }
                 }
@@ -314,9 +319,13 @@ impl PromptDefinition {
         + 'static,
     ) -> Self {
         let f = Box::new(f);
-        Self { prompt, f, completions: Vec::new() }
+        Self {
+            prompt,
+            f,
+            completions: Vec::new(),
+        }
     }
-    
+
     pub fn with_completions(mut self, completions: Vec<CompletionInfo>) -> Self {
         self.completions = completions;
         self

@@ -24,7 +24,7 @@ fn test_basic_transitivity() -> Result<()> {
     let output = build_transitivity_raw(&[input])?;
     let output_str = output.to_string();
 
-    println!("Generated code:\n{}", output_str);
+    println!("Generated code:\n{output_str}");
     // 既存の変換は生成しない
     assert!(output_str.contains("impl :: std :: convert :: From < A > for C"));
     Ok(())
@@ -59,7 +59,7 @@ fn test_self_keyword() -> Result<()> {
     let output = build_transitivity_raw(&[input])?;
     let output_str = output.to_string();
 
-    println!("Generated code:\n{}", output_str);
+    println!("Generated code:\n{output_str}");
     // 既存の変換は生成しない
     // A -> C と &B -> C の推移的な変換のみが生成される
     assert!(output_str.contains("impl :: std :: convert :: From < A > for C"));
@@ -90,7 +90,7 @@ fn test_skip_generic_types() -> Result<()> {
     let output = build_transitivity_raw(&[input])?;
     let output_str = output.to_string();
 
-    println!("Generated code:\n{}", output_str);
+    println!("Generated code:\n{output_str}");
     // ジェネリック型への変換はスキップされるため、A -> C<T> の変換は生成されない
     assert!(!output_str.contains("impl :: std :: convert :: From < A > for C"));
     Ok(())
@@ -122,7 +122,7 @@ fn test_multiple_files() -> Result<()> {
     let output = build_transitivity_raw(&[input1, input2])?;
     let output_str = output.to_string();
 
-    println!("Generated code:\n{}", output_str);
+    println!("Generated code:\n{output_str}");
     // 既存の変換は生成しない
     assert!(output_str.contains("impl :: std :: convert :: From < A > for C"));
     Ok(())
@@ -150,7 +150,7 @@ fn test_ref_self_transitivity() -> Result<()> {
     let output = build_transitivity_raw(&[input])?;
     let output_str = output.to_string();
 
-    println!("Generated code:\n{}", output_str);
+    println!("Generated code:\n{output_str}");
     // 既存の変換は生成しない
     assert!(output_str.contains("impl :: std :: convert :: From < & B > for C"));
     Ok(())
@@ -178,7 +178,7 @@ fn test_no_extra_conversions() -> Result<()> {
     let output = build_transitivity_raw(&[input])?;
     let output_str = output.to_string();
 
-    println!("Generated code:\n{}", output_str);
+    println!("Generated code:\n{output_str}");
 
     // 期待される変換のみが生成されていることを確認
     let expected_conversions = [
@@ -234,7 +234,7 @@ fn test_multiple_paths() -> Result<()> {
     let output = build_transitivity_raw(&[input])?;
     let output_str = output.to_string();
 
-    println!("Generated code:\n{}", output_str);
+    println!("Generated code:\n{output_str}");
     // A -> D への変換は複数のパスがあるため生成されない
     assert!(!output_str.contains("impl :: std :: convert :: From < A > for D"));
     Ok(())

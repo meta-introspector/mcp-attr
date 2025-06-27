@@ -248,7 +248,7 @@ impl ResourceEntry {
             let uri = uri.to_string();
             quote!(#uri)
         });
-        
+
         // Generate completion information
         let mut completion_infos = Vec::new();
         let resource_uri = if let Some(uri) = &self.uri {
@@ -256,7 +256,7 @@ impl ResourceEntry {
         } else {
             name.clone()
         };
-        
+
         for arg in &self.args {
             if let ResourceFnArg::Var(uri_var) = arg {
                 if let Some(complete_expr) = &uri_var.complete_expr {
@@ -265,21 +265,21 @@ impl ResourceEntry {
                         crate::CompleteFuncExpr::InstanceMethod(method_name) => {
                             return Err(syn::Error::new(
                                 method_name.span(),
-                                "Method syntax (.method_name) can only be used within impl blocks, not in standalone functions"
+                                "Method syntax (.method_name) can only be used within impl blocks, not in standalone functions",
                             ));
                         }
                         crate::CompleteFuncExpr::Expr(expr) => {
                             completion_infos.push((
                                 resource_uri.clone(),
                                 uri_var.name.clone(),
-                                expr.clone()
+                                expr.clone(),
                             ));
                         }
                     }
                 }
             }
         }
-        
+
         // Generate completion function calls
         let completions = completion_infos.iter().map(|(uri_str, arg_name, complete_expr)| {
             quote! {
@@ -296,7 +296,7 @@ impl ResourceEntry {
                 }
             }
         }).collect::<Vec<_>>();
-        
+
         Ok(quote! {
             #[allow(clippy::needless_question_mark)]
             #vis fn #route_ident() -> ::mcp_attr::Result<::mcp_attr::server::builder::ResourceDefinition> {

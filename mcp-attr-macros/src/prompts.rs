@@ -174,7 +174,7 @@ impl PromptEntry {
             .map(|a| a.build_get_expr())
             .collect::<Result<Vec<_>>>()?;
         let metadata = self.build_metadata()?;
-        
+
         // Generate completion information
         let mut completion_infos = Vec::new();
         for arg in &self.args {
@@ -185,21 +185,21 @@ impl PromptEntry {
                         crate::CompleteFuncExpr::InstanceMethod(method_name) => {
                             return Err(syn::Error::new(
                                 method_name.span(),
-                                "Method syntax (.method_name) can only be used within impl blocks, not in global functions"
+                                "Method syntax (.method_name) can only be used within impl blocks, not in global functions",
                             ));
                         }
                         crate::CompleteFuncExpr::Expr(expr) => {
                             completion_infos.push((
                                 self.name.clone(),
                                 prompt_arg.name.clone(),
-                                expr.clone()
+                                expr.clone(),
                             ));
                         }
                     }
                 }
             }
         }
-        
+
         // Generate completion function calls
         let completions = completion_infos.iter().map(|(prompt_name, arg_name, complete_expr)| {
             quote! {
@@ -216,7 +216,7 @@ impl PromptEntry {
                 }
             }
         }).collect::<Vec<_>>();
-        
+
         Ok(quote! {
             #vis fn #route_ident() -> ::mcp_attr::Result<::mcp_attr::server::builder::PromptDefinition> {
                 let completions = vec![#(#completions),*];

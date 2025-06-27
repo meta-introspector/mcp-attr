@@ -1,12 +1,12 @@
-use std::collections::BTreeMap;
 use mcp_attr::Result;
 use mcp_attr::client::McpClient;
-use mcp_attr::server::{McpServerBuilder, RequestContext};
 use mcp_attr::schema::{
-    CompleteRequestParams, PromptReference, CompleteRequestParamsArgument,
-    CompleteRequestParamsContext,
+    CompleteRequestParams, CompleteRequestParamsArgument, CompleteRequestParamsContext,
+    PromptReference,
 };
+use mcp_attr::server::{McpServerBuilder, RequestContext};
 use mcp_attr_macros::{prompt, route};
+use std::collections::BTreeMap;
 
 // Global completion function with no additional arguments
 #[mcp_attr_macros::complete_fn]
@@ -23,14 +23,17 @@ async fn complete_with_context(_value: &str, _cx: &RequestContext) -> Result<Vec
 // Global completion function with additional arguments
 #[mcp_attr_macros::complete_fn]
 async fn complete_with_args_str(_value: &str, category: &str) -> Result<Vec<String>> {
-    Ok(vec![format!("{}_item_1", category), format!("{}_item_2", category)])
+    Ok(vec![
+        format!("{}_item_1", category),
+        format!("{}_item_2", category),
+    ])
 }
 
 // Global completion function with optional string arguments
 #[mcp_attr_macros::complete_fn]
 async fn complete_with_args_optional_str(
-    _value: &str, 
-    prefix: Option<&str>
+    _value: &str,
+    prefix: Option<&str>,
 ) -> Result<Vec<String>> {
     let prefix = prefix.unwrap_or("default");
     Ok(vec![
@@ -42,21 +45,17 @@ async fn complete_with_args_optional_str(
 // Global completion function with FromStr argument
 #[mcp_attr_macros::complete_fn]
 async fn complete_with_args_fromstr(_value: &str, count: u32) -> Result<Vec<String>> {
-    Ok((1..=count)
-        .map(|i| format!("item_{}", i))
-        .collect())
+    Ok((1..=count).map(|i| format!("item_{i}")).collect())
 }
 
 // Global completion function with optional FromStr argument
 #[mcp_attr_macros::complete_fn]
 async fn complete_with_args_optional_fromstr(
-    _value: &str, 
-    count: Option<u32>
+    _value: &str,
+    count: Option<u32>,
 ) -> Result<Vec<String>> {
     let count = count.unwrap_or(3);
-    Ok((1..=count)
-        .map(|i| format!("item_{}", i))
-        .collect())
+    Ok((1..=count).map(|i| format!("item_{i}")).collect())
 }
 
 // Global completion function with mixed argument types
@@ -86,7 +85,7 @@ async fn complete_multi_arg(
     let base_count = count.unwrap_or(3);
     let prefix = prefix.unwrap_or("item");
     Ok((1..=base_count)
-        .map(|i| format!("{}_{}_{}", category, prefix, i))
+        .map(|i| format!("{category}_{prefix}_{i}"))
         .collect())
 }
 
@@ -120,77 +119,87 @@ async fn complete_with_custom_arg_source(_value: &str, source_type: &str) -> Res
 // Test prompts
 #[prompt]
 async fn prompt_simple(#[complete(complete_simple)] msg: String) -> Result<String> {
-    Ok(format!("Simple: {}", msg))
+    Ok(format!("Simple: {msg}"))
 }
 
 #[prompt]
 async fn prompt_with_context(#[complete(complete_with_context)] msg: String) -> Result<String> {
-    Ok(format!("With context: {}", msg))
+    Ok(format!("With context: {msg}"))
 }
 
 #[prompt]
 async fn prompt_with_args_str(#[complete(complete_with_args_str)] msg: String) -> Result<String> {
-    Ok(format!("Str args: {}", msg))
+    Ok(format!("Str args: {msg}"))
 }
 
 #[prompt]
-async fn prompt_with_args_optional_str(#[complete(complete_with_args_optional_str)] msg: String) -> Result<String> {
-    Ok(format!("Optional str: {}", msg))
+async fn prompt_with_args_optional_str(
+    #[complete(complete_with_args_optional_str)] msg: String,
+) -> Result<String> {
+    Ok(format!("Optional str: {msg}"))
 }
 
 #[prompt]
-async fn prompt_with_args_fromstr(#[complete(complete_with_args_fromstr)] msg: String) -> Result<String> {
-    Ok(format!("FromStr: {}", msg))
+async fn prompt_with_args_fromstr(
+    #[complete(complete_with_args_fromstr)] msg: String,
+) -> Result<String> {
+    Ok(format!("FromStr: {msg}"))
 }
 
 #[prompt]
-async fn prompt_with_args_optional_fromstr(#[complete(complete_with_args_optional_fromstr)] msg: String) -> Result<String> {
-    Ok(format!("Optional FromStr: {}", msg))
+async fn prompt_with_args_optional_fromstr(
+    #[complete(complete_with_args_optional_fromstr)] msg: String,
+) -> Result<String> {
+    Ok(format!("Optional FromStr: {msg}"))
 }
 
 #[prompt]
-async fn prompt_with_args_mixed(#[complete(complete_with_args_mixed)] msg: String) -> Result<String> {
-    Ok(format!("Mixed args: {}", msg))
+async fn prompt_with_args_mixed(
+    #[complete(complete_with_args_mixed)] msg: String,
+) -> Result<String> {
+    Ok(format!("Mixed args: {msg}"))
 }
 
 #[prompt]
 async fn prompt_multi_arg(#[complete(complete_multi_arg)] msg: String) -> Result<String> {
-    Ok(format!("Multi arg: {}", msg))
+    Ok(format!("Multi arg: {msg}"))
 }
 
 #[prompt]
-async fn prompt_return_static_str(#[complete(complete_return_static_str)] msg: String) -> Result<String> {
-    Ok(format!("Static str: {}", msg))
+async fn prompt_return_static_str(
+    #[complete(complete_return_static_str)] msg: String,
+) -> Result<String> {
+    Ok(format!("Static str: {msg}"))
 }
 
 #[prompt]
 async fn prompt_return_string(#[complete(complete_return_string)] msg: String) -> Result<String> {
-    Ok(format!("String: {}", msg))
+    Ok(format!("String: {msg}"))
 }
 
 #[prompt]
 async fn prompt_return_display(#[complete(complete_return_display)] msg: String) -> Result<String> {
-    Ok(format!("Display: {}", msg))
+    Ok(format!("Display: {msg}"))
 }
 
-
 #[prompt]
-async fn prompt_with_arg_for_completion_func(#[complete(complete_with_custom_arg_source)] #[arg("source_type")] msg: String) -> Result<String> {
-    Ok(format!("Prompt with arg for completion func: {}", msg))
+async fn prompt_with_arg_for_completion_func(
+    #[complete(complete_with_custom_arg_source)]
+    #[arg("source_type")]
+    msg: String,
+) -> Result<String> {
+    Ok(format!("Prompt with arg for completion func: {msg}"))
 }
 
 #[prompt]
 async fn prompt_no_completion_defined(msg: String) -> Result<String> {
-    Ok(format!("No completion: {}", msg))
+    Ok(format!("No completion: {msg}"))
 }
 
 // Tests
 #[tokio::test]
 async fn test_simple() -> Result<()> {
-
-    let server = McpServerBuilder::new()
-        .route(route![prompt_simple])
-        .build();
+    let server = McpServerBuilder::new().route(route![prompt_simple]).build();
 
     let client = McpClient::with_server(server).await?;
 
@@ -234,7 +243,6 @@ async fn test_with_context() -> Result<()> {
 
 #[tokio::test]
 async fn test_with_args_str() -> Result<()> {
-
     let server = McpServerBuilder::new()
         .route(route![prompt_with_args_str])
         .build();
@@ -262,7 +270,6 @@ async fn test_with_args_str() -> Result<()> {
 
 #[tokio::test]
 async fn test_with_args_optional_str() -> Result<()> {
-
     let server = McpServerBuilder::new()
         .route(route![prompt_with_args_optional_str])
         .build();
@@ -291,7 +298,6 @@ async fn test_with_args_optional_str() -> Result<()> {
 
 #[tokio::test]
 async fn test_with_args_fromstr() -> Result<()> {
-
     let server = McpServerBuilder::new()
         .route(route![prompt_with_args_fromstr])
         .build();
@@ -319,7 +325,6 @@ async fn test_with_args_fromstr() -> Result<()> {
 
 #[tokio::test]
 async fn test_with_args_optional_fromstr() -> Result<()> {
-
     let server = McpServerBuilder::new()
         .route(route![prompt_with_args_optional_fromstr])
         .build();
@@ -351,7 +356,6 @@ async fn test_with_args_optional_fromstr() -> Result<()> {
 
 #[tokio::test]
 async fn test_with_args_mixed() -> Result<()> {
-
     let server = McpServerBuilder::new()
         .route(route![prompt_with_args_mixed])
         .build();
@@ -384,7 +388,6 @@ async fn test_with_args_mixed() -> Result<()> {
 
 #[tokio::test]
 async fn test_multi_arg() -> Result<()> {
-
     let server = McpServerBuilder::new()
         .route(route![prompt_multi_arg])
         .build();
@@ -414,7 +417,6 @@ async fn test_multi_arg() -> Result<()> {
 
 #[tokio::test]
 async fn test_return_types_static_str() -> Result<()> {
-
     let server = McpServerBuilder::new()
         .route(route![prompt_return_static_str])
         .build();
@@ -438,7 +440,6 @@ async fn test_return_types_static_str() -> Result<()> {
 
 #[tokio::test]
 async fn test_return_types_string() -> Result<()> {
-
     let server = McpServerBuilder::new()
         .route(route![prompt_return_string])
         .build();
@@ -462,7 +463,6 @@ async fn test_return_types_string() -> Result<()> {
 
 #[tokio::test]
 async fn test_return_types_display() -> Result<()> {
-
     let server = McpServerBuilder::new()
         .route(route![prompt_return_display])
         .build();
@@ -486,7 +486,6 @@ async fn test_return_types_display() -> Result<()> {
 
 #[tokio::test]
 async fn test_missing_required_args() -> Result<()> {
-
     let server = McpServerBuilder::new()
         .route(route![prompt_with_args_str])
         .build();
@@ -512,7 +511,6 @@ async fn test_missing_required_args() -> Result<()> {
 
 #[tokio::test]
 async fn test_type_conversion_error() -> Result<()> {
-
     let server = McpServerBuilder::new()
         .route(route![prompt_with_args_fromstr])
         .build();
@@ -539,7 +537,6 @@ async fn test_type_conversion_error() -> Result<()> {
 
 #[tokio::test]
 async fn test_no_completion_defined() -> Result<()> {
-
     let server = McpServerBuilder::new()
         .route(route![prompt_no_completion_defined])
         .build();
@@ -559,11 +556,8 @@ async fn test_no_completion_defined() -> Result<()> {
     Ok(())
 }
 
-
-
 #[tokio::test]
 async fn test_arg_name_for_completion_function_args() -> Result<()> {
-
     let server = McpServerBuilder::new()
         .route(route![prompt_with_arg_for_completion_func])
         .build();

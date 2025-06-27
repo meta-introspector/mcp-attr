@@ -90,7 +90,6 @@ pub fn complete_fn(
     into_macro_output(build_complete_fn(attr.into(), item.into()))
 }
 
-
 fn build_mcp_server(
     attr: TokenStream,
     item: TokenStream,
@@ -584,7 +583,10 @@ fn build_complete_fn(attr: TokenStream, item: TokenStream) -> Result<TokenStream
     })
 }
 
-fn build_complete_fn_signature(original_sig: &syn::Signature, allow_self: bool) -> Result<syn::Signature> {
+fn build_complete_fn_signature(
+    original_sig: &syn::Signature,
+    allow_self: bool,
+) -> Result<syn::Signature> {
     // Validate the original signature first
     validate_complete_fn_signature(original_sig, allow_self)?;
 

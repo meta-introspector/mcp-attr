@@ -1,12 +1,12 @@
-use std::collections::BTreeMap;
 use mcp_attr::Result;
 use mcp_attr::client::McpClient;
-use mcp_attr::server::{McpServerBuilder, RequestContext};
 use mcp_attr::schema::{
-    CompleteRequestParams, ResourceTemplateReference, CompleteRequestParamsArgument,
-    CompleteRequestParamsContext,
+    CompleteRequestParams, CompleteRequestParamsArgument, CompleteRequestParamsContext,
+    ResourceTemplateReference,
 };
+use mcp_attr::server::{McpServerBuilder, RequestContext};
 use mcp_attr_macros::{resource, route};
+use std::collections::BTreeMap;
 
 // Global completion function with no additional arguments
 #[mcp_attr_macros::complete_fn]
@@ -23,14 +23,17 @@ async fn complete_with_context(_value: &str, _cx: &RequestContext) -> Result<Vec
 // Global completion function with additional arguments
 #[mcp_attr_macros::complete_fn]
 async fn complete_with_args_str(_value: &str, category: &str) -> Result<Vec<String>> {
-    Ok(vec![format!("{}_resource_1", category), format!("{}_resource_2", category)])
+    Ok(vec![
+        format!("{}_resource_1", category),
+        format!("{}_resource_2", category),
+    ])
 }
 
 // Global completion function with optional string arguments
 #[mcp_attr_macros::complete_fn]
 async fn complete_with_args_optional_str(
-    _value: &str, 
-    prefix: Option<&str>
+    _value: &str,
+    prefix: Option<&str>,
 ) -> Result<Vec<String>> {
     let prefix = prefix.unwrap_or("default");
     Ok(vec![
@@ -42,21 +45,17 @@ async fn complete_with_args_optional_str(
 // Global completion function with FromStr argument
 #[mcp_attr_macros::complete_fn]
 async fn complete_with_args_fromstr(_value: &str, count: u32) -> Result<Vec<String>> {
-    Ok((1..=count)
-        .map(|i| format!("resource_{}", i))
-        .collect())
+    Ok((1..=count).map(|i| format!("resource_{i}")).collect())
 }
 
 // Global completion function with optional FromStr argument
 #[mcp_attr_macros::complete_fn]
 async fn complete_with_args_optional_fromstr(
-    _value: &str, 
-    count: Option<u32>
+    _value: &str,
+    count: Option<u32>,
 ) -> Result<Vec<String>> {
     let count = count.unwrap_or(3);
-    Ok((1..=count)
-        .map(|i| format!("resource_{}", i))
-        .collect())
+    Ok((1..=count).map(|i| format!("resource_{i}")).collect())
 }
 
 // Global completion function with mixed argument types
@@ -86,7 +85,7 @@ async fn complete_multi_arg(
     let base_count = count.unwrap_or(3);
     let prefix = prefix.unwrap_or("resource");
     Ok((1..=base_count)
-        .map(|i| format!("{}_{}_{}", category, prefix, i))
+        .map(|i| format!("{category}_{prefix}_{i}"))
         .collect())
 }
 
@@ -119,61 +118,76 @@ async fn complete_file(_value: &str) -> Result<Vec<&'static str>> {
     Ok(vec!["config.txt", "data.json"])
 }
 
-
 // Test resources
 #[resource("test://{name}")]
 async fn resource_simple(#[complete(complete_simple)] name: String) -> Result<String> {
-    Ok(format!("Resource: {}", name))
+    Ok(format!("Resource: {name}"))
 }
 
 #[resource("context://{name}")]
 async fn resource_with_context(#[complete(complete_with_context)] name: String) -> Result<String> {
-    Ok(format!("Resource with context: {}", name))
+    Ok(format!("Resource with context: {name}"))
 }
 
 #[resource("test_str://{name}")]
-async fn resource_with_args_str(#[complete(complete_with_args_str)] name: String) -> Result<String> {
-    Ok(format!("Str resource: {}", name))
+async fn resource_with_args_str(
+    #[complete(complete_with_args_str)] name: String,
+) -> Result<String> {
+    Ok(format!("Str resource: {name}"))
 }
 
 #[resource("test_opt_str://{name}")]
-async fn resource_with_args_optional_str(#[complete(complete_with_args_optional_str)] name: String) -> Result<String> {
-    Ok(format!("Optional str resource: {}", name))
+async fn resource_with_args_optional_str(
+    #[complete(complete_with_args_optional_str)] name: String,
+) -> Result<String> {
+    Ok(format!("Optional str resource: {name}"))
 }
 
 #[resource("test_fromstr://{name}")]
-async fn resource_with_args_fromstr(#[complete(complete_with_args_fromstr)] name: String) -> Result<String> {
-    Ok(format!("FromStr resource: {}", name))
+async fn resource_with_args_fromstr(
+    #[complete(complete_with_args_fromstr)] name: String,
+) -> Result<String> {
+    Ok(format!("FromStr resource: {name}"))
 }
 
 #[resource("test_opt_fromstr://{name}")]
-async fn resource_with_args_optional_fromstr(#[complete(complete_with_args_optional_fromstr)] name: String) -> Result<String> {
-    Ok(format!("Optional FromStr resource: {}", name))
+async fn resource_with_args_optional_fromstr(
+    #[complete(complete_with_args_optional_fromstr)] name: String,
+) -> Result<String> {
+    Ok(format!("Optional FromStr resource: {name}"))
 }
 
 #[resource("test_mixed://{name}")]
-async fn resource_with_args_mixed(#[complete(complete_with_args_mixed)] name: String) -> Result<String> {
-    Ok(format!("Mixed resource: {}", name))
+async fn resource_with_args_mixed(
+    #[complete(complete_with_args_mixed)] name: String,
+) -> Result<String> {
+    Ok(format!("Mixed resource: {name}"))
 }
 
 #[resource("test_multi://{name}")]
 async fn resource_multi_arg(#[complete(complete_multi_arg)] name: String) -> Result<String> {
-    Ok(format!("Multi arg resource: {}", name))
+    Ok(format!("Multi arg resource: {name}"))
 }
 
 #[resource("static://{name}")]
-async fn resource_return_static_str(#[complete(complete_return_static_str)] name: String) -> Result<String> {
-    Ok(format!("Static resource: {}", name))
+async fn resource_return_static_str(
+    #[complete(complete_return_static_str)] name: String,
+) -> Result<String> {
+    Ok(format!("Static resource: {name}"))
 }
 
 #[resource("string://{name}")]
-async fn resource_return_string(#[complete(complete_return_string)] name: String) -> Result<String> {
-    Ok(format!("String resource: {}", name))
+async fn resource_return_string(
+    #[complete(complete_return_string)] name: String,
+) -> Result<String> {
+    Ok(format!("String resource: {name}"))
 }
 
 #[resource("display://{name}")]
-async fn resource_return_display(#[complete(complete_return_display)] name: String) -> Result<String> {
-    Ok(format!("Display resource: {}", name))
+async fn resource_return_display(
+    #[complete(complete_return_display)] name: String,
+) -> Result<String> {
+    Ok(format!("Display resource: {name}"))
 }
 
 #[resource("files://{path}/{file}")]
@@ -181,7 +195,7 @@ async fn resource_multi_param(
     #[complete(complete_path)] path: String,
     #[complete(complete_file)] file: String,
 ) -> Result<String> {
-    Ok(format!("Multi param: {}/{}", path, file))
+    Ok(format!("Multi param: {path}/{file}"))
 }
 
 #[resource("plain://resource")]
@@ -189,11 +203,9 @@ async fn resource_no_completion_defined() -> Result<String> {
     Ok("Plain resource".to_string())
 }
 
-
 // Tests
 #[tokio::test]
 async fn test_simple() -> Result<()> {
-
     let server = McpServerBuilder::new()
         .route(route![resource_simple])
         .build();
@@ -240,7 +252,6 @@ async fn test_with_context() -> Result<()> {
 
 #[tokio::test]
 async fn test_with_args_str() -> Result<()> {
-
     let server = McpServerBuilder::new()
         .route(route![resource_with_args_str])
         .build();
@@ -268,7 +279,6 @@ async fn test_with_args_str() -> Result<()> {
 
 #[tokio::test]
 async fn test_with_args_optional_str() -> Result<()> {
-
     let server = McpServerBuilder::new()
         .route(route![resource_with_args_optional_str])
         .build();
@@ -297,7 +307,6 @@ async fn test_with_args_optional_str() -> Result<()> {
 
 #[tokio::test]
 async fn test_with_args_fromstr() -> Result<()> {
-
     let server = McpServerBuilder::new()
         .route(route![resource_with_args_fromstr])
         .build();
@@ -325,7 +334,6 @@ async fn test_with_args_fromstr() -> Result<()> {
 
 #[tokio::test]
 async fn test_with_args_optional_fromstr() -> Result<()> {
-
     let server = McpServerBuilder::new()
         .route(route![resource_with_args_optional_fromstr])
         .build();
@@ -357,7 +365,6 @@ async fn test_with_args_optional_fromstr() -> Result<()> {
 
 #[tokio::test]
 async fn test_with_args_mixed() -> Result<()> {
-
     let server = McpServerBuilder::new()
         .route(route![resource_with_args_mixed])
         .build();
@@ -390,7 +397,6 @@ async fn test_with_args_mixed() -> Result<()> {
 
 #[tokio::test]
 async fn test_multi_arg() -> Result<()> {
-
     let server = McpServerBuilder::new()
         .route(route![resource_multi_arg])
         .build();
@@ -420,7 +426,6 @@ async fn test_multi_arg() -> Result<()> {
 
 #[tokio::test]
 async fn test_multi_param_resource() -> Result<()> {
-
     let server = McpServerBuilder::new()
         .route(route![resource_multi_param])
         .build();
@@ -458,7 +463,6 @@ async fn test_multi_param_resource() -> Result<()> {
 
 #[tokio::test]
 async fn test_return_types_static_str() -> Result<()> {
-
     let server = McpServerBuilder::new()
         .route(route![resource_return_static_str])
         .build();
@@ -482,7 +486,6 @@ async fn test_return_types_static_str() -> Result<()> {
 
 #[tokio::test]
 async fn test_return_types_string() -> Result<()> {
-
     let server = McpServerBuilder::new()
         .route(route![resource_return_string])
         .build();
@@ -506,7 +509,6 @@ async fn test_return_types_string() -> Result<()> {
 
 #[tokio::test]
 async fn test_return_types_display() -> Result<()> {
-
     let server = McpServerBuilder::new()
         .route(route![resource_return_display])
         .build();
@@ -530,7 +532,6 @@ async fn test_return_types_display() -> Result<()> {
 
 #[tokio::test]
 async fn test_missing_required_args() -> Result<()> {
-
     let server = McpServerBuilder::new()
         .route(route![resource_with_args_str])
         .build();
@@ -556,7 +557,6 @@ async fn test_missing_required_args() -> Result<()> {
 
 #[tokio::test]
 async fn test_type_conversion_error() -> Result<()> {
-
     let server = McpServerBuilder::new()
         .route(route![resource_with_args_fromstr])
         .build();
@@ -583,7 +583,6 @@ async fn test_type_conversion_error() -> Result<()> {
 
 #[tokio::test]
 async fn test_no_completion_defined() -> Result<()> {
-
     let server = McpServerBuilder::new()
         .route(route![resource_no_completion_defined])
         .build();
@@ -602,4 +601,3 @@ async fn test_no_completion_defined() -> Result<()> {
 
     Ok(())
 }
-

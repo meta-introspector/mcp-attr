@@ -1,4 +1,3 @@
-use std::collections::BTreeMap;
 use mcp_attr::{
     Result,
     client::McpClient,
@@ -8,6 +7,7 @@ use mcp_attr::{
     },
     server::{McpServer, RequestContext, mcp_server},
 };
+use std::collections::BTreeMap;
 
 struct TestServer;
 
@@ -15,37 +15,55 @@ struct TestServer;
 impl McpServer for TestServer {
     #[resource("test://{name}")]
     async fn resource_simple(&self, #[complete(.complete_simple)] name: String) -> Result<String> {
-        Ok(format!("Resource: {}", name))
+        Ok(format!("Resource: {name}"))
     }
 
     #[resource("test_context://{name}")]
-    async fn resource_with_context(&self, #[complete(.complete_with_context)] name: String) -> Result<String> {
-        Ok(format!("Context resource: {}", name))
+    async fn resource_with_context(
+        &self,
+        #[complete(.complete_with_context)] name: String,
+    ) -> Result<String> {
+        Ok(format!("Context resource: {name}"))
     }
 
     #[resource("test_str://{name}")]
-    async fn resource_with_args_str(&self, #[complete(.complete_with_args_str)] name: String) -> Result<String> {
-        Ok(format!("Str resource: {}", name))
+    async fn resource_with_args_str(
+        &self,
+        #[complete(.complete_with_args_str)] name: String,
+    ) -> Result<String> {
+        Ok(format!("Str resource: {name}"))
     }
 
     #[resource("test_opt_str://{name}")]
-    async fn resource_with_args_optional_str(&self, #[complete(.complete_with_args_optional_str)] name: String) -> Result<String> {
-        Ok(format!("Optional str resource: {}", name))
+    async fn resource_with_args_optional_str(
+        &self,
+        #[complete(.complete_with_args_optional_str)] name: String,
+    ) -> Result<String> {
+        Ok(format!("Optional str resource: {name}"))
     }
 
     #[resource("test_fromstr://{name}")]
-    async fn resource_with_args_fromstr(&self, #[complete(.complete_with_args_fromstr)] name: String) -> Result<String> {
-        Ok(format!("FromStr resource: {}", name))
+    async fn resource_with_args_fromstr(
+        &self,
+        #[complete(.complete_with_args_fromstr)] name: String,
+    ) -> Result<String> {
+        Ok(format!("FromStr resource: {name}"))
     }
 
     #[resource("test_opt_fromstr://{name}")]
-    async fn resource_with_args_optional_fromstr(&self, #[complete(.complete_with_args_optional_fromstr)] name: String) -> Result<String> {
-        Ok(format!("Optional FromStr resource: {}", name))
+    async fn resource_with_args_optional_fromstr(
+        &self,
+        #[complete(.complete_with_args_optional_fromstr)] name: String,
+    ) -> Result<String> {
+        Ok(format!("Optional FromStr resource: {name}"))
     }
 
     #[resource("test_mixed://{name}")]
-    async fn resource_with_args_mixed(&self, #[complete(.complete_with_args_mixed)] name: String) -> Result<String> {
-        Ok(format!("Mixed resource: {}", name))
+    async fn resource_with_args_mixed(
+        &self,
+        #[complete(.complete_with_args_mixed)] name: String,
+    ) -> Result<String> {
+        Ok(format!("Mixed resource: {name}"))
     }
 
     #[resource("files://{path}/{file}")]
@@ -54,29 +72,37 @@ impl McpServer for TestServer {
         #[complete(.complete_path)] path: String,
         #[complete(.complete_file)] file: String,
     ) -> Result<String> {
-        Ok(format!("Multi param: {}/{}", path, file))
+        Ok(format!("Multi param: {path}/{file}"))
     }
 
     #[resource("static://{name}")]
-    async fn resource_return_static_str(&self, #[complete(.complete_return_static_str)] name: String) -> Result<String> {
-        Ok(format!("Static resource: {}", name))
+    async fn resource_return_static_str(
+        &self,
+        #[complete(.complete_return_static_str)] name: String,
+    ) -> Result<String> {
+        Ok(format!("Static resource: {name}"))
     }
 
     #[resource("string://{name}")]
-    async fn resource_return_string(&self, #[complete(.complete_return_string)] name: String) -> Result<String> {
-        Ok(format!("String resource: {}", name))
+    async fn resource_return_string(
+        &self,
+        #[complete(.complete_return_string)] name: String,
+    ) -> Result<String> {
+        Ok(format!("String resource: {name}"))
     }
 
     #[resource("display://{name}")]
-    async fn resource_return_display(&self, #[complete(.complete_return_display)] name: String) -> Result<String> {
-        Ok(format!("Display resource: {}", name))
+    async fn resource_return_display(
+        &self,
+        #[complete(.complete_return_display)] name: String,
+    ) -> Result<String> {
+        Ok(format!("Display resource: {name}"))
     }
 
     #[resource("plain://resource")]
     async fn resource_no_completion_defined(&self) -> Result<String> {
         Ok("Plain resource".to_string())
     }
-
 
     // Complete functions
     #[complete_fn]
@@ -85,17 +111,28 @@ impl McpServer for TestServer {
     }
 
     #[complete_fn]
-    async fn complete_with_context(&self, _value: &str, _cx: &RequestContext) -> Result<Vec<&'static str>> {
+    async fn complete_with_context(
+        &self,
+        _value: &str,
+        _cx: &RequestContext,
+    ) -> Result<Vec<&'static str>> {
         Ok(vec!["context_res1", "context_res2"])
     }
 
     #[complete_fn]
     async fn complete_with_args_str(&self, _value: &str, category: &str) -> Result<Vec<String>> {
-        Ok(vec![format!("{}_resource_1", category), format!("{}_resource_2", category)])
+        Ok(vec![
+            format!("{}_resource_1", category),
+            format!("{}_resource_2", category),
+        ])
     }
 
     #[complete_fn]
-    async fn complete_with_args_optional_str(&self, _value: &str, prefix: Option<&str>) -> Result<Vec<String>> {
+    async fn complete_with_args_optional_str(
+        &self,
+        _value: &str,
+        prefix: Option<&str>,
+    ) -> Result<Vec<String>> {
         let prefix = prefix.unwrap_or("default");
         Ok(vec![
             format!("{}_res_1", prefix),
@@ -105,17 +142,17 @@ impl McpServer for TestServer {
 
     #[complete_fn]
     async fn complete_with_args_fromstr(&self, _value: &str, count: u32) -> Result<Vec<String>> {
-        Ok((1..=count)
-            .map(|i| format!("resource_{}", i))
-            .collect())
+        Ok((1..=count).map(|i| format!("resource_{i}")).collect())
     }
 
     #[complete_fn]
-    async fn complete_with_args_optional_fromstr(&self, _value: &str, count: Option<u32>) -> Result<Vec<String>> {
+    async fn complete_with_args_optional_fromstr(
+        &self,
+        _value: &str,
+        count: Option<u32>,
+    ) -> Result<Vec<String>> {
         let count = count.unwrap_or(3);
-        Ok((1..=count)
-            .map(|i| format!("resource_{}", i))
-            .collect())
+        Ok((1..=count).map(|i| format!("resource_{i}")).collect())
     }
 
     #[complete_fn]
@@ -145,20 +182,31 @@ impl McpServer for TestServer {
     }
 
     #[complete_fn]
-    async fn complete_return_static_str(&self, _value: &str, _cx: &RequestContext) -> Result<Vec<&'static str>> {
+    async fn complete_return_static_str(
+        &self,
+        _value: &str,
+        _cx: &RequestContext,
+    ) -> Result<Vec<&'static str>> {
         Ok(vec!["static_res1", "static_res2"])
     }
 
     #[complete_fn]
-    async fn complete_return_string(&self, _value: &str, _cx: &RequestContext) -> Result<Vec<String>> {
+    async fn complete_return_string(
+        &self,
+        _value: &str,
+        _cx: &RequestContext,
+    ) -> Result<Vec<String>> {
         Ok(vec!["string_res1".to_string(), "string_res2".to_string()])
     }
 
     #[complete_fn]
-    async fn complete_return_display(&self, _value: &str, _cx: &RequestContext) -> Result<Vec<u32>> {
+    async fn complete_return_display(
+        &self,
+        _value: &str,
+        _cx: &RequestContext,
+    ) -> Result<Vec<u32>> {
         Ok(vec![1000, 2000, 3000])
     }
-
 }
 
 // Tests
@@ -452,4 +500,3 @@ async fn test_no_completion_defined() -> Result<()> {
     assert_eq!(ret.completion.values, Vec::<String>::new());
     Ok(())
 }
-
