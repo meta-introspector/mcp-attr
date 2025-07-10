@@ -39,10 +39,14 @@ pub struct ToolAttr {
     description: Option<Expr>,
     title: Option<Expr>,
     pub dump: bool,
-    destructive: Option<NameValue<Option<LitBool>>>,
-    idempotent: Option<NameValue<Option<LitBool>>>,
-    open_world: Option<NameValue<Option<LitBool>>>,
-    read_only: Option<NameValue<Option<LitBool>>>,
+    // MCP spec: destructive -> non_destructive (inverted)
+    non_destructive: bool,
+    // MCP spec: idempotent -> idempotent (same)
+    idempotent: bool,
+    // MCP spec: open_world -> closed_world (inverted)
+    closed_world: bool,
+    // MCP spec: read_only -> read_only (same)
+    read_only: bool,
 }
 
 pub struct ToolEntry {
@@ -318,21 +322,16 @@ impl ToolArg {
     }
 }
 
-fn parse_optional_bool(attr: &Option<NameValue<Option<LitBool>>>) -> Result<Option<bool>> {
-    match attr {
-        None => Ok(None),
-        Some(name_value) => match &name_value.value {
-            None => Ok(Some(true)),
-            Some(lit_bool) => Ok(Some(lit_bool.value)),
-        },
-    }
-}
-
 fn build_tool_annotations(attr: &ToolAttr) -> Result<Option<ToolAnnotationsData>> {
-    let destructive_hint = parse_optional_bool(&attr.destructive)?;
-    let idempotent_hint = parse_optional_bool(&attr.idempotent)?;
-    let open_world_hint = parse_optional_bool(&attr.open_world)?;
-    let read_only_hint = parse_optional_bool(&attr.read_only)?;
+    // Convert new attribute names to MCP spec format
+    let destructive_hint = if attr.non_destructive {
+        Some(false)
+    } else {
+        None
+    };
+    let idempotent_hint = if attr.idempotent { Some(true) } else { None };
+    let open_world_hint = if attr.closed_world { Some(false) } else { None };
+    let read_only_hint = if attr.read_only { Some(true) } else { None };
 
     if destructive_hint.is_none()
         && idempotent_hint.is_none()

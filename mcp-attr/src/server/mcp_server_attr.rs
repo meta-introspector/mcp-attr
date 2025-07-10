@@ -185,10 +185,10 @@
 ///     "name",
 ///     description = "..",
 ///     title = "..",
-///     destructive = ..,
+///     non_destructive,
 ///     idempotent,
 ///     read_only,
-///     open_world = ..,
+///     closed_world,
 /// )]
 /// async fn func_name(&self) -> Result<CallToolResult> { }
 /// ```
@@ -196,10 +196,10 @@
 /// - "name" (optional): Tool name. If omitted, the function name is used.
 /// - "description" (optional): Function description for AI. Takes precedence over documentation comments.
 /// - "title" (optional): Human-readable tool title.
-/// - "destructive" (optional): `true` if the tool may perform destructive updates, `false` if it only performs additive updates (default: `true`)
-/// - "idempotent" (optional): `true` if calling the tool repeatedly with the same arguments has no additional effect (default: `false`)
-/// - "read_only" (optional): `true` if the tool does not modify its environment (default: `false`)
-/// - "open_world" (optional): `true` if the tool may interact with an "open world" of external entities (default: `true`)
+/// - "non_destructive" (optional): Tool performs only additive updates (MCP spec: `destructive = false`)
+/// - "idempotent" (optional): Calling the tool repeatedly with the same arguments has no additional effect (MCP spec: `idempotent = true`)
+/// - "read_only" (optional): Tool does not modify its environment (MCP spec: `read_only = true`)
+/// - "closed_world" (optional): Tool's domain of interaction is closed (MCP spec: `open_world = false`)
 ///
 /// Implements the following methods:
 ///

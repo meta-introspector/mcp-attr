@@ -13,22 +13,17 @@ impl McpServer for TestServer {
         Ok("basic")
     }
 
-    #[tool(destructive)]
+    #[tool]
     async fn destructive_tool(&self) -> Result<&'static str> {
         Ok("destructive")
     }
 
-    #[tool(destructive = false)]
+    #[tool(non_destructive)]
     async fn non_destructive_tool(&self) -> Result<&'static str> {
         Ok("non_destructive")
     }
 
-    #[tool(destructive, idempotent, read_only = false, open_world = true)]
-    async fn multi_annotation_tool(&self) -> Result<&'static str> {
-        Ok("multi")
-    }
-
-    #[tool(destructive = false, idempotent = true, read_only, open_world = false)]
+    #[tool(non_destructive, idempotent, read_only, closed_world)]
     async fn all_explicit_tool(&self) -> Result<&'static str> {
         Ok("all_explicit")
     }
@@ -53,11 +48,7 @@ async fn test_mcp_server_tool_annotations() -> Result<()> {
         .iter()
         .find(|t| t.name == "destructive_tool")
         .unwrap();
-    let expected = ToolAnnotations {
-        destructive_hint: Some(true),
-        ..ToolAnnotations::default()
-    };
-    assert_eq!(destructive_tool.annotations, Some(expected));
+    assert!(destructive_tool.annotations.is_none());
 
     let non_destructive_tool = result
         .tools
@@ -76,10 +67,7 @@ async fn test_mcp_server_tool_annotations() -> Result<()> {
         .find(|t| t.name == "multi_annotation_tool")
         .unwrap();
     let expected = ToolAnnotations {
-        destructive_hint: Some(true),
         idempotent_hint: Some(true),
-        read_only_hint: Some(false),
-        open_world_hint: Some(true),
         ..ToolAnnotations::default()
     };
     assert_eq!(multi_tool.annotations, Some(expected));

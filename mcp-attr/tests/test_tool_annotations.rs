@@ -9,22 +9,22 @@ async fn basic_tool() -> Result<&'static str> {
     Ok("basic")
 }
 
-#[tool(destructive)]
+#[tool]
 async fn destructive_tool() -> Result<&'static str> {
     Ok("destructive")
 }
 
-#[tool(destructive = false)]
+#[tool(non_destructive)]
 async fn non_destructive_tool() -> Result<&'static str> {
     Ok("non_destructive")
 }
 
-#[tool(destructive, read_only = true, idempotent = false)]
+#[tool(read_only)]
 async fn multi_annotation_tool() -> Result<&'static str> {
     Ok("multi")
 }
 
-#[tool(destructive = false, idempotent, read_only, open_world = false)]
+#[tool(non_destructive, idempotent, read_only, closed_world)]
 async fn trailing_comma_tool() -> Result<&'static str> {
     Ok("trailing_comma")
 }
@@ -65,11 +65,7 @@ async fn test_tool_annotations() -> Result<()> {
         .iter()
         .find(|t| t.name == "destructive_tool")
         .unwrap();
-    let expected = ToolAnnotations {
-        destructive_hint: Some(true),
-        ..ToolAnnotations::default()
-    };
-    assert_eq!(destructive_tool.annotations, Some(expected));
+    assert!(destructive_tool.annotations.is_none());
 
     let non_destructive_tool = result
         .tools
@@ -88,8 +84,6 @@ async fn test_tool_annotations() -> Result<()> {
         .find(|t| t.name == "multi_annotation_tool")
         .unwrap();
     let expected = ToolAnnotations {
-        destructive_hint: Some(true),
-        idempotent_hint: Some(false),
         read_only_hint: Some(true),
         ..ToolAnnotations::default()
     };
