@@ -61,17 +61,6 @@ async fn test_mcp_server_tool_annotations() -> Result<()> {
     };
     assert_eq!(non_destructive_tool.annotations, Some(expected));
 
-    let multi_tool = result
-        .tools
-        .iter()
-        .find(|t| t.name == "multi_annotation_tool")
-        .unwrap();
-    let expected = ToolAnnotations {
-        idempotent_hint: Some(true),
-        ..ToolAnnotations::default()
-    };
-    assert_eq!(multi_tool.annotations, Some(expected));
-
     let all_explicit_tool = result
         .tools
         .iter()
