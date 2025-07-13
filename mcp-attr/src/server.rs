@@ -332,21 +332,21 @@ impl<T: McpServer> DynMcpServer for T {
 pub trait McpServer: Send + Sync + 'static {
     /// Returns `server_info` used in the [`initialize`] request response
     ///
-    /// [`initialize`]: https://modelcontextprotocol.io/specification/2025-03-26/basic/lifecycle/#initialization
+    /// [`initialize`]: https://modelcontextprotocol.io/specification/2025-06-18/basic/lifecycle#initialization
     fn server_info(&self) -> Implementation {
         Implementation::from_compile_time_env()
     }
 
     /// Returns `instructions` used in the [`initialize`] request response
     ///
-    /// [`initialize`]: https://modelcontextprotocol.io/specification/2025-03-26/basic/lifecycle/#initialization
+    /// [`initialize`]: https://modelcontextprotocol.io/specification/2025-06-18/basic/lifecycle#initialization
     fn instructions(&self) -> Option<String> {
         None
     }
 
     /// Returns `capabilities` used in the [`initialize`] request response
     ///
-    /// [`initialize`]: https://modelcontextprotocol.io/specification/2025-03-26/basic/lifecycle/#initialization
+    /// [`initialize`]: https://modelcontextprotocol.io/specification/2025-06-18/basic/lifecycle#initialization
     fn capabilities(&self) -> ServerCapabilities {
         ServerCapabilities {
             prompts: Some(ServerCapabilitiesPrompts {
@@ -364,7 +364,7 @@ pub trait McpServer: Send + Sync + 'static {
 
     /// Handles [`prompts/list`]
     ///
-    /// [`prompts/list`]: https://modelcontextprotocol.io/specification/2025-03-26/server/prompts/#listing-prompts
+    /// [`prompts/list`]: https://modelcontextprotocol.io/specification/2025-06-18/server/prompts#listing-prompts
     #[allow(unused_variables)]
     fn prompts_list(
         &self,
@@ -376,7 +376,7 @@ pub trait McpServer: Send + Sync + 'static {
 
     /// Handles [`prompts/get`]
     ///
-    /// [`prompts/get`]: https://modelcontextprotocol.io/specification/2025-03-26/server/prompts/#getting-a-prompt
+    /// [`prompts/get`]: https://modelcontextprotocol.io/specification/2025-06-18/server/prompts#getting-a-prompt
     #[allow(unused_variables)]
     fn prompts_get(
         &self,
@@ -388,7 +388,7 @@ pub trait McpServer: Send + Sync + 'static {
 
     /// Handles [`resources/list`]
     ///
-    /// [`resources/list`]: https://modelcontextprotocol.io/specification/2025-03-26/server/resources/#listing-resources
+    /// [`resources/list`]: https://modelcontextprotocol.io/specification/2025-06-18/server/resources#listing-resources
     #[allow(unused_variables)]
     fn resources_list(
         &self,
@@ -400,7 +400,7 @@ pub trait McpServer: Send + Sync + 'static {
 
     /// Handles [`resources/templates/list`]
     ///
-    /// [`resources/templates/list`]: https://modelcontextprotocol.io/specification/2025-03-26/server/resources/#resource-templates
+    /// [`resources/templates/list`]: https://modelcontextprotocol.io/specification/2025-06-18/server/resources#resource-templates
     #[allow(unused_variables)]
     fn resources_templates_list(
         &self,
@@ -412,7 +412,7 @@ pub trait McpServer: Send + Sync + 'static {
 
     /// Handles [`resources/read`]
     ///
-    /// [`resources/read`]: https://modelcontextprotocol.io/specification/2025-03-26/server/resources/#reading-resources
+    /// [`resources/read`]: https://modelcontextprotocol.io/specification/2025-06-18/server/resources#reading-resources
     #[allow(unused_variables)]
     fn resources_read(
         &self,
@@ -424,7 +424,7 @@ pub trait McpServer: Send + Sync + 'static {
 
     /// Handles [`tools/list`]
     ///
-    /// [`tools/list`]: https://modelcontextprotocol.io/specification/2025-03-26/server/tools/#listing-tools
+    /// [`tools/list`]: https://modelcontextprotocol.io/specification/2025-06-18/server/tools#listing-tools
     #[allow(unused_variables)]
     fn tools_list(
         &self,
@@ -436,7 +436,7 @@ pub trait McpServer: Send + Sync + 'static {
 
     /// Handles [`tools/call`]
     ///
-    /// [`tools/call`]: https://modelcontextprotocol.io/specification/2025-03-26/server/tools/#calling-tools
+    /// [`tools/call`]: https://modelcontextprotocol.io/specification/2025-06-18/server/tools#calling-tools
     #[allow(unused_variables)]
     fn tools_call(
         &self,
@@ -448,7 +448,7 @@ pub trait McpServer: Send + Sync + 'static {
 
     /// Handles [`completion/complete`]
     ///
-    /// [`completion/complete`]: https://modelcontextprotocol.io/specification/2025-03-26/server/utilities/completion/#requesting-completions
+    /// [`completion/complete`]: https://modelcontextprotocol.io/specification/2025-06-18/server/utilities/completion#requesting-completions
     #[allow(unused_variables)]
     fn completion_complete(
         &self,
@@ -502,7 +502,7 @@ impl RequestContext {
     ///
     /// See [`notifications/progress`]
     ///
-    /// [`notifications/progress`]: https://modelcontextprotocol.io/specification/2025-03-26/basic/utilities/progress/
+    /// [`notifications/progress`]: https://modelcontextprotocol.io/specification/2025-06-18/basic/utilities/progress
     pub fn progress(&self, progress: f64, total: Option<f64>, message: Option<String>) {
         self.session
             .notification(
@@ -519,7 +519,7 @@ impl RequestContext {
 
     /// Calls [`sampling/createMessage`]
     ///
-    /// [`sampling/createMessage`]: https://modelcontextprotocol.io/specification/2025-03-26/client/sampling/#creating-messages
+    /// [`sampling/createMessage`]: https://modelcontextprotocol.io/specification/2025-06-18/client/sampling#creating-messages
     pub async fn sampling_create_message(
         &self,
         p: CreateMessageRequestParams,
@@ -531,7 +531,7 @@ impl RequestContext {
 
     /// Calls [`roots/list`]
     ///
-    /// [`roots/list`]: https://modelcontextprotocol.io/specification/2025-03-26/client/roots/#listing-roots
+    /// [`roots/list`]: https://modelcontextprotocol.io/specification/2025-06-18/client/roots#listing-roots
     pub async fn roots_list(&self) -> SessionResult<Vec<Root>> {
         let res: ListRootsResult = self
             .session

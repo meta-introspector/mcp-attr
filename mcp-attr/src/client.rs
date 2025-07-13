@@ -33,9 +33,9 @@ use crate::{
 ///
 /// Used with [`McpClientBuilder::with_handler`] to create an MCP client that supports client features.
 ///
-/// [client features]: https://modelcontextprotocol.io/specification/2025-03-26/client/
+/// [client features]: https://modelcontextprotocol.io/specification/2025-06-18/client/
 pub trait McpClientHandler {
-    /// [`sampling/createMessage`](https://modelcontextprotocol.io/specification/2025-03-26/client/sampling/#creating-messages)
+    /// [`sampling/createMessage`](https://modelcontextprotocol.io/specification/2025-06-18/client/sampling#creating-messages)
     fn create_message(
         &self,
         p: CreateMessageRequestParams,
@@ -116,7 +116,7 @@ impl McpClientBuilder {
     ///
     /// Also sets the roots capabilities that the MCP client will return.
     ///
-    /// [`roots/list`]: https://modelcontextprotocol.io/specification/2025-03-26/client/roots/#listing-roots
+    /// [`roots/list`]: https://modelcontextprotocol.io/specification/2025-06-18/client/roots#listing-roots
     pub fn with_roots(mut self, roots: Vec<Root>) -> Self {
         self.roots = Some(roots);
         self
@@ -269,7 +269,7 @@ impl McpClientJsonRpcHandler {
 /// To create an `McpClient`, use the [`with_server`](Self::with_server) method or [`McpClientBuilder`].
 /// The method to create an `McpClient` performs an [`initialize`] request to the server and returns control when the request completes.
 ///
-/// [`initialize`]: https://modelcontextprotocol.io/specification/2025-03-26/client/initialize/
+/// [`initialize`]: https://modelcontextprotocol.io/specification/2025-06-18/client/initialize
 ///
 /// # Example
 ///
@@ -313,7 +313,7 @@ impl McpClient {
     ///
     /// Performs an [`initialize`] request to the server and returns the result
     ///
-    /// [`initialize`]: https://modelcontextprotocol.io/specification/2025-03-26/client/initialize/
+    /// [`initialize`]: https://modelcontextprotocol.io/specification/2025-06-18/client/initialize
     pub async fn with_server(server: impl McpServer) -> SessionResult<Self> {
         McpClientBuilder::new().build_with_server(server).await
     }
@@ -324,7 +324,7 @@ impl McpClient {
     ///
     /// Performs an [`initialize`] request to the server and returns the result
     ///
-    /// [`initialize`]: https://modelcontextprotocol.io/specification/2025-03-26/client/initialize/
+    /// [`initialize`]: https://modelcontextprotocol.io/specification/2025-06-18/client/initialize
     pub async fn initialize(session: Session, p: InitializeRequestParams) -> SessionResult<Self> {
         let init = session
             .request::<InitializeResult>("initialize", Some(&p))
@@ -347,21 +347,21 @@ impl McpClient {
 
     /// Gets the `instructions` obtained from the [`initialize`] request response
     ///
-    /// [`initialize`]: https://modelcontextprotocol.io/specification/2025-03-26/client/initialize/
+    /// [`initialize`]: https://modelcontextprotocol.io/specification/2025-06-18/client/initialize
     pub fn instructions(&self) -> Option<&str> {
         self.init.instructions.as_deref()
     }
 
     /// Gets the `server_info` obtained from the [`initialize`] request response
     ///
-    /// [`initialize`]: https://modelcontextprotocol.io/specification/2025-03-26/client/initialize/
+    /// [`initialize`]: https://modelcontextprotocol.io/specification/2025-06-18/client/initialize
     pub fn server_info(&self) -> &Implementation {
         &self.init.server_info
     }
 
     /// Calls [`prompts/list`]
     ///
-    /// [`prompts/list`]: https://modelcontextprotocol.io/specification/2025-03-26/client/prompts/#listing-prompts
+    /// [`prompts/list`]: https://modelcontextprotocol.io/specification/2025-06-18/client/prompts#listing-prompts
     pub async fn prompts_list(
         &self,
         params: Option<ListPromptsRequestParams>,
@@ -371,7 +371,7 @@ impl McpClient {
 
     /// Calls [`prompts/get`]
     ///
-    /// [`prompts/get`]: https://modelcontextprotocol.io/specification/2025-03-26/client/prompts/#getting-a-prompt
+    /// [`prompts/get`]: https://modelcontextprotocol.io/specification/2025-06-18/client/prompts#getting-a-prompt
     pub async fn prompts_get(
         &self,
         params: GetPromptRequestParams,
@@ -381,7 +381,7 @@ impl McpClient {
 
     /// Calls [`resources/list`]
     ///
-    /// [`resources/list`]: https://modelcontextprotocol.io/specification/2025-03-26/client/resources/#listing-resources
+    /// [`resources/list`]: https://modelcontextprotocol.io/specification/2025-06-18/client/resources#listing-resources
     pub async fn resources_list(
         &self,
         params: Option<ListResourcesRequestParams>,
@@ -393,7 +393,7 @@ impl McpClient {
 
     /// Calls [`resources/templates/list`]
     ///
-    /// [`resources/templates/list`]: https://modelcontextprotocol.io/specification/2025-03-26/client/resources/#listing-resource-templates
+    /// [`resources/templates/list`]: https://modelcontextprotocol.io/specification/2025-06-18/client/resources#listing-resource-templates
     pub async fn resources_templates_list(
         &self,
         params: Option<ListResourceTemplatesRequestParams>,
@@ -405,7 +405,7 @@ impl McpClient {
 
     /// Calls [`resources/read`]
     ///
-    /// [`resources/read`]: https://modelcontextprotocol.io/specification/2025-03-26/client/resources/#reading-a-resource
+    /// [`resources/read`]: https://modelcontextprotocol.io/specification/2025-06-18/client/resources#reading-a-resource
     pub async fn resources_read(
         &self,
         params: ReadResourceRequestParams,
@@ -415,7 +415,7 @@ impl McpClient {
 
     /// Calls [`tools/list`]
     ///
-    /// [`tools/list`]: https://modelcontextprotocol.io/specification/2025-03-26/client/tools/#listing-tools
+    /// [`tools/list`]: https://modelcontextprotocol.io/specification/2025-06-18/client/tools#listing-tools
     pub async fn tools_list(
         &self,
         params: Option<ListToolsRequestParams>,
@@ -425,14 +425,14 @@ impl McpClient {
 
     /// Calls [`tools/call`]
     ///
-    /// [`tools/call`]: https://modelcontextprotocol.io/specification/2025-03-26/client/tools/#calling-tools
+    /// [`tools/call`]: https://modelcontextprotocol.io/specification/2025-06-18/client/tools#calling-tools
     pub async fn tools_call(&self, params: CallToolRequestParams) -> SessionResult<CallToolResult> {
         self.session.request("tools/call", Some(&params)).await
     }
 
     /// Calls [`completion/complete`]
     ///
-    /// [`completion/complete`]: https://modelcontextprotocol.io/specification/2025-03-26/client/completion/#completing-a-prompt
+    /// [`completion/complete`]: https://modelcontextprotocol.io/specification/2025-06-18/client/completion#completing-a-prompt
     pub async fn completion_complete(
         &self,
         params: CompleteRequestParams,
@@ -443,7 +443,7 @@ impl McpClient {
     }
     /// Calls [`ping`]
     ///
-    /// [`ping`]: https://modelcontextprotocol.io/specification/2025-03-26/basic/utilities/ping/
+    /// [`ping`]: https://modelcontextprotocol.io/specification/2025-06-18/basic/utilities/ping
     pub async fn ping(&self) -> SessionResult<()> {
         let _: Empty = self
             .session

@@ -601,16 +601,16 @@ This project is dual licensed under Apache-2.0/MIT. See the two LICENSE-\* files
 
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any additional terms or conditions.
 
-[Model Context Protocol]: https://modelcontextprotocol.io/specification/2025-03-26/
+[Model Context Protocol]: https://modelcontextprotocol.io/specification/2025-06-18/
 [RFC 6570]: https://www.rfc-editor.org/rfc/rfc6570.html
-[`prompts/list`]: https://modelcontextprotocol.io/specification/2025-03-26/server/prompts/#listing-prompts
-[`prompts/get`]: https://modelcontextprotocol.io/specification/2025-03-26/server/prompts/#getting-a-prompt
-[`resources/list`]: https://modelcontextprotocol.io/specification/2025-03-26/server/resources/#listing-resources
-[`resources/read`]: https://modelcontextprotocol.io/specification/2025-03-26/server/resources/#reading-resources
-[`resources/templates/list`]: https://modelcontextprotocol.io/specification/2025-03-26/server/resources/#resource-templates
-[`tools/list`]: https://modelcontextprotocol.io/specification/2025-03-26/server/tools/#listing-tools
-[`tools/call`]: https://modelcontextprotocol.io/specification/2025-03-26/server/tools/#calling-tools
-[`roots/list`]: https://modelcontextprotocol.io/specification/2025-03-26/client/roots/#listing-roots
+[`prompts/list`]: https://modelcontextprotocol.io/specification/2025-06-18/server/prompts#listing-prompts
+[`prompts/get`]: https://modelcontextprotocol.io/specification/2025-06-18/server/prompts#getting-a-prompt
+[`resources/list`]: https://modelcontextprotocol.io/specification/2025-06-18/server/resources#listing-resources
+[`resources/read`]: https://modelcontextprotocol.io/specification/2025-06-18/server/resources#reading-resources
+[`resources/templates/list`]: https://modelcontextprotocol.io/specification/2025-06-18/server/resources#resource-templates
+[`tools/list`]: https://modelcontextprotocol.io/specification/2025-06-18/server/tools#listing-tools
+[`tools/call`]: https://modelcontextprotocol.io/specification/2025-06-18/server/tools#calling-tools
+[`roots/list`]: https://modelcontextprotocol.io/specification/2025-06-18/client/roots#listing-roots
 [`FromStr`]: https://doc.rust-lang.org/std/str/trait.FromStr.html
 [`JsonSchema`]: https://docs.rs/schemars/latest/schemars/trait.JsonSchema.html
 [`DeserializeOwned`]: https://docs.rs/serde/latest/serde/de/trait.DeserializeOwned.html
