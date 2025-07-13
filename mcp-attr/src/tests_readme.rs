@@ -273,6 +273,99 @@
 //! }
 //! ```
 //!
+//! ### クライアント機能の呼び出し
+//!
+//! MCP サーバは [`RequestContext`] を使用してクライアント機能([`roots/list`]など)を呼び出すことができます。
+//!
+//! 属性を使用して実装されたメソッドで `ResuestContext` を使用するには、メソッドの引数に `&ResuestContext` 型の変数を追加します。
+//!
+//! ```rust
+//! use mcp_attr::server::{mcp_server, McpServer, RequestContext};
+//! use mcp_attr::Result;
+//!
+//! struct ExampleServer;
+//!
+//! #[mcp_server]
+//! impl McpServer for ExampleServer {
+//!   #[prompt]
+//!   async fn echo_roots(&self, context: &RequestContext) -> Result<String> {
+//!     let roots = context.roots_list().await?;
+//!     Ok(format!("{:?}", roots))
+//!   }
+//! }
+//! ```
+//!
+//! ### ドキュメントコメントからのinstructions
+//!
+//! `impl McpServer` ブロックのドキュメントコメントから [`instructions`] メソッドが自動生成されます。サーバーについて説明するドキュメントコメントを書くと、それがMCPクライアントにinstructionsとして送信されます。
+//!
+//! ```rust
+//! use mcp_attr::server::{mcp_server, McpServer};
+//! use mcp_attr::Result;
+//!
+//! struct ExampleServer;
+//!
+//! /// このサーバーはファイル操作とユーティリティを提供します。
+//! /// 様々なファイル形式を扱い、データ変換を実行できます。
+//! #[mcp_server]
+//! impl McpServer for ExampleServer {
+//!     #[tool]
+//!     async fn hello(&self) -> Result<String> {
+//!         Ok("Hello, world!".to_string())
+//!     }
+//! }
+//! ```
+//!
+//! [`instructions`] メソッドが手動実装されている場合は手動実装が使用され、ドキュメントコメントからのinstructions生成は行われません。
+//!
+//! ### 補完機能サポート (`#[complete]`)
+//!
+//! `#[complete(function)]` 属性を使用してプロンプトやリソースの引数に補完機能を追加できます。
+//!
+//! 補完関数は以下のシグネチャを持つ必要があります：
+//! - メソッド形式（`.method_name`）：`async fn func_name(&self, p: &CompleteRequestParams, cx: &RequestContext) -> Result<CompleteResult>`
+//! - グローバル関数形式（`method_name`）：`async fn func_name(p: &CompleteRequestParams, cx: &RequestContext) -> Result<CompleteResult>`
+//!
+//! `#[complete]` 属性が使用されている場合、`completion_complete` メソッドが自動生成されます。手動実装がある場合は自動生成をスキップします。
+//!
+//! 補完関数の開発を容易にするため、`#[complete_fn]` 属性を使用して簡潔なシグネチャから必要なシグネチャへの自動変換ができます：
+//!
+//! ```rust
+//! use mcp_attr::server::{mcp_server, McpServer, RequestContext, complete_fn};
+//! use mcp_attr::Result;
+//!
+//! struct ExampleServer;
+//!
+//! #[mcp_server]
+//! impl McpServer for ExampleServer {
+//!     #[prompt]
+//!     async fn greet(&self, #[complete(.complete_names)] name: String) -> Result<String> {
+//!         Ok(format!("Hello, {name}!"))
+//!     }
+//!
+//!     #[resource("files://{path}")]
+//!     async fn get_file(&self, #[complete(.complete_paths)] path: String) -> Result<String> {
+//!         Ok(format!("File: {path}"))
+//!     }
+//!
+//!     // #[complete_fn]を#[mcp_server]ブロック内に記述
+//!     #[complete_fn]
+//!     async fn complete_paths(&self, _value: &str) -> Result<Vec<String>> {
+//!         Ok(vec!["home".to_string(), "usr".to_string()])
+//!     }
+//!
+//!     // RequestContextが必要な場合
+//!     #[complete_fn]
+//!     async fn complete_names(&self, _value: &str, _cx: &RequestContext) -> Result<Vec<&'static str>> {
+//!         Ok(vec!["Alice", "Bob"])
+//!     }
+//! }
+//! ```
+//!
+//! `#[complete_fn]` 属性では `cx: &RequestContext` パラメータを省略できます。RequestContextが不要な場合は省略することで、よりシンプルな補完関数を記述できます。
+//!
+//! 補完機能は `#[prompt]` と `#[resource]` の引数でのみ使用可能で、`#[tool]` の引数では使用できません。
+//!
 //! ## 各属性の説明
 //!
 //! ### `#[prompt]`
@@ -453,99 +546,6 @@
 //!   }
 //! }
 //! ```
-//!
-//! ### クライアント機能の呼び出し
-//!
-//! MCP サーバは [`RequestContext`] を使用してクライアント機能([`roots/list`]など)を呼び出すことができます。
-//!
-//! 属性を使用して実装されたメソッドで `ResuestContext` を使用するには、メソッドの引数に `&ResuestContext` 型の変数を追加します。
-//!
-//! ```rust
-//! use mcp_attr::server::{mcp_server, McpServer, RequestContext};
-//! use mcp_attr::Result;
-//!
-//! struct ExampleServer;
-//!
-//! #[mcp_server]
-//! impl McpServer for ExampleServer {
-//!   #[prompt]
-//!   async fn echo_roots(&self, context: &RequestContext) -> Result<String> {
-//!     let roots = context.roots_list().await?;
-//!     Ok(format!("{:?}", roots))
-//!   }
-//! }
-//! ```
-//!
-//! ### ドキュメントコメントからのinstructions
-//!
-//! `impl McpServer` ブロックのドキュメントコメントから [`instructions`] メソッドが自動生成されます。サーバーについて説明するドキュメントコメントを書くと、それがMCPクライアントにinstructionsとして送信されます。
-//!
-//! ```rust
-//! use mcp_attr::server::{mcp_server, McpServer};
-//! use mcp_attr::Result;
-//!
-//! struct ExampleServer;
-//!
-//! /// このサーバーはファイル操作とユーティリティを提供します。
-//! /// 様々なファイル形式を扱い、データ変換を実行できます。
-//! #[mcp_server]
-//! impl McpServer for ExampleServer {
-//!     #[tool]
-//!     async fn hello(&self) -> Result<String> {
-//!         Ok("Hello, world!".to_string())
-//!     }
-//! }
-//! ```
-//!
-//! [`instructions`] メソッドが手動実装されている場合は手動実装が使用され、ドキュメントコメントからのinstructions生成は行われません。
-//!
-//! ### 補完機能サポート (`#[complete]`)
-//!
-//! `#[complete(function)]` 属性を使用してプロンプトやリソースの引数に補完機能を追加できます。
-//!
-//! 補完関数は以下のシグネチャを持つ必要があります：
-//! - メソッド形式（`.method_name`）：`async fn func_name(&self, p: &CompleteRequestParams, cx: &RequestContext) -> Result<CompleteResult>`
-//! - グローバル関数形式（`method_name`）：`async fn func_name(p: &CompleteRequestParams, cx: &RequestContext) -> Result<CompleteResult>`
-//!
-//! `#[complete]` 属性が使用されている場合、`completion_complete` メソッドが自動生成されます。手動実装がある場合は自動生成をスキップします。
-//!
-//! 補完関数の開発を容易にするため、`#[complete_fn]` 属性を使用して簡潔なシグネチャから必要なシグネチャへの自動変換ができます：
-//!
-//! ```rust
-//! use mcp_attr::server::{mcp_server, McpServer, RequestContext, complete_fn};
-//! use mcp_attr::Result;
-//!
-//! struct ExampleServer;
-//!
-//! #[mcp_server]
-//! impl McpServer for ExampleServer {
-//!     #[prompt]
-//!     async fn greet(&self, #[complete(.complete_names)] name: String) -> Result<String> {
-//!         Ok(format!("Hello, {name}!"))
-//!     }
-//!
-//!     #[resource("files://{path}")]
-//!     async fn get_file(&self, #[complete(.complete_paths)] path: String) -> Result<String> {
-//!         Ok(format!("File: {path}"))
-//!     }
-//!
-//!     // #[complete_fn]を#[mcp_server]ブロック内に記述
-//!     #[complete_fn]
-//!     async fn complete_paths(&self, _value: &str) -> Result<Vec<String>> {
-//!         Ok(vec!["home".to_string(), "usr".to_string()])
-//!     }
-//!
-//!     // RequestContextが必要な場合
-//!     #[complete_fn]
-//!     async fn complete_names(&self, _value: &str, _cx: &RequestContext) -> Result<Vec<&'static str>> {
-//!         Ok(vec!["Alice", "Bob"])
-//!     }
-//! }
-//! ```
-//!
-//! `#[complete_fn]` 属性では `cx: &RequestContext` パラメータを省略できます。RequestContextが不要な場合は省略することで、よりシンプルな補完関数を記述できます。
-//!
-//! 補完機能は `#[prompt]` と `#[resource]` の引数でのみ使用可能で、`#[tool]` の引数では使用できません。
 //!
 //! ### 手動実装
 //!
