@@ -100,42 +100,37 @@ fn collect_defined_types(file: &syn::File, registry: &mut Registry) -> Result<()
 
 fn collect_converts(file: &syn::File, registry: &mut Registry) -> Result<()> {
     for item in &file.items {
-        if let Item::Impl(item_impl) = item {
-            if let Some((_, trait_path, _)) = &item_impl.trait_ {
-                if trait_path
-                    .segments
-                    .last()
-                    .map(|s| s.ident == "From")
-                    .unwrap_or(false)
-                {
-                    if let Some(segment) = trait_path.segments.last() {
-                        if let PathArguments::AngleBracketed(args) = &segment.arguments {
-                            if let Some(GenericArgument::Type(from_type)) = args.args.first() {
-                                let to_type = &*item_impl.self_ty;
+        if let Item::Impl(item_impl) = item
+            && let Some((_, trait_path, _)) = &item_impl.trait_
+            && trait_path
+                .segments
+                .last()
+                .map(|s| s.ident == "From")
+                .unwrap_or(false)
+            && let Some(segment) = trait_path.segments.last()
+            && let PathArguments::AngleBracketed(args) = &segment.arguments
+            && let Some(GenericArgument::Type(from_type)) = args.args.first()
+        {
+            let to_type = &*item_impl.self_ty;
 
-                                // ジェネリックなimpl（impl<T> From<T> for Y のような）の場合はスキップ
-                                if !item_impl.generics.params.is_empty() {
-                                    continue;
-                                }
-
-                                let normalized_from = normalize_type(from_type, to_type)?;
-                                let normalized_to = normalize_type(to_type, to_type)?;
-
-                                // 既存の変換として登録
-                                registry.converts.push(Convert {
-                                    from: normalized_from.clone(),
-                                    to: normalized_to.clone(),
-                                });
-
-                                // 既に生成済みとしてマーク
-                                registry
-                                    .generated_converts
-                                    .insert((normalized_from, normalized_to));
-                            }
-                        }
-                    }
-                }
+            // ジェネリックなimpl（impl<T> From<T> for Y のような）の場合はスキップ
+            if !item_impl.generics.params.is_empty() {
+                continue;
             }
+
+            let normalized_from = normalize_type(from_type, to_type)?;
+            let normalized_to = normalize_type(to_type, to_type)?;
+
+            // 既存の変換として登録
+            registry.converts.push(Convert {
+                from: normalized_from.clone(),
+                to: normalized_to.clone(),
+            });
+
+            // 既に生成済みとしてマーク
+            registry
+                .generated_converts
+                .insert((normalized_from, normalized_to));
         }
     }
     Ok(())
@@ -145,10 +140,10 @@ fn normalize_type(ty: &Type, self_type: &Type) -> Result<Type> {
     match ty {
         Type::Path(type_path) => {
             let mut normalized = type_path.clone();
-            if let Some(segment) = normalized.path.segments.first_mut() {
-                if segment.ident == "Self" {
-                    return Ok(self_type.clone());
-                }
+            if let Some(segment) = normalized.path.segments.first_mut()
+                && segment.ident == "Self"
+            {
+                return Ok(self_type.clone());
             }
             Ok(Type::Path(normalized))
         }
@@ -210,10 +205,10 @@ fn generate_transitive_converts(registry: &mut Registry) -> Result<Vec<TokenStre
                         new_path.push(next_type.clone());
 
                         // 既に到達可能な型の場合はスキップ
-                        if let Some(existing_paths) = reachable.get(from_type) {
-                            if existing_paths.iter().any(|(t, _)| t == next_type) {
-                                continue;
-                            }
+                        if let Some(existing_paths) = reachable.get(from_type)
+                            && existing_paths.iter().any(|(t, _)| t == next_type)
+                        {
+                            continue;
                         }
 
                         new_reachable.push((from_type.clone(), next_type.clone(), new_path));
