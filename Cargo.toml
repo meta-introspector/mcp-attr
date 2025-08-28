@@ -1,7 +1,12 @@
-[workspace]
-members = ["codegen", "mcp-attr-macros", "mcp-attr"]
-resolver = "3"
+[package]
+name = "mcp-attr"
+version = "0.0.7"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/frozenlib/mcp-attr"
+description = "A library for declaratively building Model Context Protocol servers."
+keywords = ["mcp", "attribute", "macro", "server", "ai"]
+categories = ["development-tools", "api-bindings"]
 
-[workspace.dependencies]
-uri-template-ex = "0.0.2"
-schemars = "0.8.22"
+[dependencies]
+tokio = { workspace = true }
